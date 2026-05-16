@@ -38,6 +38,24 @@ function StaffDashboard() {
           <li>
             <button onClick={logout}>Logout</button>
           </li>
+          <li>
+  <button onClick={() => navigate("/staff/create-parent")}>
+    Add Guardian
+  </button>
+</li>
+<li>
+  <button onClick={() => navigate("/staff/parents")}>
+    Guardians
+  </button>
+</li>
+<li>
+  <button onClick={() => navigate("/staff/create-patient")}>
+    Add Patient
+  </button>
+</li>
+<li><button onClick={() => navigate("/staff/patients")}>
+    Patients
+  </button></li>
         </ul>
       </div>
 

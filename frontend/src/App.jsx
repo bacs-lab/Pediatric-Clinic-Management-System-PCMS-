@@ -7,7 +7,10 @@ import CreateRecord from "./pages/CreateRecord";
 import EditRecord from "./pages/EditRecord";
 import RecordDetails from "./pages/RecordDetails";
 import ParentPatientRecords from "./pages/ParentPatientRecords";
-
+import CreateParent from "./pages/CreateParent";
+import ParentList from "./pages/ParentList";
+import CreatePatient from "./pages/CreatePatient";
+import PatientList from "./pages/PatientList";
 
 function App() {
   return (
@@ -38,6 +41,38 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <CreateRecord />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-parent"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateParent />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/parents"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <ParentList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-patient"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreatePatient />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/patients"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <PatientList />
     </ProtectedRoute>
   }
 />

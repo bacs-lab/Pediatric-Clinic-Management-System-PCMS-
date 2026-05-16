@@ -10,6 +10,8 @@ const authRoutes = require("./routes/authRoutes");
 
 const patientRoutes = require("./routes/patientRoutes");
 
+const parentProfileRoutes = require("./routes/parentProfileRoutes");
+
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use("/api/records", medicalRecordRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/patients", patientRoutes);
+
+app.use("/api/parent-profiles", parentProfileRoutes);
 
 
 mongoose
