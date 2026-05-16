@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function ParentPatientRecords() {
   const { patientId } = useParams();
 
   const [records, setRecords] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/records/patient/${patientId}`)
@@ -15,6 +18,7 @@ function ParentPatientRecords() {
 
   return (
     <div>
+    <button onClick={() => navigate("/parent/dashboard")}> Back </button>
       <h1>Medical History</h1>
 
       {records.length === 0 ? (

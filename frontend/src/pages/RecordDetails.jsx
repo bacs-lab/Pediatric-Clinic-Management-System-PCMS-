@@ -11,6 +11,32 @@ function RecordDetails() {
       .then((res) => res.json())
       .then((data) => setRecord(data));
   }, [id]);
+  const handleDelete = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this medical record?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/records/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      alert("Medical record deleted!");
+      navigate("/staff/dashboard");
+      return;
+    }
+
+    const text = await res.text();
+    console.log("Delete failed:", text);
+    alert("Failed to delete record");
+  } catch (error) {
+    console.log("Delete error:", error);
+    alert("Something went wrong");
+  }
+};
 
   if (!record) return <p>Loading...</p>;
 
@@ -31,6 +57,9 @@ function RecordDetails() {
       <button onClick={() => navigate(`/staff/records/${record._id}/edit`)}>
   Edit Record
 </button>
+<button onClick={handleDelete}>
+        Delete Record
+      </button>
     </div>
   );
 }

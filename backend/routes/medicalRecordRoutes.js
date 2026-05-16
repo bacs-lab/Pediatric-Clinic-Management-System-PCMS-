@@ -73,4 +73,18 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// DELETE medical record
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedRecord = await MedicalRecord.findByIdAndDelete(req.params.id);
+
+    if (!deletedRecord) {
+      return res.status(404).json({ message: "Record not found" });
+    }
+
+    res.json({ message: "Medical record deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 module.exports = router;
