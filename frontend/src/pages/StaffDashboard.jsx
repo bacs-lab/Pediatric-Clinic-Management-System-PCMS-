@@ -14,55 +14,74 @@ function StaffDashboard() {
   useEffect(() => {
     fetch("http://localhost:5000/api/records")
       .then((res) => res.json())
-      .then((data) => setRecords(data))
-      .catch((err) => console.log(err));
+      .then((data) => setRecords(data));
   }, []);
 
   return (
-    <div>
-      <h1>Clinic Staff Dashboard</h1>
-      <button onClick={logout}>Logout</button>
+    <div className="layout">
+      <div className="sidebar">
+        <h2>PCMS Staff</h2>
 
-      <h2>Medical Records</h2>
-      <button onClick={() => navigate("/staff/create-record")}>
-  Add Medical Record
-</button>
+        <ul>
+          <li>
+            <button onClick={() => navigate("/staff/dashboard")}>
+              Dashboard
+            </button>
+          </li>
 
-      {records.length === 0 ? (
-        <p>No records found.</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Age</th>
-              <th>Gender</th>
-              <th>Complaint</th>
-              <th>Diagnosis</th>
-              <th>Doctor</th>
-              <th>Action</th>
-            </tr>
-          </thead>
+          <li>
+            <button onClick={() => navigate("/staff/create-record")}>
+              Add Record
+            </button>
+          </li>
 
-          <tbody>
-            {records.map((record) => (
-              <tr key={record._id}>
-                <td>{record.patientName}</td>
-                <td>{record.age}</td>
-                <td>{record.gender}</td>
-                <td>{record.chiefComplaint}</td>
-                <td>{record.diagnosis}</td>
-                <td>{record.doctorName}</td>
-                <td>
-  <button onClick={() => navigate(`/staff/records/${record._id}`)}>
-    View
-  </button>
-</td>
+          <li>
+            <button onClick={logout}>Logout</button>
+          </li>
+        </ul>
+      </div>
+
+      <div className="main-content">
+        <h1 className="page-title">Clinic Staff Dashboard</h1>
+
+        <div className="card">
+          <h2>Medical Records</h2>
+        </div>
+
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Diagnosis</th>
+                <th>Doctor</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+
+            <tbody>
+              {records.map((record) => (
+                <tr key={record._id}>
+                  <td>{record.patientName}</td>
+                  <td>{record.diagnosis}</td>
+                  <td>{record.doctorName}</td>
+
+                  <td>
+                    <button
+                      className="primary-btn"
+                      onClick={() =>
+                        navigate(`/staff/records/${record._id}`)
+                      }
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

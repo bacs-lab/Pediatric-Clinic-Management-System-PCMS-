@@ -7,6 +7,12 @@ function ParentDashboard() {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   useEffect(() => {
     fetch(`http://localhost:5000/api/patients/guardian/${user.id}`)
       .then((res) => res.json())
@@ -15,40 +21,63 @@ function ParentDashboard() {
   }, []);
 
   return (
-    <div>
-      <h1>Parent Dashboard</h1>
-      <h2>My Children</h2>
+    <div className="layout">
+      <div className="sidebar">
+        <h2>Parent Portal</h2>
 
-      {patients.length === 0 ? (
-        <p>No patients found.</p>
-      ) : (
-        patients.map((patient) => (
-          <div
-            key={patient._id}
-            style={{
-              border: "1px solid white",
-              padding: "20px",
-              marginBottom: "20px",
-            }}
-          >
-            <h3>
-              {patient.firstName} {patient.lastName}
-            </h3>
-
-            <p>Gender: {patient.gender}</p>
-            <p>Blood Type: {patient.bloodType}</p>
-            <p>Allergies: {patient.allergies}</p>
-
-            <button
-              onClick={() =>
-                navigate(`/parent/patient/${patient._id}/records`)
-              }
-            >
-              View Medical History
+        <ul>
+          <li>
+            <button onClick={() => navigate("/parent/dashboard")}>
+              Dashboard
             </button>
-          </div>
-        ))
-      )}
+          </li>
+
+          <li>
+            <button onClick={logout}>Logout</button>
+          </li>
+        </ul>
+      </div>
+
+      <div className="main-content">
+        <h1 className="page-title">Parent Dashboard</h1>
+
+        <div className="card">
+          <h2>My Children</h2>
+        </div>
+
+        {patients.length === 0 ? (
+          <p>No patients found.</p>
+        ) : (
+          patients.map((patient) => (
+            <div className="card" key={patient._id}>
+              <h2>
+                {patient.firstName} {patient.lastName}
+              </h2>
+
+              <p>
+                <strong>Gender:</strong> {patient.gender}
+              </p>
+
+              <p>
+                <strong>Blood Type:</strong> {patient.bloodType}
+              </p>
+
+              <p>
+                <strong>Allergies:</strong> {patient.allergies}
+              </p>
+
+              <button
+                className="primary-btn"
+                onClick={() =>
+                  navigate(`/parent/patient/${patient._id}/records`)
+                }
+              >
+                View Medical History
+              </button>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

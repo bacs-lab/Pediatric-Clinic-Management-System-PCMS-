@@ -9,16 +9,17 @@ function RecordDetails() {
   useEffect(() => {
     fetch(`http://localhost:5000/api/records/${id}`)
       .then((res) => res.json())
-      .then((data) => setRecord(data));
+      .then((data) => setRecord(data))
+      .catch((err) => console.log(err));
   }, [id]);
+
   const handleDelete = async () => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this medical record?"
-  );
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this medical record?"
+    );
 
-  if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-  try {
     const res = await fetch(`http://localhost:5000/api/records/${id}`, {
       method: "DELETE",
     });
@@ -26,41 +27,67 @@ function RecordDetails() {
     if (res.ok) {
       alert("Medical record deleted!");
       navigate("/staff/dashboard");
-      return;
+    } else {
+      alert("Failed to delete record");
     }
-
-    const text = await res.text();
-    console.log("Delete failed:", text);
-    alert("Failed to delete record");
-  } catch (error) {
-    console.log("Delete error:", error);
-    alert("Something went wrong");
-  }
-};
+  };
 
   if (!record) return <p>Loading...</p>;
 
   return (
-    <div>
-      <button onClick={() => navigate("/staff/dashboard")}>Back</button>
+    <div className="layout">
+      <div className="sidebar">
+        <h2>PCMS Staff</h2>
 
-      <h1>{record.patientName}</h1>
-      <p>Age: {record.age}</p>
-      <p>Gender: {record.gender}</p>
-      <p>Phone: {record.phone}</p>
-      <p>Address: {record.address}</p>
-      <p>Chief Complaint: {record.chiefComplaint}</p>
-      <p>Diagnosis: {record.diagnosis}</p>
-      <p>Treatment: {record.treatment}</p>
-      <p>Prescription: {record.prescription}</p>
-      <p>Doctor: {record.doctorName}</p>
-      <button onClick={() => navigate(`/staff/records/${record._id}/edit`)}>
-  Edit Record
-</button>
-<button onClick={handleDelete}>
-        Delete Record
-      </button>
+        <ul>
+          <li>
+            <button onClick={() => navigate("/staff/dashboard")}>
+              Dashboard
+            </button>
+          </li>
+
+          <li>
+            <button onClick={() => navigate(-1)}>Back</button>
+          </li>
+        </ul>
+      </div>
+
+      <div className="main-content">
+        <h1 className="page-title">Medical Record Details</h1>
+
+        <div className="card">
+          <h2>{record.patientName}</h2>
+
+          <p><strong>Age:</strong> {record.age}</p>
+          <p><strong>Gender:</strong> {record.gender}</p>
+          <p><strong>Phone:</strong> {record.phone}</p>
+          <p><strong>Address:</strong> {record.address}</p>
+          <p><strong>Chief Complaint:</strong> {record.chiefComplaint}</p>
+          <p><strong>Diagnosis:</strong> {record.diagnosis}</p>
+          <p><strong>Treatment:</strong> {record.treatment}</p>
+          <p><strong>Prescription:</strong> {record.prescription}</p>
+          <p><strong>Doctor:</strong> {record.doctorName}</p>
+
+          <br />
+
+          <button
+            className="primary-btn"
+            onClick={() => navigate(`/staff/records/${record._id}/edit`)}
+          >
+            Edit Record
+          </button>
+
+          <button
+            className="danger-btn"
+            onClick={handleDelete}
+            style={{ marginLeft: "10px" }}
+          >
+            Delete Record
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
+
 export default RecordDetails;
