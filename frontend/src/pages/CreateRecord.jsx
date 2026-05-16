@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function CreateRecord() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedPatientId = searchParams.get("patientId");
 
   const [patients, setPatients] = useState([]);
 
@@ -21,11 +23,31 @@ function CreateRecord() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients")
-      .then((res) => res.json())
-      .then((data) => setPatients(data))
-      .catch((err) => console.log(err));
-  }, []);
+  fetch("http://localhost:5000/api/patients")
+    .then((res) => res.json())
+    .then((data) => {
+      setPatients(data);
+
+      if (selectedPatientId) {
+        const selectedPatient = data.find(
+          (patient) => patient._id === selectedPatientId
+        );
+
+        if (selectedPatient) {
+          setForm((prevForm) => ({
+            ...prevForm,
+            patientId: selectedPatient._id,
+            patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
+            age: calculateAge(selectedPatient.birthDate),
+            gender: selectedPatient.gender,
+            phone: selectedPatient.contactNumber || "",
+            address: selectedPatient.address || "",
+          }));
+        }
+      }
+    })
+    .catch((err) => console.log(err));
+}, [selectedPatientId]);
 
   const calculateAge = (birthDate) => {
     const birth = new Date(birthDate);
