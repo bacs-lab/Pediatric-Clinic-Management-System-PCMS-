@@ -73,6 +73,11 @@ function StaffDashboard() {
     Billing Records
   </button>
 </li>
+<li>
+  <button onClick={() => navigate("/staff/inventory")}>
+    Inventory
+  </button>
+</li>
         </ul>
       </div>
 

@@ -20,6 +20,8 @@ import CreateConsultation from "./pages/CreateConsultation";
 import CreateBilling from "./pages/CreateBilling";
 import BillingList from "./pages/BillingList";
 import ParentBilling from "./pages/ParentBilling";
+import InventoryList from "./pages/InventoryList";
+import CreateInventoryItem from "./pages/CreateInventoryItem";
 
 function App() {
   return (
@@ -154,6 +156,22 @@ function App() {
   element={
     <ProtectedRoute allowedRole="parent">
       <ParentBilling />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/inventory"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <InventoryList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-inventory"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateInventoryItem />
     </ProtectedRoute>
   }
 />
