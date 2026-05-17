@@ -14,6 +14,7 @@ import PatientList from "./pages/PatientList";
 import CreateAppointment from "./pages/CreateAppointment";
 import AppointmentList from "./pages/AppointmentList";
 import ParentAppointments from "./pages/ParentAppointments";
+import QueueList from "./pages/QueueList";
 
 function App() {
   return (
@@ -100,6 +101,14 @@ function App() {
   element={
     <ProtectedRoute allowedRole="parent">
       <ParentAppointments />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/queue"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <QueueList />
     </ProtectedRoute>
   }
 />

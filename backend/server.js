@@ -13,7 +13,7 @@ const patientRoutes = require("./routes/patientRoutes");
 const parentProfileRoutes = require("./routes/parentProfileRoutes");
 
 const appointmentRoutes = require("./routes/appointmentRoutes");
-
+const queueRoutes = require("./routes/queueRoutes");
 
 const app = express();
 
@@ -31,7 +31,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/parent-profiles", parentProfileRoutes);
 
 app.use("/api/appointments", appointmentRoutes);
-
+app.use("/api/queue", queueRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)

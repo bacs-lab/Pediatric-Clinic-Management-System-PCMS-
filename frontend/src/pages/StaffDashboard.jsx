@@ -63,6 +63,11 @@ function StaffDashboard() {
     Appointments
   </button>
 </li>
+<li>
+  <button onClick={() => navigate("/staff/queue")}>
+    Queue
+  </button>
+</li>
         </ul>
       </div>
 

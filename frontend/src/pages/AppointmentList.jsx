@@ -35,6 +35,25 @@ function AppointmentList() {
       alert("Failed to update appointment");
     }
   };
+  const addToQueue = async (appointment) => {
+  const res = await fetch("http://localhost:5000/api/queue", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      appointmentId: appointment._id,
+      patientId: appointment.patientId,
+      patientName: appointment.patientName,
+    }),
+  });
+
+  if (res.ok) {
+    alert("Patient added to queue!");
+  } else {
+    alert("Failed to add patient to queue");
+  }
+};
 
   return (
     <div className="layout">
@@ -119,6 +138,15 @@ function AppointmentList() {
                     >
                       Cancel
                     </button>
+                      {appointment.status === "Approved" && (
+    <button
+      className="primary-btn"
+      style={{ marginLeft: "10px" }}
+      onClick={() => addToQueue(appointment)}
+    >
+      Add to Queue
+    </button>
+  )}
                   </td>
                 </tr>
               ))}
