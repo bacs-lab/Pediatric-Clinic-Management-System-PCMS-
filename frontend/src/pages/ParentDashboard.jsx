@@ -99,6 +99,15 @@ function ParentDashboard() {
 >
   View Billing
 </button>
+<button
+  className="primary-btn"
+  style={{ marginLeft: "10px" }}
+  onClick={() =>
+    navigate(`/parent/patient/${patient._id}/vaccines`)
+  }
+>
+  View Vaccines
+</button>
             </div>
           ))
         )}
