@@ -35,8 +35,7 @@ function ParentDashboard() {
           <li>
             <button onClick={logout}>Logout</button>
           </li>
-        </ul>
-        <li>
+          <li>
   <button
     onClick={() =>
       navigate("/parent/create-appointment")
@@ -45,6 +44,8 @@ function ParentDashboard() {
     Request Appointment
   </button>
 </li>
+        </ul>
+        
       </div>
 
       <div className="main-content">

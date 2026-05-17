@@ -56,6 +56,13 @@ function StaffDashboard() {
 <li><button onClick={() => navigate("/staff/patients")}>
     Patients
   </button></li>
+  <li>
+  <button
+    onClick={() => navigate("/staff/appointments")}
+  >
+    Appointments
+  </button>
+</li>
         </ul>
       </div>
 
