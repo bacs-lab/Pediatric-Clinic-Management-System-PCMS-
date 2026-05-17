@@ -15,6 +15,7 @@ import CreateAppointment from "./pages/CreateAppointment";
 import AppointmentList from "./pages/AppointmentList";
 import ParentAppointments from "./pages/ParentAppointments";
 import QueueList from "./pages/QueueList";
+import CreateAssessment from "./pages/CreateAssessment";
 
 function App() {
   return (
@@ -109,6 +110,14 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <QueueList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-assessment"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateAssessment />
     </ProtectedRoute>
   }
 />

@@ -71,6 +71,18 @@ function QueueList() {
                       <option>Completed</option>
                       <option>Cancelled</option>
                     </select>
+                    {item.status === "In Assessment" && (
+  <button
+    className="primary-btn"
+    onClick={() =>
+      navigate("/staff/create-assessment", {
+        state: item,
+      })
+    }
+  >
+    Assess
+  </button>
+)}
                   </td>
                 </tr>
               ))}
