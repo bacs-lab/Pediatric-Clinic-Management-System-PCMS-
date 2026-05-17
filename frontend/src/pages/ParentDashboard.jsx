@@ -44,6 +44,11 @@ function ParentDashboard() {
     Request Appointment
   </button>
 </li>
+<li>
+  <button onClick={() => navigate("/parent/appointments")}>
+    My Appointments
+  </button>
+</li>
         </ul>
         
       </div>

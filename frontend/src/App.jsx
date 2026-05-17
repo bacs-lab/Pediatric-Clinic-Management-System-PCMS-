@@ -13,6 +13,7 @@ import CreatePatient from "./pages/CreatePatient";
 import PatientList from "./pages/PatientList";
 import CreateAppointment from "./pages/CreateAppointment";
 import AppointmentList from "./pages/AppointmentList";
+import ParentAppointments from "./pages/ParentAppointments";
 
 function App() {
   return (
@@ -91,6 +92,14 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <AppointmentList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/parent/appointments"
+  element={
+    <ProtectedRoute allowedRole="parent">
+      <ParentAppointments />
     </ProtectedRoute>
   }
 />
