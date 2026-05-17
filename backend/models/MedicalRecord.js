@@ -13,12 +13,10 @@ const medicalRecordSchema = new mongoose.Schema(
     },
     age: {
       type: Number,
-      required: true,
     },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: true,
     },
     phone: {
       type: String,
@@ -28,7 +26,6 @@ const medicalRecordSchema = new mongoose.Schema(
     },
     chiefComplaint: {
       type: String,
-      required: true,
     },
     diagnosis: {
       type: String,

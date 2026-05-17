@@ -83,6 +83,30 @@ function QueueList() {
     Assess
   </button>
 )}
+{item.status === "For Consultation" && (
+  <button
+    className="primary-btn"
+    onClick={() =>
+      navigate("/staff/create-consultation", {
+        state: item,
+      })
+    }
+  >
+    Consult
+  </button>
+)}
+{item.status === "For Billing" && (
+  <button
+    className="primary-btn"
+    onClick={() =>
+      navigate("/staff/create-billing", {
+        state: item,
+      })
+    }
+  >
+    Billing
+  </button>
+)}
                   </td>
                 </tr>
               ))}

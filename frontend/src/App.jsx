@@ -16,6 +16,8 @@ import AppointmentList from "./pages/AppointmentList";
 import ParentAppointments from "./pages/ParentAppointments";
 import QueueList from "./pages/QueueList";
 import CreateAssessment from "./pages/CreateAssessment";
+import CreateConsultation from "./pages/CreateConsultation";
+import CreateBilling from "./pages/CreateBilling";
 
 function App() {
   return (
@@ -118,6 +120,22 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <CreateAssessment />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-consultation"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateConsultation />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/create-billing"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateBilling />
     </ProtectedRoute>
   }
 />
