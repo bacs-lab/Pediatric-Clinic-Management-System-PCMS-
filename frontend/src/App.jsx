@@ -18,6 +18,8 @@ import QueueList from "./pages/QueueList";
 import CreateAssessment from "./pages/CreateAssessment";
 import CreateConsultation from "./pages/CreateConsultation";
 import CreateBilling from "./pages/CreateBilling";
+import BillingList from "./pages/BillingList";
+import ParentBilling from "./pages/ParentBilling";
 
 function App() {
   return (
@@ -136,6 +138,22 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <CreateBilling />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/billings"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <BillingList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/parent/patient/:patientId/billing"
+  element={
+    <ProtectedRoute allowedRole="parent">
+      <ParentBilling />
     </ProtectedRoute>
   }
 />

@@ -68,6 +68,11 @@ function StaffDashboard() {
     Queue
   </button>
 </li>
+<li>
+  <button onClick={() => navigate("/staff/billings")}>
+    Billing Records
+  </button>
+</li>
         </ul>
       </div>
 

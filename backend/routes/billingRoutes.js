@@ -46,5 +46,18 @@ router.get("/", async (req, res) => {
     });
   }
 });
+// GET billing by patient
+router.get("/patient/:patientId", async (req, res) => {
+  try {
+    const billings = await Billing.find({
+      patientId: req.params.patientId,
+    }).sort({ createdAt: -1 });
 
+    res.json(billings);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
 module.exports = router;

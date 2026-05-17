@@ -49,6 +49,7 @@ function ParentDashboard() {
     My Appointments
   </button>
 </li>
+
         </ul>
         
       </div>
@@ -89,6 +90,15 @@ function ParentDashboard() {
               >
                 View Medical History
               </button>
+              <button
+  className="primary-btn"
+  style={{ marginLeft: "10px" }}
+  onClick={() =>
+    navigate(`/parent/patient/${patient._id}/billing`)
+  }
+>
+  View Billing
+</button>
             </div>
           ))
         )}
