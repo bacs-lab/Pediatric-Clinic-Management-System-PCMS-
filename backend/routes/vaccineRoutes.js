@@ -2,17 +2,24 @@ const express = require("express");
 const router = express.Router();
 
 const VaccineRecord = require("../models/VaccineRecord");
+const InventoryItem = require("../models/InventoryItem");
 
 // CREATE vaccine record
 router.post("/", async (req, res) => {
   try {
     const vaccineRecord = await VaccineRecord.create(req.body);
+
+    if (req.body.inventoryItemId && req.body.status === "Completed") {
+      await InventoryItem.findByIdAndUpdate(req.body.inventoryItemId, {
+        $inc: { stockQuantity: -1 },
+      });
+    }
+
     res.status(201).json(vaccineRecord);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
 // GET all vaccine records
 router.get("/", async (req, res) => {
   try {

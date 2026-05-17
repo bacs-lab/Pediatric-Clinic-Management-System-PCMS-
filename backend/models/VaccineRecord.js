@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const vaccineRecordSchema = new mongoose.Schema(
   {
+    
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient",
@@ -40,6 +41,10 @@ const vaccineRecordSchema = new mongoose.Schema(
     remarks: {
       type: String,
     },
+    inventoryItemId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "InventoryItem",
+},
   },
   { timestamps: true }
 );
