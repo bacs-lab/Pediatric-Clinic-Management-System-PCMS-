@@ -1,0 +1,39 @@
+const express = require("express");
+const router = express.Router();
+
+const VaccineRecord = require("../models/VaccineRecord");
+
+// CREATE vaccine record
+router.post("/", async (req, res) => {
+  try {
+    const vaccineRecord = await VaccineRecord.create(req.body);
+    res.status(201).json(vaccineRecord);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET all vaccine records
+router.get("/", async (req, res) => {
+  try {
+    const records = await VaccineRecord.find().sort({ createdAt: -1 });
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET vaccine records by patient
+router.get("/patient/:patientId", async (req, res) => {
+  try {
+    const records = await VaccineRecord.find({
+      patientId: req.params.patientId,
+    }).sort({ vaccineDate: -1 });
+
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = router;

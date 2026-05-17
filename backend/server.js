@@ -17,6 +17,7 @@ const queueRoutes = require("./routes/queueRoutes");
 const assessmentRoutes = require("./routes/assessmentRoutes");
 const billingRoutes = require("./routes/billingRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
+const vaccineRoutes = require("./routes/vaccineRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/queue", queueRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/billings", billingRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/vaccines", vaccineRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)

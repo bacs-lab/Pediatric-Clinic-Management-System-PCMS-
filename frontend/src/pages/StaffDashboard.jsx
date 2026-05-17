@@ -78,6 +78,11 @@ function StaffDashboard() {
     Inventory
   </button>
 </li>
+<li>
+  <button onClick={() => navigate("/staff/vaccines")}>
+    Vaccines
+  </button>
+</li>
         </ul>
       </div>
 

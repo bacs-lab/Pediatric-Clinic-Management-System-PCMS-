@@ -22,6 +22,8 @@ import BillingList from "./pages/BillingList";
 import ParentBilling from "./pages/ParentBilling";
 import InventoryList from "./pages/InventoryList";
 import CreateInventoryItem from "./pages/CreateInventoryItem";
+import VaccineList from "./pages/VaccineList";
+import CreateVaccineRecord from "./pages/CreateVaccineRecord";
 
 function App() {
   return (
@@ -172,6 +174,23 @@ function App() {
   element={
     <ProtectedRoute allowedRole="staff">
       <CreateInventoryItem />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/staff/vaccines"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <VaccineList />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/staff/create-vaccine"
+  element={
+    <ProtectedRoute allowedRole="staff">
+      <CreateVaccineRecord />
     </ProtectedRoute>
   }
 />
