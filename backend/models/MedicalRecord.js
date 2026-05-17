@@ -46,6 +46,23 @@ const medicalRecordSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    assessmentId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Assessment",
+},
+
+queueId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Queue",
+},
+
+consultationNotes: {
+  type: String,
+},
+
+followUpDate: {
+  type: Date,
+},
   },
   { timestamps: true }
 );
