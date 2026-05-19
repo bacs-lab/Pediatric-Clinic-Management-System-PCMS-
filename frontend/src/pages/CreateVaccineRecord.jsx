@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 function CreateVaccineRecord() {
   const navigate = useNavigate();
+
   const [patients, setPatients] = useState([]);
+  const [vaccines, setVaccines] = useState([]);
 
   const [form, setForm] = useState({
     patientId: "",
     patientName: "",
+    inventoryItemId: "",
     vaccineName: "",
     vaccineDate: "",
     nextDoseDate: "",
@@ -20,6 +23,16 @@ function CreateVaccineRecord() {
     fetch("http://localhost:5000/api/patients")
       .then((res) => res.json())
       .then((data) => setPatients(data));
+
+    fetch("http://localhost:5000/api/inventory")
+      .then((res) => res.json())
+      .then((data) => {
+        const vaccineItems = data.filter(
+          (item) => item.category === "Vaccine" && item.stockQuantity > 0
+        );
+
+        setVaccines(vaccineItems);
+      });
   }, []);
 
   const handlePatientSelect = (e) => {
@@ -34,6 +47,18 @@ function CreateVaccineRecord() {
     });
   };
 
+  const handleVaccineSelect = (e) => {
+    const selectedVaccine = vaccines.find(
+      (vaccine) => vaccine._id === e.target.value
+    );
+
+    setForm({
+      ...form,
+      inventoryItemId: e.target.value,
+      vaccineName: selectedVaccine?.itemName || "",
+    });
+  };
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -44,6 +69,16 @@ function CreateVaccineRecord() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!form.patientId) {
+      alert("Please select a patient");
+      return;
+    }
+
+    if (!form.inventoryItemId) {
+      alert("Please select a vaccine from inventory");
+      return;
+    }
+
     const res = await fetch("http://localhost:5000/api/vaccines", {
       method: "POST",
       headers: {
@@ -53,10 +88,11 @@ function CreateVaccineRecord() {
     });
 
     if (res.ok) {
-      alert("Vaccine record saved!");
+      alert("Vaccine record saved and inventory deducted!");
       navigate("/staff/vaccines");
     } else {
-      alert("Failed to save vaccine record");
+      const data = await res.json();
+      alert(data.message || "Failed to save vaccine record");
     }
   };
 
@@ -64,9 +100,17 @@ function CreateVaccineRecord() {
     <div className="layout">
       <div className="sidebar">
         <h2>PCMS Staff</h2>
+
         <ul>
-          <li><button onClick={() => navigate("/staff/vaccines")}>Vaccines</button></li>
-          <li><button onClick={() => navigate(-1)}>Back</button></li>
+          <li>
+            <button onClick={() => navigate("/staff/vaccines")}>
+              Vaccines
+            </button>
+          </li>
+
+          <li>
+            <button onClick={() => navigate(-1)}>Back</button>
+          </li>
         </ul>
       </div>
 
@@ -76,6 +120,7 @@ function CreateVaccineRecord() {
         <form onSubmit={handleSubmit}>
           <select value={form.patientId} onChange={handlePatientSelect}>
             <option value="">Select Patient</option>
+
             {patients.map((patient) => (
               <option key={patient._id} value={patient._id}>
                 {patient.firstName} {patient.lastName}
@@ -85,11 +130,26 @@ function CreateVaccineRecord() {
 
           <input value={form.patientName} readOnly placeholder="Patient Name" />
 
+          <select
+            name="inventoryItemId"
+            value={form.inventoryItemId}
+            onChange={handleVaccineSelect}
+            required
+          >
+            <option value="">Select Vaccine</option>
+
+            {vaccines.map((vaccine) => (
+              <option key={vaccine._id} value={vaccine._id}>
+                {vaccine.itemName} — Stock: {vaccine.stockQuantity}
+              </option>
+            ))}
+          </select>
+
           <input
             name="vaccineName"
             placeholder="Vaccine Name"
             value={form.vaccineName}
-            onChange={handleChange}
+            readOnly
           />
 
           <input
@@ -97,6 +157,7 @@ function CreateVaccineRecord() {
             type="date"
             value={form.vaccineDate}
             onChange={handleChange}
+            required
           />
 
           <input
