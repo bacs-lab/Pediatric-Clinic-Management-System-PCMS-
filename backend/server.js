@@ -19,6 +19,8 @@ const billingRoutes = require("./routes/billingRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const vaccineRoutes = require("./routes/vaccineRoutes");
 
+const dashboardRoutes = require("./routes/dashboardRoutes");
+
 const app = express();
 
 app.use(cors());
@@ -40,6 +42,8 @@ app.use("/api/assessments", assessmentRoutes);
 app.use("/api/billings", billingRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/vaccines", vaccineRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
