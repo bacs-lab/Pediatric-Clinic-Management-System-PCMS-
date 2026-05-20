@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -10,6 +11,11 @@ function PatientList() {
       .then((res) => res.json())
       .then((data) => setPatients(data));
   }, []);
+  const filteredPatients = patients.filter((patient) =>
+  `${patient.firstName} ${patient.lastName}`
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   return (
     <div className="layout">
@@ -33,8 +39,20 @@ function PatientList() {
 
       <div className="main-content">
         <h1 className="page-title">Patients</h1>
+        <input
+  type="text"
+  placeholder="Search patient..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  style={{
+    marginBottom: "20px",
+    padding: "10px",
+    width: "300px",
+  }}
+/>
 
         <div className="table-container">
+
           <table>
             <thead>
               <tr>
@@ -47,7 +65,7 @@ function PatientList() {
             </thead>
 
             <tbody>
-              {patients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <tr key={patient._id}>
                   <td>
                     {patient.firstName} {patient.lastName}
