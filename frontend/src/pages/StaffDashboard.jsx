@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 function StaffDashboard() {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
+  const [reminders, setReminders] = useState({
+  upcomingFollowUps: [],
+  upcomingVaccines: [],
+});
 
   const [stats, setStats] = useState({
     totalPatients: 0,
@@ -29,6 +33,9 @@ function StaffDashboard() {
       .then((res) => res.json())
       .then((data) => setStats(data));
   }, []);
+  fetch("http://localhost:5000/api/reminders")
+  .then((res) => res.json())
+  .then((data) => setReminders(data));
 
   return (
     <div className="layout">
@@ -55,6 +62,63 @@ function StaffDashboard() {
         <h1 className="page-title">Clinic Staff Dashboard</h1>
 
         <div className="dashboard-grid">
+          <div className="card">
+  <h2>Upcoming Follow-ups</h2>
+
+  {reminders.upcomingFollowUps.length === 0 ? (
+    <p>No upcoming follow-ups.</p>
+  ) : (
+    reminders.upcomingFollowUps.slice(0, 5).map((item) => (
+      <div key={item._id}>
+        <p>
+          <strong>{item.patientName}</strong>
+        </p>
+
+        <p>
+          Follow-up:
+          {" "}
+          {new Date(
+            item.followUpDate
+          ).toLocaleDateString()}
+        </p>
+
+        <hr />
+      </div>
+    ))
+  )}
+</div>
+
+<div className="card">
+  <h2>Upcoming Vaccines</h2>
+
+  {reminders.upcomingVaccines.length === 0 ? (
+    <p>No upcoming vaccines.</p>
+  ) : (
+    reminders.upcomingVaccines.slice(0, 5).map((item) => (
+      <div key={item._id}>
+        <p>
+          <strong>{item.patientName}</strong>
+        </p>
+
+        <p>
+          Vaccine:
+          {" "}
+          {item.vaccineName}
+        </p>
+
+        <p>
+          Next Dose:
+          {" "}
+          {new Date(
+            item.nextDoseDate
+          ).toLocaleDateString()}
+        </p>
+
+        <hr />
+      </div>
+    ))
+  )}
+</div>
           <div className="card"><h3>Total Patients</h3><h2>{stats.totalPatients}</h2></div>
           <div className="card"><h3>Pending Appointments</h3><h2>{stats.pendingAppointments}</h2></div>
           <div className="card"><h3>Current Queue</h3><h2>{stats.currentQueue}</h2></div>
