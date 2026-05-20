@@ -57,6 +57,10 @@ function CreateConsultation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!queueItem._id || !form.patientId) {
+    alert("No queue item selected");
+    return;
+  }
 
     const res = await fetch(
       "http://localhost:5000/api/records",

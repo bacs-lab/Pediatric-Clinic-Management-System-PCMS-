@@ -6,7 +6,11 @@ function QueueList() {
   const [queue, setQueue] = useState([]);
 
   const fetchQueue = () => {
-    fetch("http://localhost:5000/api/queue")
+    fetch("http://localhost:5000/api/queue", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setQueue(data))
       .catch((err) => console.log(err));
@@ -19,7 +23,10 @@ function QueueList() {
   const updateStatus = async (id, status) => {
     const res = await fetch(`http://localhost:5000/api/queue/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
       body: JSON.stringify({ status }),
     });
 

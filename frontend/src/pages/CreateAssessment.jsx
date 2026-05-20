@@ -6,6 +6,7 @@ function CreateAssessment() {
   const location = useLocation();
 
   const queueItem = location.state;
+  const token = localStorage.getItem("token");
 
   const [form, setForm] = useState({
     queueId: queueItem?._id || "",
@@ -31,8 +32,9 @@ function CreateAssessment() {
     const res = await fetch("http://localhost:5000/api/assessments", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-      },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
       body: JSON.stringify(form),
     });
 

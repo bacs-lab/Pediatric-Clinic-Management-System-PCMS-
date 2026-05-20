@@ -1,10 +1,15 @@
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
 
 const Queue = require("../models/Queue");
 
 // CREATE queue entry
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary", "nurse"),
+  async (req, res) => {
   try {
     const count = await Queue.countDocuments();
 
@@ -20,7 +25,11 @@ router.post("/", async (req, res) => {
 });
 
 // GET all queue entries
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "doctor", "nurse", "secretary"),
+  async (req, res) => {
   try {
     const queue = await Queue.find().sort({ queueNumber: 1 });
     res.json(queue);
@@ -30,7 +39,11 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE queue status
-router.put("/:id", async (req, res) => {
+router.put(
+  "/:id",
+  protect,
+  allowRoles("staff", "admin", "doctor", "nurse", "secretary"),
+  async (req, res) => {
   try {
     const updatedQueue = await Queue.findByIdAndUpdate(
       req.params.id,

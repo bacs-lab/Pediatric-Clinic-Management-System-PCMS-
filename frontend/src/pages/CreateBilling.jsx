@@ -5,6 +5,7 @@ function CreateBilling() {
   const navigate = useNavigate();
   const location = useLocation();
   const queueItem = location.state;
+  const token = localStorage.getItem("token");
 
   const [form, setForm] = useState({
     queueId: queueItem?._id || "",
@@ -34,8 +35,9 @@ function CreateBilling() {
     const res = await fetch("http://localhost:5000/api/billings", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-      },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
       body: JSON.stringify(form),
     });
 
