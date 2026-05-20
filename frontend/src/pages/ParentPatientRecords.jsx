@@ -8,11 +8,17 @@ function ParentPatientRecords() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/records/patient/${patientId}`)
-      .then((res) => res.json())
-      .then((data) => setRecords(data))
-      .catch((err) => console.log(err));
-  }, []);
+  const token = localStorage.getItem("token");
+
+  fetch(`http://localhost:5000/api/records/patient/${patientId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setRecords(data))
+    .catch((err) => console.log(err));
+}, [patientId]);
 
   return (
     <div className="layout">

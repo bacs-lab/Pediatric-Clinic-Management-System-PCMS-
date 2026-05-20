@@ -19,7 +19,11 @@ function EditRecord() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/records/${id}`)
+    fetch(`http://localhost:5000/api/records/${id}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => {
         setForm({
@@ -47,7 +51,10 @@ function EditRecord() {
 
     const res = await fetch(`http://localhost:5000/api/records/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
       body: JSON.stringify(form),
     });
 

@@ -5,7 +5,9 @@ function CreateConsultation() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const queueItem = location.state;
+  const queueItem = location.state || {};
+  const token = localStorage.getItem("token");
+
 
   const [assessment, setAssessment] = useState(null);
 
@@ -23,9 +25,15 @@ function CreateConsultation() {
   });
 
   useEffect(() => {
+      if (!queueItem.patientId) return;
     fetch(
-      `http://localhost:5000/api/assessments/patient/${queueItem.patientId}`
-    )
+  `http://localhost:5000/api/assessments/patient/${queueItem.patientId}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+)
       .then((res) => res.json())
       .then((data) => {
         if (data.length > 0) {
@@ -38,7 +46,7 @@ function CreateConsultation() {
         }
       })
       .catch((err) => console.log(err));
-  }, []);
+  }, [queueItem.patientId, token]);
 
   const handleChange = (e) => {
     setForm({
@@ -55,8 +63,9 @@ function CreateConsultation() {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-        },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
         body: JSON.stringify(form),
       }
     );
@@ -67,8 +76,9 @@ function CreateConsultation() {
         {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
-          },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
           body: JSON.stringify({
             status: "For Billing",
           }),

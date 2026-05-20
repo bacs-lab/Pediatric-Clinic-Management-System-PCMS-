@@ -5,8 +5,13 @@ const MedicalRecord = require("../models/MedicalRecord");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
 
 
+
 // CREATE medical record
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("staff", "doctor", "nurse", "admin"),
+  async (req, res) => {
   try {
     const newRecord = new MedicalRecord(req.body);
 
@@ -20,7 +25,11 @@ router.post("/", async (req, res) => {
 
 
 // GET all medical records
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "doctor", "nurse", "admin"),
+  async (req, res) => {
   try {
     const records = await MedicalRecord.find();
 
@@ -30,7 +39,11 @@ router.get("/", async (req, res) => {
   }
 });
 // GET records by patient
-router.get("/patient/:patientId", async (req, res) => {
+router.get(
+  "/patient/:patientId",
+  protect,
+  allowRoles("staff", "doctor", "nurse", "admin", "parent"),
+  async (req, res) => {
   try {
     const records = await MedicalRecord.find({
       patientId: req.params.patientId,
@@ -43,7 +56,11 @@ router.get("/patient/:patientId", async (req, res) => {
 });
 
 // GET one medical record
-router.get("/:id", async (req, res) => {
+router.get(
+  "/:id",
+  protect,
+  allowRoles("staff", "doctor", "nurse", "admin", "parent"),
+  async (req, res) => {
   try {
     const record = await MedicalRecord.findById(req.params.id);
 
@@ -57,7 +74,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 // UPDATE medical record
-router.put("/:id", async (req, res) => {
+router.put(
+  "/:id",
+  protect,
+  allowRoles("staff", "doctor", "admin"),
+  async (req, res) => {
   try {
     const updatedRecord = await MedicalRecord.findByIdAndUpdate(
       req.params.id,
@@ -75,7 +96,11 @@ router.put("/:id", async (req, res) => {
   }
 });
 // DELETE medical record
-router.delete("/:id", async (req, res) => {
+router.delete(
+  "/:id",
+  protect,
+  allowRoles("admin"),
+  async (req, res) => {
   try {
     const deletedRecord = await MedicalRecord.findByIdAndDelete(req.params.id);
 

@@ -26,6 +26,8 @@ import VaccineList from "./pages/VaccineList";
 import CreateVaccineRecord from "./pages/CreateVaccineRecord";
 import ParentVaccines from "./pages/ParentVaccines";
 
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -35,7 +37,7 @@ function App() {
         <Route
           path="/staff/dashboard"
           element={
-            <ProtectedRoute allowedRole="staff">
+            <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
               <StaffDashboard />
             </ProtectedRoute>
           }
@@ -53,7 +55,7 @@ function App() {
         <Route
   path="/staff/create-record"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateRecord />
     </ProtectedRoute>
   }
@@ -61,7 +63,7 @@ function App() {
 <Route
   path="/staff/create-parent"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateParent />
     </ProtectedRoute>
   }
@@ -69,7 +71,7 @@ function App() {
 <Route
   path="/staff/parents"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <ParentList />
     </ProtectedRoute>
   }
@@ -77,7 +79,7 @@ function App() {
 <Route
   path="/staff/create-patient"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreatePatient />
     </ProtectedRoute>
   }
@@ -85,7 +87,7 @@ function App() {
 <Route
   path="/staff/patients"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <PatientList />
     </ProtectedRoute>
   }
@@ -101,7 +103,7 @@ function App() {
 <Route
   path="/staff/appointments"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <AppointmentList />
     </ProtectedRoute>
   }
@@ -117,7 +119,7 @@ function App() {
 <Route
   path="/staff/queue"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <QueueList />
     </ProtectedRoute>
   }
@@ -125,7 +127,7 @@ function App() {
 <Route
   path="/staff/create-assessment"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateAssessment />
     </ProtectedRoute>
   }
@@ -133,7 +135,7 @@ function App() {
 <Route
   path="/staff/create-consultation"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateConsultation />
     </ProtectedRoute>
   }
@@ -141,7 +143,7 @@ function App() {
 <Route
   path="/staff/create-billing"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateBilling />
     </ProtectedRoute>
   }
@@ -149,7 +151,7 @@ function App() {
 <Route
   path="/staff/billings"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <BillingList />
     </ProtectedRoute>
   }
@@ -165,7 +167,7 @@ function App() {
 <Route
   path="/staff/inventory"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <InventoryList />
     </ProtectedRoute>
   }
@@ -173,7 +175,7 @@ function App() {
 <Route
   path="/staff/create-inventory"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateInventoryItem />
     </ProtectedRoute>
   }
@@ -181,7 +183,7 @@ function App() {
 <Route
   path="/staff/vaccines"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <VaccineList />
     </ProtectedRoute>
   }
@@ -190,7 +192,7 @@ function App() {
 <Route
   path="/staff/create-vaccine"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <CreateVaccineRecord />
     </ProtectedRoute>
   }
@@ -210,7 +212,7 @@ function App() {
 <Route
   path="/staff/records/:id/edit"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <EditRecord />
     </ProtectedRoute>
   }
@@ -218,7 +220,7 @@ function App() {
 <Route
   path="/staff/records/:id"
   element={
-    <ProtectedRoute allowedRole="staff">
+    <ProtectedRoute allowedRoles={["staff", "admin", "doctor", "nurse", "secretary"]}>
       <RecordDetails />
     </ProtectedRoute>
   }

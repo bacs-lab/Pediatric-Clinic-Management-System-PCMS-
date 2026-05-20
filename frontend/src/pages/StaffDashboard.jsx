@@ -25,17 +25,33 @@ function StaffDashboard() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/records")
-      .then((res) => res.json())
-      .then((data) => setRecords(data));
+  const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5000/api/dashboard/stats")
-      .then((res) => res.json())
-      .then((data) => setStats(data));
-  }, []);
-  fetch("http://localhost:5000/api/reminders")
-  .then((res) => res.json())
-  .then((data) => setReminders(data));
+  fetch("http://localhost:5000/api/records", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setRecords(data));
+
+  fetch("http://localhost:5000/api/dashboard/stats", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setStats(data));
+
+  fetch("http://localhost:5000/api/reminders", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setReminders(data));
+}, []);
+
 
   return (
     <div className="layout">

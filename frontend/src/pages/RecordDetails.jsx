@@ -7,7 +7,11 @@ function RecordDetails() {
   const [record, setRecord] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/records/${id}`)
+    fetch(`http://localhost:5000/api/records/${id}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setRecord(data))
       .catch((err) => console.log(err));
@@ -21,8 +25,11 @@ function RecordDetails() {
     if (!confirmDelete) return;
 
     const res = await fetch(`http://localhost:5000/api/records/${id}`, {
-      method: "DELETE",
-    });
+  method: "DELETE",
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 
     if (res.ok) {
       alert("Medical record deleted!");
@@ -54,13 +61,7 @@ function RecordDetails() {
 
       <div className="main-content">
         <h1 className="page-title">Medical Record Details</h1>
-        <button
-  className="primary-btn"
-  onClick={() => window.print()}
-  style={{ marginBottom: "20px" }}
->
-  Print Record
-</button>
+        
 
         <div className="card">
           <h2>{record.patientName}</h2>

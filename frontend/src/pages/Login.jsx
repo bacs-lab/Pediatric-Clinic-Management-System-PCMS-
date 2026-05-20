@@ -37,11 +37,11 @@ function Login() {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    if (data.user.role === "staff") {
-      navigate("/staff/dashboard");
-    } else {
-      navigate("/parent/dashboard");
-    }
+    if (data.user.role === "parent") {
+  navigate("/parent/dashboard");
+} else {
+  navigate("/staff/dashboard");
+}
   };
 
   return (
