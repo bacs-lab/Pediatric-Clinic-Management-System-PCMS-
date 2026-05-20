@@ -149,3 +149,43 @@ form {
   font-size: 32px;
   color: #2563eb;
 }
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .sidebar,
+  button {
+    display: none !important;
+  }
+
+  .layout {
+    display: block;
+  }
+
+  .main-content {
+    padding: 0;
+  }
+
+  .card {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  table {
+    border: 1px solid black;
+  }
+
+  table th,
+  table td {
+    border: 1px solid black;
+  }
+}

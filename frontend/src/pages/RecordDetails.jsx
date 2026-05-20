@@ -54,6 +54,13 @@ function RecordDetails() {
 
       <div className="main-content">
         <h1 className="page-title">Medical Record Details</h1>
+        <button
+  className="primary-btn"
+  onClick={() => window.print()}
+  style={{ marginBottom: "20px" }}
+>
+  Print Record
+</button>
 
         <div className="card">
           <h2>{record.patientName}</h2>

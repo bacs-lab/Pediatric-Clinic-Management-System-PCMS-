@@ -4,12 +4,25 @@ import { useNavigate } from "react-router-dom";
 function InventoryList() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [search, setSearch] = useState("");
+  const [showLowStock, setShowLowStock] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/inventory")
       .then((res) => res.json())
       .then((data) => setItems(data));
   }, []);
+  const filteredItems = items.filter((item) => {
+  const matchesSearch = item.itemName
+    .toLowerCase()
+    .includes(search.toLowerCase());
+
+  const matchesLowStock = showLowStock
+    ? item.stockQuantity <= item.lowStockLevel
+    : true;
+
+  return matchesSearch && matchesLowStock;
+});
 
   return (
     <div className="layout">
@@ -23,6 +36,37 @@ function InventoryList() {
 
       <div className="main-content">
         <h1 className="page-title">Inventory</h1>
+
+        <div
+  style={{
+    display: "flex",
+    gap: "20px",
+    marginBottom: "20px",
+    alignItems: "center",
+  }}
+>
+  <input
+    type="text"
+    placeholder="Search inventory..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    style={{
+      padding: "10px",
+      width: "300px",
+    }}
+  />
+
+  <label>
+    <input
+      type="checkbox"
+      checked={showLowStock}
+      onChange={() =>
+        setShowLowStock(!showLowStock)
+      }
+    />
+    {" "}Show Low Stock Only
+  </label>
+</div>
 
         <div className="table-container">
           <table>
@@ -39,7 +83,7 @@ function InventoryList() {
             </thead>
 
             <tbody>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <tr key={item._id}>
                   <td>{item.itemName}</td>
                   <td>{item.category}</td>
