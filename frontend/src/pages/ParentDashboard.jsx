@@ -14,11 +14,15 @@ function ParentDashboard() {
   };
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/patients/guardian/${user.id}`)
-      .then((res) => res.json())
-      .then((data) => setPatients(data))
-      .catch((err) => console.log(err));
-  }, []);
+  fetch(`http://localhost:5000/api/patients/guardian/${user.id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setPatients(data))
+    .catch((err) => console.log(err));
+}, []);
 
   return (
     <div className="layout">

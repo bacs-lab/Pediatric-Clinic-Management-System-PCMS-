@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 function CreateVaccineRecord() {
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+
   const [patients, setPatients] = useState([]);
   const [vaccines, setVaccines] = useState([]);
 
@@ -20,11 +22,19 @@ function CreateVaccineRecord() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients")
+    fetch("http://localhost:5000/api/patients", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setPatients(data));
 
-    fetch("http://localhost:5000/api/inventory")
+    fetch("http://localhost:5000/api/inventory", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         const vaccineItems = data.filter(
@@ -33,7 +43,7 @@ function CreateVaccineRecord() {
 
         setVaccines(vaccineItems);
       });
-  }, []);
+  }, [token]);
 
   const handlePatientSelect = (e) => {
     const patient = patients.find((p) => p._id === e.target.value);
@@ -83,6 +93,7 @@ function CreateVaccineRecord() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(form),
     });
@@ -194,7 +205,7 @@ function CreateVaccineRecord() {
         </form>
       </div>
     </div>
-  );
+  );  
 }
 
 export default CreateVaccineRecord;

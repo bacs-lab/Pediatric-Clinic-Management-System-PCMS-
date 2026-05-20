@@ -7,11 +7,16 @@ function PatientList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients")
-      .then((res) => res.json())
-      .then((data) => setPatients(data));
-  }, []);
-  const filteredPatients = patients.filter((patient) =>
+  fetch("http://localhost:5000/api/patients", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setPatients(data));
+}, []);
+
+const filteredPatients = patients.filter((patient) =>
   `${patient.firstName} ${patient.lastName}`
     .toLowerCase()
     .includes(search.toLowerCase())

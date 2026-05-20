@@ -5,6 +5,7 @@ function CreateAppointment() {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
   const [patients, setPatients] = useState([]);
 
@@ -19,11 +20,15 @@ function CreateAppointment() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/patients/guardian/${user.id}`)
+    fetch(`http://localhost:5000/api/patients/guardian/${user.id}`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setPatients(data))
       .catch((err) => console.log(err));
-  }, []);
+  }, [user.id, token]);
 
   const handlePatientSelect = (e) => {
     const selectedPatient = patients.find(
@@ -55,8 +60,9 @@ function CreateAppointment() {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-        },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
         body: JSON.stringify(form),
       }
     );

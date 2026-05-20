@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const Patient = require("../models/Patient");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 
 // CREATE patient
-router.post("/", async (req, res) => {
+router.post("/", protect, allowRoles("staff", "admin", "secretary", "nurse"), async (req, res) => {
   try {
     const patient = await Patient.create(req.body);
     res.status(201).json(patient);
@@ -14,7 +15,7 @@ router.post("/", async (req, res) => {
 });
 
 // GET all patients
-router.get("/", async (req, res) => {
+router.get("/", protect, allowRoles("staff", "admin", "secretary", "nurse", "doctor"), async (req, res) => {
   try {
     const patients = await Patient.find();
     res.json(patients);
@@ -24,7 +25,7 @@ router.get("/", async (req, res) => {
 });
 
 // GET patients by guardian/parent
-router.get("/guardian/:guardianId", async (req, res) => {
+router.get("/guardian/:guardianId", protect, allowRoles("parent", "staff", "admin"), async (req, res) => {
   try {
     const patients = await Patient.find({
       guardianId: req.params.guardianId,

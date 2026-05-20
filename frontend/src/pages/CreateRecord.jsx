@@ -5,6 +5,7 @@ function CreateRecord() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedPatientId = searchParams.get("patientId");
+  const token = localStorage.getItem("token");
 
   const [patients, setPatients] = useState([]);
 
@@ -23,7 +24,12 @@ function CreateRecord() {
   });
 
   useEffect(() => {
-  fetch("http://localhost:5000/api/patients")
+  fetch("http://localhost:5000/api/patients", {
+  headers: {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
+})
     .then((res) => res.json())
     .then((data) => {
       setPatients(data);
@@ -47,7 +53,7 @@ function CreateRecord() {
       }
     })
     .catch((err) => console.log(err));
-}, [selectedPatientId]);
+}, [selectedPatientId, token]);
 
   const calculateAge = (birthDate) => {
     const birth = new Date(birthDate);

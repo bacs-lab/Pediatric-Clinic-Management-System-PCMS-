@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const MedicalRecord = require("../models/MedicalRecord");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 
 
 // CREATE medical record

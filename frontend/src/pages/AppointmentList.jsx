@@ -7,7 +7,11 @@ function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
 
   const fetchAppointments = () => {
-    fetch("http://localhost:5000/api/appointments")
+    fetch("http://localhost:5000/api/appointments", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setAppointments(data))
       .catch((err) => console.log(err));
@@ -23,8 +27,9 @@ function AppointmentList() {
       {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-        },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
         body: JSON.stringify({ status }),
       }
     );
@@ -39,8 +44,9 @@ function AppointmentList() {
   const res = await fetch("http://localhost:5000/api/queue", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-    },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+},
     body: JSON.stringify({
       appointmentId: appointment._id,
       patientId: appointment.patientId,

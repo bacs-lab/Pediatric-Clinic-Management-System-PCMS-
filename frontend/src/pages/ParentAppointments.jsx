@@ -4,14 +4,19 @@ import { useNavigate } from "react-router-dom";
 function ParentAppointments() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/appointments/guardian/${user.id}`)
-      .then((res) => res.json())
-      .then((data) => setAppointments(data))
-      .catch((err) => console.log(err));
-  }, []);
+  fetch(`http://localhost:5000/api/appointments/guardian/${user.id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setAppointments(data))
+    .catch((err) => console.log(err));
+}, [user.id, token]);
 
   return (
     <div className="layout">

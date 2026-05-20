@@ -2,9 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const Appointment = require("../models/Appointment");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 
 // CREATE appointment
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("parent", "staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const appointment = await Appointment.create(req.body);
     res.status(201).json(appointment);
@@ -14,7 +19,11 @@ router.post("/", async (req, res) => {
 });
 
 // GET all appointments
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary", "nurse", "doctor"),
+  async (req, res) => {
   try {
     const appointments = await Appointment.find().sort({
       appointmentDate: 1,
@@ -27,7 +36,11 @@ router.get("/", async (req, res) => {
 });
 
 // GET appointments by guardian
-router.get("/guardian/:guardianId", async (req, res) => {
+router.get(
+  "/guardian/:guardianId",
+  protect,
+  allowRoles("parent", "staff", "admin"),
+  async (req, res) => {
   try {
     const appointments = await Appointment.find({
       guardianId: req.params.guardianId,
@@ -40,7 +53,11 @@ router.get("/guardian/:guardianId", async (req, res) => {
 });
 
 // UPDATE appointment status/details
-router.put("/:id", async (req, res) => {
+router.put(
+  "/:id",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       req.params.id,
