@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function QueueList() {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ function QueueList() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">CLINIC PATIENT FLOW</p>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function StaffDashboard() {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ function StaffDashboard() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PEDIATRIC CLINIC MANAGEMENT</p>

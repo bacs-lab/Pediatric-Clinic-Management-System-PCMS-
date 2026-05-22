@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/authFetch";
+import Topbar from "../components/Topbar";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -40,6 +41,7 @@ const filteredPatients = patients.filter((patient) =>
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Patients</h1>
         <input
   type="text"

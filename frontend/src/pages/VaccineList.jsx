@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function VaccineList() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ function VaccineList() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PEDIATRIC IMMUNIZATION</p>

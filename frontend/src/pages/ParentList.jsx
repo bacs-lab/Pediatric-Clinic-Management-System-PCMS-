@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/authFetch";
+import Topbar from "../components/Topbar";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -34,6 +35,7 @@ function PatientList() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PATIENT MANAGEMENT</p>
