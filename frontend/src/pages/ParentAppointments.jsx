@@ -8,20 +8,21 @@ function ParentAppointments() {
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-  fetch(`http://localhost:5000/api/appointments/guardian/${user.id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setAppointments(data))
-    .catch((err) => console.log(err));
-}, [user.id, token]);
+    fetch(`http://localhost:5000/api/appointments/guardian/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setAppointments(data))
+      .catch((err) => console.log(err));
+  }, [user.id, token]);
 
   return (
     <div className="layout">
       <div className="sidebar">
-        <h2>Parent Portal</h2>
+        <h2>KIDS FIRST</h2>
+
         <ul>
           <li><button onClick={() => navigate("/parent/dashboard")}>Dashboard</button></li>
           <li><button onClick={() => navigate("/parent/create-appointment")}>Request Appointment</button></li>
@@ -29,33 +30,65 @@ function ParentAppointments() {
         </ul>
       </div>
 
-      <div className="main-content">
-        <h1 className="page-title">My Appointments</h1>
+      <div className="main-content dashboard-bg">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">PARENT APPOINTMENTS</p>
+            <h1>My Appointments</h1>
+            <span>Track appointment requests and clinic approval status.</span>
+          </div>
 
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Reason</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+          <button
+            className="primary-btn"
+            onClick={() => navigate("/parent/create-appointment")}
+          >
+            + Request Appointment
+          </button>
+        </div>
 
-            <tbody>
-              {appointments.map((appointment) => (
-                <tr key={appointment._id}>
-                  <td>{appointment.patientName}</td>
-                  <td>{new Date(appointment.appointmentDate).toLocaleDateString()}</td>
-                  <td>{appointment.appointmentTime}</td>
-                  <td>{appointment.reason}</td>
-                  <td>{appointment.status}</td>
+        <div className="panel">
+          <div className="panel-header">
+            <h2>Appointment Schedule</h2>
+            <span style={{ color: "#64748b" }}>
+              {appointments.length} appointment(s)
+            </span>
+          </div>
+
+          <div className="table-container flat">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {appointments.length === 0 ? (
+                  <tr>
+                    <td colSpan="5">No appointments found.</td>
+                  </tr>
+                ) : (
+                  appointments.map((appointment) => (
+                    <tr key={appointment._id}>
+                      <td><strong>{appointment.patientName}</strong></td>
+                      <td>{new Date(appointment.appointmentDate).toLocaleDateString()}</td>
+                      <td>{appointment.appointmentTime}</td>
+                      <td>{appointment.reason}</td>
+                      <td>
+                        <span className={`status-badge ${appointment.status.toLowerCase()}`}>
+                          {appointment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
