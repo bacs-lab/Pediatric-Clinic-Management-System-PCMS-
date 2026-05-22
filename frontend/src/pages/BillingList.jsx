@@ -6,11 +6,15 @@ function BillingList() {
   const [billings, setBillings] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/billings")
-      .then((res) => res.json())
-      .then((data) => setBillings(data))
-      .catch((err) => console.log(err));
-  }, []);
+  fetch("http://localhost:5000/api/billings", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setBillings(data))
+    .catch((err) => console.log(err));
+}, []);
 
   return (
     <div className="layout">

@@ -2,9 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const InventoryItem = require("../models/InventoryItem");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 
 // CREATE item
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const item = await InventoryItem.create(req.body);
     res.status(201).json(item);
@@ -14,7 +19,11 @@ router.post("/", async (req, res) => {
 });
 
 // GET all items
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary", "nurse", "doctor"),
+  async (req, res) => {
   try {
     const items = await InventoryItem.find().sort({ createdAt: -1 });
     res.json(items);
@@ -24,7 +33,11 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE item
-router.put("/:id", async (req, res) => {
+router.put(
+  "/:id",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const updatedItem = await InventoryItem.findByIdAndUpdate(
       req.params.id,

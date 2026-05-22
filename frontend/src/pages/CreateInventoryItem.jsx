@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function CreateInventoryItem() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const [form, setForm] = useState({
     itemName: "",
@@ -25,8 +26,9 @@ function CreateInventoryItem() {
     const res = await fetch("http://localhost:5000/api/inventory", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-      },
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+},
       body: JSON.stringify(form),
     });
 

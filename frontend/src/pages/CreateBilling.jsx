@@ -31,6 +31,10 @@ function CreateBilling() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!queueItem || !form.queueId) {
+  alert("No queue item selected");
+  return;
+}
 
     const res = await fetch("http://localhost:5000/api/billings", {
       method: "POST",

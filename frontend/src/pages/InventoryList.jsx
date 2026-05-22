@@ -8,10 +8,14 @@ function InventoryList() {
   const [showLowStock, setShowLowStock] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/inventory")
-      .then((res) => res.json())
-      .then((data) => setItems(data));
-  }, []);
+  fetch("http://localhost:5000/api/inventory", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setItems(data));
+}, []);
   const filteredItems = items.filter((item) => {
   const matchesSearch = item.itemName
     .toLowerCase()

@@ -6,7 +6,11 @@ function VaccineList() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/vaccines")
+    fetch("http://localhost:5000/api/vaccines", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setRecords(data));
   }, []);

@@ -6,7 +6,11 @@ const Assessment = require("../models/Assessment");
 const Queue = require("../models/Queue");
 
 // CREATE assessment
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "nurse", "doctor"),
+  async (req, res) => {
   try {
     const assessment = await Assessment.create(req.body);
 
@@ -21,7 +25,11 @@ router.post("/", async (req, res) => {
 });
 
 // GET all assessments
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "nurse", "doctor"),
+  async (req, res) => {
   try {
     const assessments = await Assessment.find().sort({ createdAt: -1 });
     res.json(assessments);
@@ -31,7 +39,11 @@ router.get("/", async (req, res) => {
 });
 
 // GET assessment by patient
-router.get("/patient/:patientId", async (req, res) => {
+router.get(
+  "/patient/:patientId",
+  protect,
+  allowRoles("staff", "admin", "nurse", "doctor", "parent"),
+  async (req, res) => {
   try {
     const assessments = await Assessment.find({
       patientId: req.params.patientId,

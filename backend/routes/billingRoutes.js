@@ -1,3 +1,4 @@
+const { protect, allowRoles } = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
 
@@ -6,7 +7,11 @@ const Queue = require("../models/Queue");
 
 
 // CREATE billing
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const totalAmount =
       Number(req.body.consultationFee || 0) +
@@ -33,7 +38,11 @@ router.post("/", async (req, res) => {
 
 
 // GET all billings
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const billings = await Billing.find().sort({
       createdAt: -1,
@@ -47,7 +56,11 @@ router.get("/", async (req, res) => {
   }
 });
 // GET billing by patient
-router.get("/patient/:patientId", async (req, res) => {
+router.get(
+  "/patient/:patientId",
+  protect,
+  allowRoles("parent", "staff", "admin", "secretary"),
+  async (req, res) => {
   try {
     const billings = await Billing.find({
       patientId: req.params.patientId,

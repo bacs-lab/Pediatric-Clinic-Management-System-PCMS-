@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+
 function ParentVaccines() {
   const navigate = useNavigate();
   const { patientId } = useParams();
   const [records, setRecords] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/vaccines/patient/${patientId}`)
-      .then((res) => res.json())
-      .then((data) => setRecords(data));
-  }, []);
+  fetch(`http://localhost:5000/api/vaccines/patient/${patientId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setRecords(data));
+}, [patientId, token]);
 
   return (
     <div className="layout">
