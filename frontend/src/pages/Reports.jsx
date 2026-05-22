@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 function Reports() {
   const navigate = useNavigate();
-
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
@@ -22,75 +21,71 @@ function Reports() {
   return (
     <div className="layout">
       <div className="sidebar">
-        <h2>PCMS Staff</h2>
+        <h2>KIDS FIRST</h2>
 
         <ul>
-          <li>
-            <button onClick={() => navigate("/staff/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => window.print()}>
-              Print Report
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>Back</button>
-          </li>
+          <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
+          <li><button onClick={() => window.print()}>Print Report</button></li>
+          <li><button onClick={() => navigate(-1)}>Back</button></li>
         </ul>
       </div>
 
-      <div className="main-content">
-        <h1 className="page-title">Reports Summary</h1>
-
-        <div className="dashboard-grid">
-          <div className="card">
-            <h3>Total Patients</h3>
-            <h2>{summary.totalPatients}</h2>
+      <div className="main-content dashboard-bg">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">CLINIC PERFORMANCE</p>
+            <h1>Reports Summary</h1>
+            <span>Overview of patients, appointments, revenue, vaccines, and inventory alerts.</span>
           </div>
 
-          <div className="card">
-            <h3>Total Appointments</h3>
-            <h2>{summary.totalAppointments}</h2>
-          </div>
-
-          <div className="card">
-            <h3>Completed Appointments</h3>
-            <h2>{summary.completedAppointments}</h2>
-          </div>
-
-          <div className="card">
-            <h3>Total Revenue</h3>
-            <h2>₱{summary.totalRevenue}</h2>
-          </div>
-
-          <div className="card">
-            <h3>Vaccine Records</h3>
-            <h2>{summary.vaccineRecords}</h2>
-          </div>
-
-          <div className="card">
-            <h3>Low Stock Items</h3>
-            <h2>{summary.lowStockItems.length}</h2>
-          </div>
+          <button className="primary-btn" onClick={() => window.print()}>
+            Print Report
+          </button>
         </div>
 
-        <div className="card">
-          <h2>Low Stock Inventory Items</h2>
+        <div className="stats-row">
+          <div className="metric-card blue"><p>Total Patients</p><h2>{summary.totalPatients}</h2></div>
+          <div className="metric-card cyan"><p>Total Appointments</p><h2>{summary.totalAppointments}</h2></div>
+          <div className="metric-card teal"><p>Completed Appointments</p><h2>{summary.completedAppointments}</h2></div>
+          <div className="metric-card yellow"><p>Total Revenue</p><h2>₱{summary.totalRevenue}</h2></div>
+          <div className="metric-card green"><p>Vaccine Records</p><h2>{summary.vaccineRecords}</h2></div>
+          <div className="metric-card red"><p>Low Stock Items</p><h2>{summary.lowStockItems.length}</h2></div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <h2>Low Stock Inventory Items</h2>
+            <span style={{ color: "#64748b" }}>
+              {summary.lowStockItems.length} item(s)
+            </span>
+          </div>
 
           {summary.lowStockItems.length === 0 ? (
             <p>No low stock items.</p>
           ) : (
-            <ul>
-              {summary.lowStockItems.map((item) => (
-                <li key={item._id}>
-                  {item.itemName} — Stock: {item.stockQuantity}
-                </li>
-              ))}
-            </ul>
+            <div className="table-container flat">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Low Stock Level</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {summary.lowStockItems.map((item) => (
+                    <tr key={item._id}>
+                      <td><strong>{item.itemName}</strong></td>
+                      <td>{item.category}</td>
+                      <td>{item.stockQuantity}</td>
+                      <td>{item.lowStockLevel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

@@ -503,3 +503,15 @@ form {
   background: #fef3c7;
   color: #92400e;
 }
+
+
+/* vaccinelists */
+.status-badge.upcoming {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.missed {
+  background: #fee2e2;
+  color: #991b1b;
+}
