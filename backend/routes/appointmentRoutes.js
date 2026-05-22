@@ -10,13 +10,28 @@ router.post(
   protect,
   allowRoles("parent", "staff", "admin", "secretary"),
   async (req, res) => {
-  try {
-    const appointment = await Appointment.create(req.body);
-    res.status(201).json(appointment);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    try {
+      const existingAppointment = await Appointment.findOne({
+        patientId: req.body.patientId,
+        appointmentDate: req.body.appointmentDate,
+        appointmentTime: req.body.appointmentTime,
+        status: { $ne: "Cancelled" },
+      });
+
+      if (existingAppointment) {
+        return res.status(400).json({
+          message: "This patient already has an appointment at this schedule",
+        });
+      }
+
+      const appointment = await Appointment.create(req.body);
+
+      res.status(201).json(appointment);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
 // GET all appointments
 router.get(

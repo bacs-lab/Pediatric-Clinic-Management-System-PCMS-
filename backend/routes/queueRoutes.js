@@ -10,19 +10,31 @@ router.post(
   protect,
   allowRoles("staff", "admin", "secretary", "nurse"),
   async (req, res) => {
-  try {
-    const count = await Queue.countDocuments();
+    try {
+      const existingQueue = await Queue.findOne({
+        appointmentId: req.body.appointmentId,
+        status: { $nin: ["Completed", "Cancelled"] },
+      });
 
-    const queue = await Queue.create({
-      ...req.body,
-      queueNumber: count + 1,
-    });
+      if (existingQueue) {
+        return res.status(400).json({
+          message: "This appointment is already in the queue",
+        });
+      }
 
-    res.status(201).json(queue);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+      const count = await Queue.countDocuments();
+
+      const queue = await Queue.create({
+        ...req.body,
+        queueNumber: count + 1,
+      });
+
+      res.status(201).json(queue);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
 // GET all queue entries
 router.get(

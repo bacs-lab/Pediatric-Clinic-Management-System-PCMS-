@@ -12,13 +12,26 @@ router.post(
   allowRoles("staff", "admin", "nurse", "doctor"),
   async (req, res) => {
     try {
-      const vaccineRecord = await VaccineRecord.create(req.body);
-
       if (req.body.inventoryItemId && req.body.status === "Completed") {
-        await InventoryItem.findByIdAndUpdate(req.body.inventoryItemId, {
-          $inc: { stockQuantity: -1 },
-        });
+        const item = await InventoryItem.findById(req.body.inventoryItemId);
+
+        if (!item) {
+          return res.status(404).json({
+            message: "Vaccine inventory item not found",
+          });
+        }
+
+        if (item.stockQuantity <= 0) {
+          return res.status(400).json({
+            message: "Vaccine is out of stock",
+          });
+        }
+
+        item.stockQuantity -= 1;
+        await item.save();
       }
+
+      const vaccineRecord = await VaccineRecord.create(req.body);
 
       res.status(201).json(vaccineRecord);
     } catch (error) {

@@ -55,10 +55,11 @@ function AppointmentList() {
   });
 
   if (res.ok) {
-    alert("Patient added to queue!");
-  } else {
-    alert("Failed to add patient to queue");
-  }
+  alert("Patient added to queue!");
+} else {
+  const data = await res.json();
+  alert(data.message || "Failed to add patient to queue");
+}
 };
 
   return (
