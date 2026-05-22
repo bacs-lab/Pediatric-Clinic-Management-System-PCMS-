@@ -31,8 +31,24 @@ function CreateBilling() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!queueItem || !form.queueId) {
-  alert("No queue item selected");
+    
+    if (!form.patientId || !form.queueId) {
+  alert("No patient/queue selected");
+  return;
+}
+
+if (
+  Number(form.consultationFee || 0) < 0 ||
+  Number(form.medicineFee || 0) < 0 ||
+  Number(form.vaccineFee || 0) < 0 ||
+  Number(form.otherFee || 0) < 0
+) {
+  alert("Fees cannot be negative");
+  return;
+}
+
+if (!form.paymentStatus) {
+  alert("Please select payment status");
   return;
 }
 

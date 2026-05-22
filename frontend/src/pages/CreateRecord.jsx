@@ -101,9 +101,29 @@ function CreateRecord() {
     e.preventDefault();
 
     if (!form.patientId) {
-      alert("Please select a patient first");
-      return;
-    }
+  alert("Please select a patient first");
+  return;
+}
+
+if (!form.chiefComplaint.trim()) {
+  alert("Chief complaint is required");
+  return;
+}
+
+if (!form.diagnosis.trim()) {
+  alert("Diagnosis is required");
+  return;
+}
+
+if (!form.treatment.trim()) {
+  alert("Treatment is required");
+  return;
+}
+
+if (!form.doctorName.trim()) {
+  alert("Doctor name is required");
+  return;
+}
 
     const res = await fetch("http://localhost:5000/api/records", {
       method: "POST",

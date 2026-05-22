@@ -22,6 +22,30 @@ function CreateInventoryItem() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.itemName.trim()) {
+  alert("Item name is required");
+  return;
+}
+
+if (!form.category) {
+  alert("Category is required");
+  return;
+}
+
+if (Number(form.stockQuantity) < 0) {
+  alert("Stock quantity cannot be negative");
+  return;
+}
+
+if (Number(form.price) < 0) {
+  alert("Price cannot be negative");
+  return;
+}
+
+if (Number(form.lowStockLevel) < 0) {
+  alert("Low stock level cannot be negative");
+  return;
+}
 
     const res = await fetch("http://localhost:5000/api/inventory", {
       method: "POST",

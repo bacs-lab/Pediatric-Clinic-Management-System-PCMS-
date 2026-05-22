@@ -21,7 +21,11 @@ function CreatePatient() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/parent-profiles")
+    fetch("http://localhost:5000/api/parent-profiles", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
       .then((res) => res.json())
       .then((data) => setGuardians(data))
       .catch((err) => console.log(err));
@@ -53,10 +57,40 @@ function CreatePatient() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.guardianId) {
-      alert("Please select a guardian");
-      return;
-    }
+    if (!form.firstName.trim()) {
+  alert("First name is required");
+  return;
+}
+
+if (!form.lastName.trim()) {
+  alert("Last name is required");
+  return;
+}
+
+if (!form.birthDate) {
+  alert("Birth date is required");
+  return;
+}
+
+if (!form.gender) {
+  alert("Gender is required");
+  return;
+}
+
+if (!form.guardianId) {
+  alert("Please select a guardian");
+  return;
+}
+
+if (!form.contactNumber.trim()) {
+  alert("Contact number is required");
+  return;
+}
+
+if (form.contactNumber.length < 11) {
+  alert("Contact number must be at least 11 digits");
+  return;
+}
 
     const res = await fetch("http://localhost:5000/api/patients", {
       method: "POST",

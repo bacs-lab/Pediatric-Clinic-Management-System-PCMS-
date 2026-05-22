@@ -78,16 +78,26 @@ function CreateVaccineRecord() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!form.patientId) {
-      alert("Please select a patient");
-      return;
-    }
+  alert("Please select a patient");
+  return;
+}
 
-    if (!form.inventoryItemId) {
-      alert("Please select a vaccine from inventory");
-      return;
-    }
+if (!form.inventoryItemId) {
+  alert("Please select a vaccine");
+  return;
+}
+
+if (!form.vaccineDate) {
+  alert("Please select vaccine date");
+  return;
+}
+
+if (!form.administeredBy.trim()) {
+  alert("Please enter administered by");
+  return;
+}
 
     const res = await fetch("http://localhost:5000/api/vaccines", {
       method: "POST",

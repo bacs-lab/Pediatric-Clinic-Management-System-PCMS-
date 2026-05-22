@@ -53,19 +53,39 @@ function CreateAppointment() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const res = await fetch(
-      "http://localhost:5000/api/appointments",
-      {
-        method: "POST",
-        headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-},
-        body: JSON.stringify(form),
-      }
-    );
+  if (!form.patientId) {
+    alert("Please select a child");
+    return;
+  }
+
+  if (!form.appointmentDate) {
+    alert("Please select appointment date");
+    return;
+  }
+
+  if (!form.appointmentTime) {
+    alert("Please select appointment time");
+    return;
+  }
+
+  if (!form.reason.trim()) {
+    alert("Please enter reason for appointment");
+    return;
+  }
+
+  const res = await fetch(
+    "http://localhost:5000/api/appointments",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(form),
+    }
+  );
 
     if (res.ok) {
       alert("Appointment request submitted!");
