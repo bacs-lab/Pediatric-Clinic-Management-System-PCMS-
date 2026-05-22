@@ -2,20 +2,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 body {
-  background-color: #f4f7fb;
-  color: #333;
-}
-
-a {
-  text-decoration: none;
+  background: #f4f8fb;
+  color: #1f2937;
 }
 
 button {
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .layout {
@@ -24,130 +21,173 @@ button {
 }
 
 .sidebar {
-  width: 250px;
-  background-color: #1e293b;
+  width: 260px;
+  background: linear-gradient(180deg, #1e3a8a, #2563eb);
   color: white;
-  padding: 20px;
+  padding: 24px 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
-  margin-bottom: 30px;
+  font-size: 22px;
+  margin-bottom: 25px;
+  text-align: center;
+  letter-spacing: 0.5px;
 }
 
 .sidebar ul {
   list-style: none;
 }
 
-.sidebar ul li {
-  margin-bottom: 15px;
+.sidebar li {
+  margin-bottom: 10px;
 }
 
-.sidebar ul li button {
+.sidebar button {
   width: 100%;
-  padding: 12px;
+  padding: 12px 14px;
   border: none;
-  background-color: #334155;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
   color: white;
-  border-radius: 8px;
   text-align: left;
+  font-weight: 600;
 }
 
-.sidebar ul li button:hover {
-  background-color: #475569;
+.sidebar button:hover {
+  background: white;
+  color: #1e3a8a;
+  transform: translateX(4px);
 }
 
 .main-content {
   flex: 1;
-  padding: 30px;
+  padding: 32px;
 }
 
 .page-title {
-  margin-bottom: 20px;
+  font-size: 34px;
+  color: #1e3a8a;
+  margin-bottom: 24px;
 }
 
 .card {
-  background-color: white;
-  padding: 20px;
-  border-radius: 12px;
+  background: white;
+  padding: 22px;
+  border-radius: 18px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(30, 58, 138, 0.08);
+  border-top: 5px solid #60a5fa;
+}
+
+.card h2,
+.card h3 {
+  margin-bottom: 10px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.dashboard-grid .card h3 {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.dashboard-grid .card h2 {
+  font-size: 34px;
+  color: #2563eb;
 }
 
 .table-container {
+  background: white;
+  border-radius: 18px;
   overflow-x: auto;
+  box-shadow: 0 8px 24px rgba(30, 58, 138, 0.08);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
 }
 
-table th,
-table td {
+th {
+  background: #dbeafe;
+  color: #1e3a8a;
+  padding: 16px;
+  text-align: left;
+}
+
+td {
   padding: 15px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-table th {
-  background-color: #e2e8f0;
+tbody tr:hover {
+  background: #f0f9ff;
 }
 
 .primary-btn {
-  padding: 10px 18px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 8px;
-  background-color: #2563eb;
+  border-radius: 10px;
+  background: #2563eb;
   color: white;
+  font-weight: 600;
 }
 
 .primary-btn:hover {
-  background-color: #1d4ed8;
+  background: #1e40af;
 }
 
 .danger-btn {
-  padding: 10px 18px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 8px;
-  background-color: #dc2626;
+  border-radius: 10px;
+  background: #ef4444;
   color: white;
+  font-weight: 600;
 }
 
 .danger-btn:hover {
-  background-color: #b91c1c;
+  background: #b91c1c;
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 13px;
+  margin-bottom: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px #dbeafe;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 form {
-  background-color: white;
-  padding: 20px;
-  border-radius: 12px;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.dashboard-grid .card h3 {
-  color: #64748b;
-  margin-bottom: 10px;
-}
-
-.dashboard-grid .card h2 {
-  font-size: 32px;
-  color: #2563eb;
+  background: white;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(30, 58, 138, 0.08);
 }
 
 @media print {
@@ -172,20 +212,5 @@ form {
   .card {
     box-shadow: none;
     border: none;
-    padding: 0;
-  }
-
-  .page-title {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  table {
-    border: 1px solid black;
-  }
-
-  table th,
-  table td {
-    border: 1px solid black;
   }
 }
