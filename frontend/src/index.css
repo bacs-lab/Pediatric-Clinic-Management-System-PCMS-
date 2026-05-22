@@ -515,3 +515,40 @@ form {
   background: #fee2e2;
   color: #991b1b;
 }
+
+
+/* Parent Dashboard */
+
+.child-card {
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 22px;
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.06);
+}
+
+.child-card h2 {
+  color: #1e3a8a;
+  margin-bottom: 10px;
+}
+
+.child-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 180px;
+}
+
+@media (max-width: 900px) {
+  .child-card {
+    flex-direction: column;
+  }
+
+  .child-actions {
+    width: 100%;
+  }
+}

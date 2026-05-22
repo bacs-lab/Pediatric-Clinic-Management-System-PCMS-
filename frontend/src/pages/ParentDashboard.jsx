@@ -14,107 +14,100 @@ function ParentDashboard() {
   };
 
   useEffect(() => {
-  fetch(`http://localhost:5000/api/patients/guardian/${user.id}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setPatients(data))
-    .catch((err) => console.log(err));
-}, []);
+    fetch(`http://localhost:5000/api/patients/guardian/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setPatients(data))
+      .catch((err) => console.log(err));
+  }, [user.id]);
 
   return (
     <div className="layout">
       <div className="sidebar">
-        <h2>Parent Portal</h2>
+        <h2>KIDS FIRST</h2>
 
         <ul>
-          <li>
-            <button onClick={() => navigate("/parent/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={logout}>Logout</button>
-          </li>
-          <li>
-  <button
-    onClick={() =>
-      navigate("/parent/create-appointment")
-    }
-  >
-    Request Appointment
-  </button>
-</li>
-<li>
-  <button onClick={() => navigate("/parent/appointments")}>
-    My Appointments
-  </button>
-</li>
-
+          <li><button onClick={() => navigate("/parent/dashboard")}>Dashboard</button></li>
+          <li><button onClick={() => navigate("/parent/create-appointment")}>Request Appointment</button></li>
+          <li><button onClick={() => navigate("/parent/appointments")}>My Appointments</button></li>
+          <li><button onClick={logout}>Logout</button></li>
         </ul>
-        
       </div>
 
-      <div className="main-content">
-        <h1 className="page-title">Parent Dashboard</h1>
+      <div className="main-content dashboard-bg">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">PARENT PORTAL</p>
+            <h1>Welcome, {user.name}</h1>
+            <span>View your child’s clinic records, appointments, vaccines, and billing.</span>
+          </div>
 
-        <div className="card">
-          <h2>My Children</h2>
+          <button
+            className="primary-btn"
+            onClick={() => navigate("/parent/create-appointment")}
+          >
+            + Request Appointment
+          </button>
         </div>
 
-        {patients.length === 0 ? (
-          <p>No patients found.</p>
-        ) : (
-          patients.map((patient) => (
-            <div className="card" key={patient._id}>
-              <h2>
-                {patient.firstName} {patient.lastName}
-              </h2>
+        <div className="panel">
+          <div className="panel-header">
+            <h2>My Children</h2>
+            <span style={{ color: "#64748b" }}>
+              {patients.length} child record(s)
+            </span>
+          </div>
 
-              <p>
-                <strong>Gender:</strong> {patient.gender}
-              </p>
+          {patients.length === 0 ? (
+            <p>No child records found.</p>
+          ) : (
+            patients.map((patient) => (
+              <div className="child-card" key={patient._id}>
+                <div>
+                  <h2>
+                    {patient.firstName} {patient.lastName}
+                  </h2>
 
-              <p>
-                <strong>Blood Type:</strong> {patient.bloodType}
-              </p>
+                  <p><strong>Gender:</strong> {patient.gender}</p>
+                  <p><strong>Blood Type:</strong> {patient.bloodType || "N/A"}</p>
+                  <p><strong>Allergies:</strong> {patient.allergies || "None"}</p>
+                </div>
 
-              <p>
-                <strong>Allergies:</strong> {patient.allergies}
-              </p>
+                <div className="child-actions">
+                  <button
+                    className="primary-btn"
+                    onClick={() =>
+                      navigate(`/parent/patient/${patient._id}/records`)
+                    }
+                  >
+                    Medical History
+                  </button>
 
-              <button
-                className="primary-btn"
-                onClick={() =>
-                  navigate(`/parent/patient/${patient._id}/records`)
-                }
-              >
-                View Medical History
-              </button>
-              <button
-  className="primary-btn"
-  style={{ marginLeft: "10px" }}
-  onClick={() =>
-    navigate(`/parent/patient/${patient._id}/billing`)
-  }
->
-  View Billing
-</button>
-<button
-  className="primary-btn"
-  style={{ marginLeft: "10px" }}
-  onClick={() =>
-    navigate(`/parent/patient/${patient._id}/vaccines`)
-  }
->
-  View Vaccines
-</button>
-            </div>
-          ))
-        )}
+                  <button
+                    className="primary-btn"
+                    onClick={() =>
+                      navigate(`/parent/patient/${patient._id}/billing`)
+                    }
+                  >
+                    Billing
+                  </button>
+
+                  <button
+                    className="primary-btn"
+                    onClick={() =>
+                      navigate(`/parent/patient/${patient._id}/vaccines`)
+                    }
+                  >
+                    Vaccines
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
