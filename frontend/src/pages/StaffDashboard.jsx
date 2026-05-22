@@ -5,9 +5,9 @@ function StaffDashboard() {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [reminders, setReminders] = useState({
-  upcomingFollowUps: [],
-  upcomingVaccines: [],
-});
+    upcomingFollowUps: [],
+    upcomingVaccines: [],
+  });
 
   const [stats, setStats] = useState({
     totalPatients: 0,
@@ -25,49 +25,39 @@ function StaffDashboard() {
   };
 
   useEffect(() => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  fetch("http://localhost:5000/api/records", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setRecords(data));
+    fetch("http://localhost:5000/api/records", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setRecords(data));
 
-  fetch("http://localhost:5000/api/dashboard/stats", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setStats(data));
+    fetch("http://localhost:5000/api/dashboard/stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setStats(data));
 
-  fetch("http://localhost:5000/api/reminders", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setReminders(data));
-}, []);
-
+    fetch("http://localhost:5000/api/reminders", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setReminders(data));
+  }, []);
 
   return (
     <div className="layout">
       <div className="sidebar">
-        <h2>PCMS Staff</h2>
+        <h2>KIDS FIRST</h2>
 
         <ul>
           <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate("/staff/parents")}>Guardians</button></li>
-          <li><button onClick={() => navigate("/staff/create-parent")}>Add Guardian</button></li>
           <li><button onClick={() => navigate("/staff/patients")}>Patients</button></li>
-          <li><button onClick={() => navigate("/staff/create-patient")}>Add Patient</button></li>
-          <li><button onClick={() => navigate("/staff/create-record")}>Add Record</button></li>
+          <li><button onClick={() => navigate("/staff/parents")}>Guardians</button></li>
           <li><button onClick={() => navigate("/staff/appointments")}>Appointments</button></li>
           <li><button onClick={() => navigate("/staff/queue")}>Queue</button></li>
-          <li><button onClick={() => navigate("/staff/billings")}>Billing Records</button></li>
+          <li><button onClick={() => navigate("/staff/billings")}>Billing</button></li>
           <li><button onClick={() => navigate("/staff/inventory")}>Inventory</button></li>
           <li><button onClick={() => navigate("/staff/vaccines")}>Vaccines</button></li>
           <li><button onClick={() => navigate("/staff/reports")}>Reports</button></li>
@@ -75,108 +65,132 @@ function StaffDashboard() {
         </ul>
       </div>
 
-      <div className="main-content">
-        <h1 className="page-title">Clinic Staff Dashboard</h1>
+      <div className="main-content dashboard-bg">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">PEDIATRIC CLINIC MANAGEMENT</p>
+            <h1>Dashboard</h1>
+            <span>Welcome to Kids First Clinic system overview.</span>
+          </div>
 
-        <div className="dashboard-grid">
-          <div className="card">
-  <h2>Upcoming Follow-ups</h2>
-
-  {reminders.upcomingFollowUps.length === 0 ? (
-    <p>No upcoming follow-ups.</p>
-  ) : (
-    reminders.upcomingFollowUps.slice(0, 5).map((item) => (
-      <div key={item._id}>
-        <p>
-          <strong>{item.patientName}</strong>
-        </p>
-
-        <p>
-          Follow-up:
-          {" "}
-          {new Date(
-            item.followUpDate
-          ).toLocaleDateString()}
-        </p>
-
-        <hr />
-      </div>
-    ))
-  )}
-</div>
-
-<div className="card">
-  <h2>Upcoming Vaccines</h2>
-
-  {reminders.upcomingVaccines.length === 0 ? (
-    <p>No upcoming vaccines.</p>
-  ) : (
-    reminders.upcomingVaccines.slice(0, 5).map((item) => (
-      <div key={item._id}>
-        <p>
-          <strong>{item.patientName}</strong>
-        </p>
-
-        <p>
-          Vaccine:
-          {" "}
-          {item.vaccineName}
-        </p>
-
-        <p>
-          Next Dose:
-          {" "}
-          {new Date(
-            item.nextDoseDate
-          ).toLocaleDateString()}
-        </p>
-
-        <hr />
-      </div>
-    ))
-  )}
-</div>
-          <div className="card"><h3>Total Patients</h3><h2>{stats.totalPatients}</h2></div>
-          <div className="card"><h3>Pending Appointments</h3><h2>{stats.pendingAppointments}</h2></div>
-          <div className="card"><h3>Current Queue</h3><h2>{stats.currentQueue}</h2></div>
-          <div className="card"><h3>Completed Visits</h3><h2>{stats.completedVisits}</h2></div>
-          <div className="card"><h3>Total Revenue</h3><h2>₱{stats.totalRevenue}</h2></div>
-          <div className="card"><h3>Low Stock Items</h3><h2>{stats.lowStockItems}</h2></div>
+          <button
+            className="primary-btn"
+            onClick={() => navigate("/staff/create-patient")}
+          >
+            + Add Patient
+          </button>
         </div>
 
-        <div className="card">
-          <h2>Recent Medical Records</h2>
+        <div className="stats-row">
+          <div className="metric-card blue">
+            <p>Total Patients</p>
+            <h2>{stats.totalPatients}</h2>
+          </div>
+
+          <div className="metric-card cyan">
+            <p>Pending Appointments</p>
+            <h2>{stats.pendingAppointments}</h2>
+          </div>
+
+          <div className="metric-card teal">
+            <p>Current Queue</p>
+            <h2>{stats.currentQueue}</h2>
+          </div>
+
+          <div className="metric-card green">
+            <p>Completed Visits</p>
+            <h2>{stats.completedVisits}</h2>
+          </div>
+
+          <div className="metric-card yellow">
+            <p>Total Revenue</p>
+            <h2>₱{stats.totalRevenue}</h2>
+          </div>
+
+          <div className="metric-card red">
+            <p>Low Stock Items</p>
+            <h2>{stats.lowStockItems}</h2>
+          </div>
         </div>
 
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Diagnosis</th>
-                <th>Doctor</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+        <div className="dashboard-sections">
+          <div className="panel">
+            <h2>Upcoming Follow-ups</h2>
 
-            <tbody>
-              {records.map((record) => (
-                <tr key={record._id}>
-                  <td>{record.patientName}</td>
-                  <td>{record.diagnosis}</td>
-                  <td>{record.doctorName}</td>
-                  <td>
-                    <button
-                      className="primary-btn"
-                      onClick={() => navigate(`/staff/records/${record._id}`)}
-                    >
-                      View
-                    </button>
-                  </td>
+            {reminders.upcomingFollowUps.length === 0 ? (
+              <p>No upcoming follow-ups.</p>
+            ) : (
+              reminders.upcomingFollowUps.slice(0, 5).map((item) => (
+                <div className="mini-item" key={item._id}>
+                  <strong>{item.patientName}</strong>
+                  <span>
+                    {new Date(item.followUpDate).toLocaleDateString()}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="panel">
+            <h2>Upcoming Vaccines</h2>
+
+            {reminders.upcomingVaccines.length === 0 ? (
+              <p>No upcoming vaccines.</p>
+            ) : (
+              reminders.upcomingVaccines.slice(0, 5).map((item) => (
+                <div className="mini-item" key={item._id}>
+                  <strong>{item.patientName}</strong>
+                  <span>
+                    {item.vaccineName} —{" "}
+                    {new Date(item.nextDoseDate).toLocaleDateString()}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <h2>Recent Medical Records</h2>
+            <button
+              className="primary-btn"
+              onClick={() => navigate("/staff/create-record")}
+            >
+              + Add Record
+            </button>
+          </div>
+
+          <div className="table-container flat">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Diagnosis</th>
+                  <th>Doctor</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {records.map((record) => (
+                  <tr key={record._id}>
+                    <td>{record.patientName}</td>
+                    <td>{record.diagnosis}</td>
+                    <td>{record.doctorName}</td>
+                    <td>
+                      <button
+                        className="primary-btn"
+                        onClick={() => navigate(`/staff/records/${record._id}`)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
