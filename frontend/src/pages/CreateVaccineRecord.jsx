@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateVaccineRecord() {
   const navigate = useNavigate();
@@ -136,6 +137,7 @@ if (!form.administeredBy.trim()) {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Add Vaccine Record</h1>
 
         <form onSubmit={handleSubmit}>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateParent() {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ function CreateParent() {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Create Guardian Account</h1>
 
         <form onSubmit={handleSubmit}>

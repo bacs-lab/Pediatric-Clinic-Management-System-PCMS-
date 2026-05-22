@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function ParentPatientRecords() {
   const { patientId } = useParams();
@@ -31,6 +32,7 @@ function ParentPatientRecords() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">CHILD MEDICAL RECORDS</p>

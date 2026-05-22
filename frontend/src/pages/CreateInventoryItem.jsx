@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateInventoryItem() {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ if (Number(form.lowStockLevel) < 0) {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Add Inventory Item</h1>
 
         <form onSubmit={handleSubmit}>

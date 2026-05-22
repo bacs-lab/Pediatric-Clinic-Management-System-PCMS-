@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function ParentBilling() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ function ParentBilling() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PARENT BILLING PORTAL</p>

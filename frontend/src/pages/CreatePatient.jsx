@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreatePatient() {
   const navigate = useNavigate();
@@ -129,6 +130,7 @@ if (form.contactNumber.length < 11) {
       </div>
 
       <div className="main-content">
+          <Topbar />
         <h1 className="page-title">Create Child Patient</h1>
 
         <form onSubmit={handleSubmit}>

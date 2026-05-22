@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateBilling() {
   const navigate = useNavigate();
@@ -80,6 +81,7 @@ if (!form.paymentStatus) {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Create Billing</h1>
 
         <form onSubmit={handleSubmit}>

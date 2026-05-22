@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateConsultation() {
   const navigate = useNavigate();
@@ -117,6 +118,7 @@ function CreateConsultation() {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">
           Doctor Consultation
         </h1>

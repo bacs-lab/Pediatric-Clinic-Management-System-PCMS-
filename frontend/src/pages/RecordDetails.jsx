@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function RecordDetails() {
   const { id } = useParams();
@@ -60,6 +61,7 @@ function RecordDetails() {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Medical Record Details</h1>
         
 

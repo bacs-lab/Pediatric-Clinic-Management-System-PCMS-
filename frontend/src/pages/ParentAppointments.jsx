@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function ParentAppointments() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ function ParentAppointments() {
       </div>
 
       <div className="main-content dashboard-bg">
+        <Topbar />
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PARENT APPOINTMENTS</p>

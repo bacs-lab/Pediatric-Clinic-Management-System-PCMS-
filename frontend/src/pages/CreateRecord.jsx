@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateRecord() {
   const navigate = useNavigate();
@@ -162,6 +163,7 @@ if (!form.doctorName.trim()) {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Create Medical Record</h1>
 
         <form onSubmit={handleSubmit}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateAppointment() {
   const navigate = useNavigate();
@@ -117,6 +118,7 @@ function CreateAppointment() {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">
           Request Appointment
         </h1>

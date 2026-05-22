@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 function CreateAssessment() {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ function CreateAssessment() {
       </div>
 
       <div className="main-content">
+        <Topbar />
         <h1 className="page-title">Physical Assessment</h1>
 
         <form onSubmit={handleSubmit}>
