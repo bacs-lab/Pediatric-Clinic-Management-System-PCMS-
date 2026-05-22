@@ -70,6 +70,7 @@ function StaffDashboard() {
           <li><button onClick={() => navigate("/staff/billings")}>Billing Records</button></li>
           <li><button onClick={() => navigate("/staff/inventory")}>Inventory</button></li>
           <li><button onClick={() => navigate("/staff/vaccines")}>Vaccines</button></li>
+          <li><button onClick={() => navigate("/staff/reports")}>Reports</button></li>
           <li><button onClick={logout}>Logout</button></li>
         </ul>
       </div>
