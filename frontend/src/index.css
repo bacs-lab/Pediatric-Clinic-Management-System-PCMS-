@@ -214,3 +214,56 @@ form {
     border: none;
   }
 }
+
+
+
+/* LOGIN */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  background: linear-gradient(135deg, #dbeafe, #f0fdf4);
+}
+
+.login-left {
+  flex: 1;
+  background: linear-gradient(180deg, #1e3a8a, #2563eb);
+  color: white;
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-left h1 {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.login-left p {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.login-left span {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.login-card {
+  width: 420px;
+  margin: auto 80px;
+  background: white;
+  padding: 35px;
+  border-radius: 24px;
+  box-shadow: 0 12px 35px rgba(30, 58, 138, 0.15);
+}
+
+.login-card h2 {
+  color: #1e3a8a;
+  font-size: 32px;
+}
+
+.login-card p {
+  margin-bottom: 25px;
+  color: #64748b;
+}

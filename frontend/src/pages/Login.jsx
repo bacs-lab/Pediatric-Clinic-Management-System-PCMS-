@@ -38,35 +38,46 @@ function Login() {
     localStorage.setItem("user", JSON.stringify(data.user));
 
     if (data.user.role === "parent") {
-  navigate("/parent/dashboard");
-} else {
-  navigate("/staff/dashboard");
-}
+      navigate("/parent/dashboard");
+    } else {
+      navigate("/staff/dashboard");
+    }
   };
 
   return (
-    <div>
-      <h1>Clinic Login</h1>
+    <div className="login-page">
+      <div className="login-left">
+        <h1>KIDS FIRST Clinic</h1>
+        <p>Pediatric Clinic Management System</p>
+        <span>Patient care made organized, secure, and simple.</span>
+      </div>
 
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-        />
+      <div className="login-card">
+        <h2>Welcome Back</h2>
+        <p>Login to continue</p>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-        />
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email address"
+            value={form.email}
+            onChange={handleChange}
+          />
 
-        <button type="submit">Login</button>
-      </form>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+          />
+
+          <button className="primary-btn" type="submit">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
