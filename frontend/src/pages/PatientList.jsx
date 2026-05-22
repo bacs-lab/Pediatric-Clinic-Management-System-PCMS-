@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/authFetch";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -7,11 +8,7 @@ function PatientList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  fetch("http://localhost:5000/api/patients", {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
+  authFetch("http://localhost:5000/api/patients")
     .then((res) => res.json())
     .then((data) => setPatients(data));
 }, []);
