@@ -8,102 +8,124 @@ function InventoryList() {
   const [showLowStock, setShowLowStock] = useState(false);
 
   useEffect(() => {
-  fetch("http://localhost:5000/api/inventory", {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => setItems(data));
-}, []);
+    fetch("http://localhost:5000/api/inventory", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setItems(data));
+  }, []);
+
   const filteredItems = items.filter((item) => {
-  const matchesSearch = item.itemName
-    .toLowerCase()
-    .includes(search.toLowerCase());
+    const matchesSearch = item.itemName
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const matchesLowStock = showLowStock
-    ? item.stockQuantity <= item.lowStockLevel
-    : true;
+    const matchesLowStock = showLowStock
+      ? item.stockQuantity <= item.lowStockLevel
+      : true;
 
-  return matchesSearch && matchesLowStock;
-});
+    return matchesSearch && matchesLowStock;
+  });
 
   return (
     <div className="layout">
       <div className="sidebar">
-        <h2>PCMS Staff</h2>
+        <h2>KIDS FIRST</h2>
         <ul>
           <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
           <li><button onClick={() => navigate("/staff/create-inventory")}>Add Item</button></li>
+          <li><button onClick={() => navigate("/staff/reports")}>Reports</button></li>
         </ul>
       </div>
 
-      <div className="main-content">
-        <h1 className="page-title">Inventory</h1>
+      <div className="main-content dashboard-bg">
+        <div className="dashboard-hero">
+          <div>
+            <p className="eyebrow">CLINIC STOCK CONTROL</p>
+            <h1>Inventory</h1>
+            <span>Monitor medicines, vaccines, supplies, stocks, and expiration dates.</span>
+          </div>
 
-        <div
-  style={{
-    display: "flex",
-    gap: "20px",
-    marginBottom: "20px",
-    alignItems: "center",
-  }}
->
-  <input
-    type="text"
-    placeholder="Search inventory..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    style={{
-      padding: "10px",
-      width: "300px",
-    }}
-  />
+          <button
+            className="primary-btn"
+            onClick={() => navigate("/staff/create-inventory")}
+          >
+            + Add Item
+          </button>
+        </div>
 
-  <label>
-    <input
-      type="checkbox"
-      checked={showLowStock}
-      onChange={() =>
-        setShowLowStock(!showLowStock)
-      }
-    />
-    {" "}Show Low Stock Only
-  </label>
-</div>
+        <div className="panel">
+          <div className="panel-header">
+            <h2>Inventory Items</h2>
 
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Category</th>
-                <th>Stock</th>
-                <th>Unit</th>
-                <th>Price</th>
-                <th>Expiration</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+            <input
+              type="text"
+              placeholder="Search inventory..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ maxWidth: "320px", marginBottom: 0 }}
+            />
+          </div>
 
-            <tbody>
-              {filteredItems.map((item) => (
-                <tr key={item._id}>
-                  <td>{item.itemName}</td>
-                  <td>{item.category}</td>
-                  <td>{item.stockQuantity}</td>
-                  <td>{item.unit}</td>
-                  <td>₱{item.price}</td>
-                  <td>{item.expirationDate ? new Date(item.expirationDate).toLocaleDateString() : "N/A"}</td>
-                  <td>
-                    {item.stockQuantity <= item.lowStockLevel
-                      ? "Low Stock"
-                      : item.status}
-                  </td>
+          <label style={{ display: "block", margin: "15px 0", color: "#64748b" }}>
+            <input
+              type="checkbox"
+              checked={showLowStock}
+              onChange={() => setShowLowStock(!showLowStock)}
+              style={{ width: "auto", marginRight: "8px" }}
+            />
+            Show Low Stock Only
+          </label>
+
+          <div className="table-container flat">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Stock</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Expiration</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="7">No inventory items found.</td>
+                  </tr>
+                ) : (
+                  filteredItems.map((item) => {
+                    const isLowStock = item.stockQuantity <= item.lowStockLevel;
+
+                    return (
+                      <tr key={item._id}>
+                        <td><strong>{item.itemName}</strong></td>
+                        <td>{item.category}</td>
+                        <td>{item.stockQuantity}</td>
+                        <td>{item.unit}</td>
+                        <td>₱{item.price}</td>
+                        <td>
+                          {item.expirationDate
+                            ? new Date(item.expirationDate).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td>
+                          <span className={`status-badge ${isLowStock ? "unpaid" : "paid"}`}>
+                            {isLowStock ? "Low Stock" : item.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
