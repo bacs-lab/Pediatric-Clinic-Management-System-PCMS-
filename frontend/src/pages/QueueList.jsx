@@ -1,50 +1,119 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
+import CreateAssessment from "./CreateAssessment";
+import CreateBilling from "./CreateBilling";
+import CreateConsultation from "./CreateConsultation";
+import { apiUrl, authHeaders } from "../utils/api";
+import { notifyError, notifySuccess } from "../utils/notify";
+
+const queueColumns = [
+  "Waiting",
+  "In Assessment",
+  "For Consultation",
+  "In Consultation",
+  "For Billing",
+  "Completed",
+];
 
 function QueueList() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [queue, setQueue] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [workflowModal, setWorkflowModal] = useState(null);
 
   const fetchQueue = () => {
-    fetch("http://localhost:5000/api/queue", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+    fetch(apiUrl("/api/queue"), {
+      headers: authHeaders(),
     })
       .then((res) => res.json())
-      .then((data) => setQueue(data))
-      .catch((err) => console.log(err));
+      .then((data) => setQueue(Array.isArray(data) ? data : []))
+      .catch(() => notifyError("Failed to load queue."))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     fetchQueue();
   }, []);
 
+  useEffect(() => {
+    if (["assessment", "consultation", "billing"].includes(location.state?.modal)) {
+      const timer = window.setTimeout(
+        () => setWorkflowModal({ type: location.state.modal, item: null }),
+        0
+      );
+      window.history.replaceState({}, document.title);
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
+
   const updateStatus = async (id, status) => {
-    const res = await fetch(`http://localhost:5000/api/queue/${id}`, {
+    const res = await fetch(apiUrl(`/api/queue/${id}`), {
       method: "PUT",
-      headers: {
+      headers: authHeaders({
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      }),
       body: JSON.stringify({ status }),
     });
 
-    if (res.ok) fetchQueue();
-    else alert("Failed to update queue");
+    if (res.ok) {
+      notifySuccess("Queue status updated.");
+      fetchQueue();
+    } else {
+      notifyError("Failed to update queue.");
+    }
   };
 
-  const filtered = queue.filter((item) => {
-    const matchesSearch = item.patientName
-      ?.toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesStatus = statusFilter ? item.status === statusFilter : true;
-    return matchesSearch && matchesStatus;
-  });
+  const filtered = useMemo(
+    () =>
+      queue.filter((item) => {
+        const matchesSearch = item.patientName
+          ?.toLowerCase()
+          .includes(search.toLowerCase());
+        const matchesStatus = statusFilter ? item.status === statusFilter : true;
+        return matchesSearch && matchesStatus;
+      }),
+    [queue, search, statusFilter]
+  );
 
-  const statuses = [...new Set(queue.map((q) => q.status))];
+  const grouped = queueColumns.map((status) => ({
+    status,
+    items: filtered.filter((item) => item.status === status),
+  }));
+
+  const cancelled = filtered.filter((item) => item.status === "Cancelled");
+
+  const activeQueueItems = queue.filter(
+    (item) => !["Completed", "Cancelled"].includes(item.status)
+  );
+
+  const openWorkflow = (type, item = null) => {
+    setWorkflowModal({ type, item });
+  };
+
+  const goToStep = (item) => {
+    if (item.status === "In Assessment") {
+      openWorkflow("assessment", item);
+    }
+    if (item.status === "For Consultation") {
+      openWorkflow("consultation", item);
+    }
+    if (item.status === "For Billing") {
+      openWorkflow("billing", item);
+    }
+  };
+
+  const closeWorkflow = () => setWorkflowModal(null);
+
+  const handleWorkflowSaved = () => {
+    closeWorkflow();
+    fetchQueue();
+  };
+
+  if (loading) return <LoadingState title="Loading patient queue..." />;
 
   return (
     <div className="dashboard-bg">
@@ -52,16 +121,29 @@ function QueueList() {
         <div>
           <p className="eyebrow">CLINIC PATIENT FLOW</p>
           <h1>Queue Management</h1>
-          <span>Track patients from waiting area to billing completion.</span>
+          <span>Move patients from waiting room to assessment, consultation, and billing.</span>
+        </div>
+
+        <div className="hero-actions">
+          <button className="secondary-btn" onClick={() => openWorkflow("assessment")}>
+            <span className="ti ti-stethoscope" />
+            New Assessment
+          </button>
+          <button className="secondary-btn" onClick={() => openWorkflow("consultation")}>
+            <span className="ti ti-notes" />
+            New Consultation
+          </button>
+          <button className="primary-btn" onClick={() => openWorkflow("billing")}>
+            <span className="ti ti-wallet" />
+            New Billing
+          </button>
         </div>
       </div>
 
       <div className="panel">
         <div className="panel-header">
-          <h2>Current Queue</h2>
-          <span style={{ color: "#64748b" }}>
-            {filtered.length} item(s)
-          </span>
+          <h2>Live Patient Flow</h2>
+          <span>{filtered.length} item(s)</span>
         </div>
 
         <div className="inventory-filters">
@@ -70,103 +152,117 @@ function QueueList() {
             className="search-input"
             placeholder="Search patient..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
           <select
             className="filter-select"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(event) => setStatusFilter(event.target.value)}
           >
             <option value="">All Statuses</option>
-            {statuses.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {[...queueColumns, "Cancelled"].map((status) => (
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
         </div>
 
-        <div className="table-container flat">
-          <table>
-            <thead>
-              <tr>
-                <th>Queue #</th>
-                <th>Patient</th>
-                <th>Status</th>
-                <th>Update / Action</th>
-              </tr>
-            </thead>
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon="ti ti-list-check"
+            title="No queue items found"
+            message="Approved appointments can be added to the queue from the appointments page."
+          />
+        ) : (
+          <div className="queue-board">
+            {grouped.map((column) => (
+              <section className="queue-column" key={column.status}>
+                <header>
+                  <h3>{column.status}</h3>
+                  <span>{column.items.length}</span>
+                </header>
 
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan="4">No patients in queue.</td>
-                </tr>
-              ) : (
-                filtered.map((item) => (
-                  <tr key={item._id}>
-                    <td><strong>#{item.queueNumber}</strong></td>
-                    <td><strong>{item.patientName}</strong></td>
-                    <td>
-                      <span className={`status-badge ${item.status.toLowerCase().replaceAll(" ", "-")}`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <select
-                          value={item.status}
-                          onChange={(e) => updateStatus(item._id, e.target.value)}
-                          className="queue-status-select"
-                        >
-                          <option>Waiting</option>
-                          <option>In Assessment</option>
-                          <option>For Consultation</option>
-                          <option>In Consultation</option>
-                          <option>For Billing</option>
-                          <option>Completed</option>
-                          <option>Cancelled</option>
-                        </select>
-
-                        {item.status === "In Assessment" && (
-                          <button
-                            className="primary-btn"
-                            onClick={() =>
-                              navigate("/staff/create-assessment", { state: item })
-                            }
-                          >
-                            Assess
-                          </button>
-                        )}
-
-                        {item.status === "For Consultation" && (
-                          <button
-                            className="primary-btn"
-                            onClick={() =>
-                              navigate("/staff/create-consultation", { state: item })
-                            }
-                          >
-                            Consult
-                          </button>
-                        )}
-
-                        {item.status === "For Billing" && (
-                          <button
-                            className="primary-btn"
-                            onClick={() =>
-                              navigate("/staff/create-billing", { state: item })
-                            }
-                          >
-                            Billing
-                          </button>
-                        )}
+                {column.items.length === 0 ? (
+                  <p className="queue-empty">No patients</p>
+                ) : (
+                  column.items.map((item) => (
+                    <article className="queue-card" key={item._id}>
+                      <div>
+                        <strong>#{item.queueNumber}</strong>
+                        <h4>{item.patientName}</h4>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+
+                      <select
+                        value={item.status}
+                        onChange={(event) => updateStatus(item._id, event.target.value)}
+                        className="queue-status-select"
+                      >
+                        {[...queueColumns, "Cancelled"].map((status) => (
+                          <option key={status}>{status}</option>
+                        ))}
+                      </select>
+
+                      {["In Assessment", "For Consultation", "For Billing"].includes(item.status) && (
+                        <button className="primary-btn" onClick={() => goToStep(item)}>
+                          Continue
+                        </button>
+                      )}
+                    </article>
+                  ))
+                )}
+              </section>
+            ))}
+
+            {cancelled.length > 0 && (
+              <section className="queue-column muted">
+                <header>
+                  <h3>Cancelled</h3>
+                  <span>{cancelled.length}</span>
+                </header>
+                {cancelled.map((item) => (
+                  <article className="queue-card" key={item._id}>
+                    <strong>#{item.queueNumber}</strong>
+                    <h4>{item.patientName}</h4>
+                  </article>
+                ))}
+              </section>
+            )}
+          </div>
+        )}
       </div>
+
+      {workflowModal && (
+        <div className="modal-overlay" onClick={closeWorkflow}>
+          <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
+            {workflowModal.type === "assessment" && (
+              <CreateAssessment
+                embedded
+                initialQueueItem={workflowModal.item}
+                queueItems={activeQueueItems}
+                onCancel={closeWorkflow}
+                onSaved={handleWorkflowSaved}
+              />
+            )}
+            {workflowModal.type === "consultation" && (
+              <CreateConsultation
+                embedded
+                initialQueueItem={workflowModal.item}
+                queueItems={activeQueueItems}
+                onCancel={closeWorkflow}
+                onSaved={handleWorkflowSaved}
+              />
+            )}
+            {workflowModal.type === "billing" && (
+              <CreateBilling
+                embedded
+                initialQueueItem={workflowModal.item}
+                queueItems={activeQueueItems}
+                onCancel={closeWorkflow}
+                onSaved={handleWorkflowSaved}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

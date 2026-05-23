@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreatePatient() {
+function CreatePatient({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const [guardians, setGuardians] = useState([]);
@@ -10,6 +12,7 @@ function CreatePatient() {
     firstName: "",
     lastName: "",
     birthDate: "",
+    age: "",
     gender: "Male",
     guardianId: "",
     guardianName: "",
@@ -21,7 +24,7 @@ function CreatePatient() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/parent-profiles", {
+    fetch(apiUrl("/api/parent-profiles"), {
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   },
@@ -30,6 +33,26 @@ function CreatePatient() {
       .then((data) => setGuardians(data))
       .catch((err) => console.log(err));
   }, []);
+
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return "";
+
+    const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return "";
+
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age -= 1;
+    }
+
+    return String(Math.max(age, 0));
+  };
 
   const handleGuardianSelect = (e) => {
     const selectedGuardian = guardians.find(
@@ -47,6 +70,16 @@ function CreatePatient() {
     });
   };
 
+  const handleBirthDateChange = (e) => {
+    const birthDate = e.target.value;
+
+    setForm({
+      ...form,
+      birthDate,
+      age: calculateAge(birthDate),
+    });
+  };
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -58,65 +91,91 @@ function CreatePatient() {
     e.preventDefault();
 
     if (!form.firstName.trim()) {
-  alert("First name is required");
+  notify("First name is required");
   return;
 }
 
 if (!form.lastName.trim()) {
-  alert("Last name is required");
+  notify("Last name is required");
   return;
 }
 
 if (!form.birthDate) {
-  alert("Birth date is required");
+  notify("Birth date is required");
   return;
 }
 
 if (!form.gender) {
-  alert("Gender is required");
+  notify("Gender is required");
   return;
 }
 
 if (!form.guardianId) {
-  alert("Please select a guardian");
+  notify("Please select a guardian");
   return;
 }
 
 if (!form.contactNumber.trim()) {
-  alert("Contact number is required");
+  notify("Contact number is required");
   return;
 }
 
 if (form.contactNumber.length < 11) {
-  alert("Contact number must be at least 11 digits");
+  notify("Contact number must be at least 11 digits");
   return;
 }
 
-    const res = await fetch("http://localhost:5000/api/patients", {
+    const payload = {
+      ...form,
+      age: form.age ? Number(form.age) : undefined,
+    };
+
+    const res = await fetch(apiUrl("/api/patients"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
   Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
-      alert("Child patient created!");
-      navigate("/staff/dashboard");
+      notify("Child patient created!");
+      if (onSaved) onSaved();
+      else navigate("/staff/dashboard");
     } else {
       const data = await res.json();
-      alert(data.message || "Failed to create patient");
+      notify(data.message || "Failed to create patient");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Create Child Patient</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Create Child Patient</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Guardian</label>
+            <label className="form-label">First Name</label>
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={form.firstName}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Last Name</label>
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={form.lastName}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Guardian Name</label>
             <select
               name="guardianId"
               value={form.guardianId}
@@ -132,22 +191,14 @@ if (form.contactNumber.length < 11) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Child First Name</label>
+            <label className="form-label">Age</label>
             <input
-              name="firstName"
-              placeholder="Child First Name"
-              value={form.firstName}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Child Last Name</label>
-            <input
-              name="lastName"
-              placeholder="Child Last Name"
-              value={form.lastName}
-              onChange={handleChange}
+              name="age"
+              type="number"
+              min="0"
+              placeholder="Auto-calculated from birth date"
+              value={form.age}
+              readOnly
             />
           </div>
 
@@ -157,7 +208,7 @@ if (form.contactNumber.length < 11) {
               name="birthDate"
               type="date"
               value={form.birthDate}
-              onChange={handleChange}
+              onChange={handleBirthDateChange}
             />
           </div>
 
@@ -219,9 +270,16 @@ if (form.contactNumber.length < 11) {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Create Patient
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Create Patient
+            </button>
+          </div>
         </form>
       </>
     );

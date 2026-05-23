@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function EditRecord() {
+function EditRecord({ embedded = false, recordId, onCancel, onSaved }) {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id: routeId } = useParams();
+  const id = recordId || routeId;
 
   const [form, setForm] = useState({
     patientName: "",
@@ -19,7 +22,7 @@ function EditRecord() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/records/${id}`, {
+    fetch(apiUrl(`/api/records/${id}`), {
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   },
@@ -49,7 +52,7 @@ function EditRecord() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch(`http://localhost:5000/api/records/${id}`, {
+    const res = await fetch(apiUrl(`/api/records/${id}`), {
       method: "PUT",
       headers: {
   "Content-Type": "application/json",
@@ -59,26 +62,21 @@ function EditRecord() {
     });
 
     if (res.ok) {
-      alert("Medical record updated!");
-      navigate(`/staff/records/${id}`);
+      const updatedRecord = await res.json();
+      notify("Medical record updated!");
+      if (onSaved) onSaved(updatedRecord);
+      else navigate(`/staff/records/${id}`);
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.message || "Failed to update record");
+      notify(data.message || "Failed to update record");
     }
   };
 
-  return (
-  <div className="dashboard-bg">
-
-      <div className="dashboard-hero">
-        <div>
-          <p className="eyebrow">MEDICAL RECORD MANAGEMENT</p>
-          <h1>Edit Medical Record</h1>
-          <span>Update patient consultation and treatment details.</span>
-        </div>
-      </div>
-
-      <div className="panel">
+  const formContent = (
+    <>
+      <h1 className={embedded ? "modal-title" : "page-title"}>
+        Edit Medical Record
+      </h1>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Patient Name</label>
@@ -184,10 +182,35 @@ function EditRecord() {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Update Record
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Update Record
+            </button>
+          </div>
         </form>
+    </>
+  );
+
+  if (embedded) return formContent;
+
+  return (
+  <div className="dashboard-bg">
+
+      <div className="dashboard-hero">
+        <div>
+          <p className="eyebrow">MEDICAL RECORD MANAGEMENT</p>
+          <h1>Edit Medical Record</h1>
+          <span>Update patient consultation and treatment details.</span>
+        </div>
+      </div>
+
+      <div className="panel">
+        {formContent}
       </div>
     </div>
   );

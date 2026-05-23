@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import CreateAppointment from "./CreateAppointment";
+import { apiUrl } from "../utils/api";
 
 function ParentAppointments() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
   const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
 
-  useEffect(() => {
-    fetch(`http://localhost:5000/api/appointments/guardian/${user.id}`, {
+  const fetchAppointments = useCallback(() => {
+    fetch(apiUrl(`/api/appointments/guardian/${user.id}`), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,7 +21,19 @@ function ParentAppointments() {
       .then((res) => res.json())
       .then((data) => setAppointments(data))
       .catch((err) => console.log(err));
-  }, [user.id, token]);
+  }, [token, user.id]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  useEffect(() => {
+    if (location.state?.modal === "request-appointment") {
+      const timer = window.setTimeout(() => setAddOpen(true), 0);
+      window.history.replaceState({}, document.title);
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const filtered = appointments.filter((a) => {
     const matchesSearch =
@@ -41,9 +56,10 @@ function ParentAppointments() {
 
         <button
           className="primary-btn"
-          onClick={() => navigate("/parent/create-appointment")}
+          onClick={() => setAddOpen(true)}
         >
-          + Request Appointment
+          <span className="ti ti-calendar-plus" />
+          Request Appointment
         </button>
       </div>
 
@@ -111,6 +127,21 @@ function ParentAppointments() {
           </table>
         </div>
       </div>
+
+      {addOpen && (
+        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+            <CreateAppointment
+              embedded
+              onCancel={() => setAddOpen(false)}
+              onSaved={() => {
+                setAddOpen(false);
+                fetchAppointments();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

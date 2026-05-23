@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreateParent() {
+function CreateParent({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -27,7 +29,7 @@ function CreateParent() {
     try {
       // CREATE USER ACCOUNT
       const userRes = await fetch(
-        "http://localhost:5000/api/auth/register",
+        apiUrl("/api/auth/register"),
         {
           method: "POST",
           headers: {
@@ -45,13 +47,13 @@ function CreateParent() {
       const userData = await userRes.json();
 
       if (!userRes.ok) {
-        alert(userData.message || "Failed to create parent account");
+        notify(userData.message || "Failed to create parent account");
         return;
       }
 
       // CREATE PARENT PROFILE
       const profileRes = await fetch(
-        "http://localhost:5000/api/parent-profiles",
+        apiUrl("/api/parent-profiles"),
         {
           method: "POST",
           headers: {
@@ -69,20 +71,21 @@ function CreateParent() {
       );
 
       if (profileRes.ok) {
-        alert("Parent account and profile created!");
-        navigate("/staff/dashboard");
+        notify("Parent account and profile created!");
+        if (onSaved) onSaved();
+        else navigate("/staff/dashboard");
       } else {
-        alert("Failed to create parent profile");
+        notify("Failed to create parent profile");
       }
     } catch (error) {
       console.log(error);
-      alert("Something went wrong");
+      notify("Something went wrong");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Create Guardian Account</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Create Guardian Account</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -157,9 +160,16 @@ function CreateParent() {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Create Guardian
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Create Guardian
+            </button>
+          </div>
         </form>
       </>
     );

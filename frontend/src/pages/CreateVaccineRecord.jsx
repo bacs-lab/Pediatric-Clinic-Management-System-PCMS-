@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreateVaccineRecord() {
+function CreateVaccineRecord({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -22,7 +24,7 @@ function CreateVaccineRecord() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients", {
+    fetch(apiUrl("/api/patients"), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -30,7 +32,7 @@ function CreateVaccineRecord() {
       .then((res) => res.json())
       .then((data) => setPatients(data));
 
-    fetch("http://localhost:5000/api/inventory", {
+    fetch(apiUrl("/api/inventory"), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -80,26 +82,26 @@ function CreateVaccineRecord() {
     e.preventDefault();
   
     if (!form.patientId) {
-  alert("Please select a patient");
+  notify("Please select a patient");
   return;
 }
 
 if (!form.inventoryItemId) {
-  alert("Please select a vaccine");
+  notify("Please select a vaccine");
   return;
 }
 
 if (!form.vaccineDate) {
-  alert("Please select vaccine date");
+  notify("Please select vaccine date");
   return;
 }
 
 if (!form.administeredBy.trim()) {
-  alert("Please enter administered by");
+  notify("Please enter administered by");
   return;
 }
 
-    const res = await fetch("http://localhost:5000/api/vaccines", {
+    const res = await fetch(apiUrl("/api/vaccines"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -109,17 +111,18 @@ if (!form.administeredBy.trim()) {
     });
 
     if (res.ok) {
-      alert("Vaccine record saved and inventory deducted!");
-      navigate("/staff/vaccines");
+      notify("Vaccine record saved and inventory deducted!");
+      if (onSaved) onSaved();
+      else navigate("/staff/vaccines");
     } else {
       const data = await res.json();
-      alert(data.message || "Failed to save vaccine record");
+      notify(data.message || "Failed to save vaccine record");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Add Vaccine Record</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Add Vaccine Record</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -202,9 +205,16 @@ if (!form.administeredBy.trim()) {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Save Vaccine Record
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Save Vaccine Record
+            </button>
+          </div>
         </form>
       </>
     );

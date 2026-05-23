@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreateConsultation() {
+function CreateConsultation({
+  embedded = false,
+  initialQueueItem,
+  queueItems = [],
+  onCancel,
+  onSaved,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const queueItem = location.state || {};
+  const queueItem = initialQueueItem || location.state || {};
   const token = localStorage.getItem("token");
 
   const [patients, setPatients] = useState([]);
@@ -24,33 +32,53 @@ function CreateConsultation() {
     followUpDate: "",
   });
 
+  const handleQueueSelect = (event) => {
+    const selected = queueItems.find((item) => item._id === event.target.value);
+    if (!selected) {
+      setForm({
+        ...form,
+        queueId: "",
+        patientId: "",
+        patientName: "",
+        assessmentId: "",
+      });
+      setAssessment(null);
+      return;
+    }
+
+    setForm({
+      ...form,
+      queueId: selected._id,
+      patientId: selected.patientId,
+      patientName: selected.patientName,
+    });
+  };
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients", {
+    fetch(apiUrl("/api/patients"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setPatients(data))
+      .then((data) => {
+        setPatients(data);
+        if (queueItem.patientId && data.length > 0) {
+          const match = data.find((p) => p._id === queueItem.patientId);
+          if (match) {
+            setForm((prev) => ({
+              ...prev,
+              patientId: match._id,
+              patientName: `${match.firstName} ${match.lastName}`,
+            }));
+          }
+        }
+      })
       .catch((err) => console.log(err));
-  }, [token]);
-
-  // auto-select the queue patient once patients list loads
-  useEffect(() => {
-    if (queueItem.patientId && patients.length > 0) {
-      const match = patients.find((p) => p._id === queueItem.patientId);
-      if (match) {
-        setForm((prev) => ({
-          ...prev,
-          patientId: match._id,
-          patientName: `${match.firstName} ${match.lastName}`,
-        }));
-      }
-    }
-  }, [queueItem.patientId, patients]);
+  }, [queueItem.patientId, token]);
 
   useEffect(() => {
-      if (!queueItem.patientId) return;
+      if (!form.patientId) return;
     fetch(
-  `http://localhost:5000/api/assessments/patient/${queueItem.patientId}`,
+  apiUrl(`/api/assessments/patient/${form.patientId}`),
   {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -69,7 +97,7 @@ function CreateConsultation() {
         }
       })
       .catch((err) => console.log(err));
-  }, [queueItem.patientId, token]);
+  }, [form.patientId, token]);
 
   const handleChange = (e) => {
     setForm({
@@ -80,13 +108,13 @@ function CreateConsultation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!queueItem._id || !form.patientId) {
-    alert("No queue item selected");
+    if (!form.queueId || !form.patientId) {
+    notify("No queue item selected");
     return;
   }
 
     const res = await fetch(
-      "http://localhost:5000/api/records",
+      apiUrl("/api/records"),
       {
         method: "POST",
         headers: {
@@ -99,7 +127,7 @@ function CreateConsultation() {
 
     if (res.ok) {
       await fetch(
-        `http://localhost:5000/api/queue/${queueItem._id}`,
+        apiUrl(`/api/queue/${form.queueId}`),
         {
           method: "PUT",
           headers: {
@@ -110,24 +138,39 @@ function CreateConsultation() {
         }
       );
 
-      alert("Consultation completed!");
-      navigate("/staff/queue");
+      notify("Consultation completed!");
+      if (onSaved) onSaved();
+      else navigate("/staff/queue");
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.message || "Failed to create consultation");
+      notify(data.message || "Failed to create consultation");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">
+        <h1 className={embedded ? "modal-title" : "page-title"}>
           Doctor Consultation
         </h1>
 
         <form onSubmit={handleSubmit}>
+          {embedded && (
+            <div className="form-group queue-form-selector">
+              <label className="form-label">Queue Patient</label>
+              <select value={form.queueId} onChange={handleQueueSelect}>
+                <option value="">Select patient from queue</option>
+                {queueItems.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    #{item.queueNumber} - {item.patientName} ({item.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">Patient</label>
-            <select value={form.patientId} onChange={(e) => {
+            <select value={form.patientId} disabled={embedded} onChange={(e) => {
               const selected = patients.find((p) => p._id === e.target.value);
               if (selected) {
                 setForm({ ...form, patientId: selected._id, patientName: `${selected.firstName} ${selected.lastName}` });
@@ -233,12 +276,19 @@ function CreateConsultation() {
             />
           </div>
 
-          <button
-            className="primary-btn"
-            type="submit"
-          >
-            Complete Consultation
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button
+              className="primary-btn"
+              type="submit"
+            >
+              Complete Consultation
+            </button>
+          </div>
         </form>
       </>
     );

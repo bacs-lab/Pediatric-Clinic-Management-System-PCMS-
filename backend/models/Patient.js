@@ -17,6 +17,10 @@ const patientSchema = new mongoose.Schema(
       required: true,
     },
 
+    age: {
+      type: Number,
+    },
+
     gender: {
       type: String,
       enum: ["Male", "Female"],

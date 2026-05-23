@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { apiUrl } from "../utils/api";
 
 function ParentBilling() {
-  const navigate = useNavigate();
   const { patientId } = useParams();
   const [billings, setBillings] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/billings/patient/${patientId}`, {
+    fetch(apiUrl(`/api/billings/patient/${patientId}`), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },

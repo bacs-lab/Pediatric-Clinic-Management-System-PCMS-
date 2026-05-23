@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-function CreateRecord() {
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
+
+function CreateRecord({ embedded = false, initialPatientId = "", onCancel, onSaved }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedPatientId = searchParams.get("patientId");
+  const selectedPatientId = initialPatientId || searchParams.get("patientId");
   const token = localStorage.getItem("token");
 
   const [patients, setPatients] = useState([]);
@@ -23,7 +26,7 @@ function CreateRecord() {
   });
 
   useEffect(() => {
-  fetch("http://localhost:5000/api/patients", {
+  fetch(apiUrl("/api/patients"), {
   headers: {
   "Content-Type": "application/json",
   Authorization: `Bearer ${token}`,
@@ -100,31 +103,31 @@ function CreateRecord() {
     e.preventDefault();
 
     if (!form.patientId) {
-  alert("Please select a patient first");
+  notify("Please select a patient first");
   return;
 }
 
 if (!form.chiefComplaint.trim()) {
-  alert("Chief complaint is required");
+  notify("Chief complaint is required");
   return;
 }
 
 if (!form.diagnosis.trim()) {
-  alert("Diagnosis is required");
+  notify("Diagnosis is required");
   return;
 }
 
 if (!form.treatment.trim()) {
-  alert("Treatment is required");
+  notify("Treatment is required");
   return;
 }
 
 if (!form.doctorName.trim()) {
-  alert("Doctor name is required");
+  notify("Doctor name is required");
   return;
 }
 
-    const res = await fetch("http://localhost:5000/api/records", {
+    const res = await fetch(apiUrl("/api/records"), {
       method: "POST",
      headers: {
   "Content-Type": "application/json",
@@ -134,17 +137,18 @@ if (!form.doctorName.trim()) {
     });
 
     if (res.ok) {
-      alert("Medical record created!");
-      navigate("/staff/dashboard");
+      notify("Medical record created!");
+      if (onSaved) onSaved();
+      else navigate("/staff/records");
     } else {
       const errorData = await res.json();
-      alert(errorData.message || "Failed to create record");
+      notify(errorData.message || "Failed to create record");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Create Medical Record</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Create Medical Record</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -234,9 +238,16 @@ if (!form.doctorName.trim()) {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Save Record
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Save Record
+            </button>
+          </div>
         </form>
       </>
   );

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreateInventoryItem() {
+function CreateInventoryItem({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -23,27 +25,27 @@ function CreateInventoryItem() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.itemName.trim()) {
-  alert("Item name is required");
+  notify("Item name is required");
   return;
 }
 
 if (!form.category) {
-  alert("Category is required");
+  notify("Category is required");
   return;
 }
 
 if (Number(form.stockQuantity) < 0) {
-  alert("Stock quantity cannot be negative");
+  notify("Stock quantity cannot be negative");
   return;
 }
 
 if (Number(form.price) < 0) {
-  alert("Price cannot be negative");
+  notify("Price cannot be negative");
   return;
 }
 
 if (Number(form.lowStockLevel) < 0) {
-  alert("Low stock level cannot be negative");
+  notify("Low stock level cannot be negative");
   return;
 }
 
@@ -56,7 +58,7 @@ if (Number(form.lowStockLevel) < 0) {
       status: "Available",
     };
 
-    const res = await fetch("http://localhost:5000/api/inventory", {
+    const res = await fetch(apiUrl("/api/inventory"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,17 +68,18 @@ if (Number(form.lowStockLevel) < 0) {
     });
 
     if (res.ok) {
-      alert("Inventory item added!");
-      navigate("/staff/inventory");
+      notify("Inventory item added!");
+      if (onSaved) onSaved();
+      else navigate("/staff/inventory");
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.message || "Failed to add item");
+      notify(data.message || "Failed to add item");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Add Inventory Item</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Add Inventory Item</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -118,7 +121,14 @@ if (Number(form.lowStockLevel) < 0) {
             <input name="lowStockLevel" type="number" placeholder="Low Stock Level" value={form.lowStockLevel} onChange={handleChange} />
           </div>
 
-          <button className="primary-btn" type="submit">Add Item</button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">Add Item</button>
+          </div>
         </form>
       </>
     );

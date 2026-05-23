@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { apiUrl } from "../utils/api";
 
 function ParentVaccines() {
-  const navigate = useNavigate();
   const { patientId } = useParams();
   const [records, setRecords] = useState([]);
   const [search, setSearch] = useState("");
@@ -10,7 +10,7 @@ function ParentVaccines() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/vaccines/patient/${patientId}`, {
+    fetch(apiUrl(`/api/vaccines/patient/${patientId}`), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

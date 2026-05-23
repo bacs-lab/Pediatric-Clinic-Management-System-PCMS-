@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-function CreateAppointment() {
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
+function CreateAppointment({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -19,7 +21,7 @@ function CreateAppointment() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/patients/guardian/${user.id}`, {
+    fetch(apiUrl(`/api/patients/guardian/${user.id}`), {
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -55,27 +57,27 @@ function CreateAppointment() {
   e.preventDefault();
 
   if (!form.patientId) {
-    alert("Please select a child");
+    notify("Please select a child");
     return;
   }
 
   if (!form.appointmentDate) {
-    alert("Please select appointment date");
+    notify("Please select appointment date");
     return;
   }
 
   if (!form.appointmentTime) {
-    alert("Please select appointment time");
+    notify("Please select appointment time");
     return;
   }
 
   if (!form.reason.trim()) {
-    alert("Please enter reason for appointment");
+    notify("Please enter reason for appointment");
     return;
   }
 
   const res = await fetch(
-    "http://localhost:5000/api/appointments",
+    apiUrl("/api/appointments"),
     {
       method: "POST",
       headers: {
@@ -87,17 +89,18 @@ function CreateAppointment() {
   );
 
     if (res.ok) {
-      alert("Appointment request submitted!");
-      navigate("/parent/dashboard");
+      notify("Appointment request submitted!");
+      if (onSaved) onSaved();
+      else navigate("/parent/dashboard");
     } else {
       const data = await res.json();
-      alert(data.message || "Failed to create appointment");
+      notify(data.message || "Failed to create appointment");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">
+        <h1 className={embedded ? "modal-title" : "page-title"}>
           Request Appointment
         </h1>
 
@@ -144,9 +147,16 @@ function CreateAppointment() {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Request Appointment
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Request Appointment
+            </button>
+          </div>
         </form>
       </>
   );

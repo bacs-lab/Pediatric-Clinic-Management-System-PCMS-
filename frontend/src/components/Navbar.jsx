@@ -1,35 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-function Navbar({ navItems, title = 'KIDS FIRST', onLogout, isOpen, onClose }) {
+function Navbar({ navItems, title = 'Kids First', onLogout, isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
 
   useEffect(() => {
-    const next = {};
-    navItems.forEach((item) => {
-      if (item.children) {
-        const childActive = item.children.some(
-          (child) => location.pathname === child.path
-        );
-        if (childActive) {
-          next[item.label] = true;
-        }
-      }
-    });
-    setOpenMenus((prev) => ({ ...prev, ...next }));
-  }, [location.pathname, navItems]);
+    const timer = window.setTimeout(() => setOpenMenus({}), 0);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname]);
 
   const toggleMenu = (label) => {
-    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenMenus((prev) => ({ [label]: !prev[label] }));
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const handleNav = (path) => {
-    navigate(path);
+  const isChildActive = (child) => {
+    if (!isActive(child.path)) return false;
+    if (child.state?.modal) {
+      return location.state?.modal === child.state.modal;
+    }
+    return true;
+  };
+
+  const handleNav = (path, state) => {
+    setOpenMenus({});
+    navigate(path, state ? { state } : undefined);
     onClose();
+  };
+
+  const handleNavKeyDown = (event, path, state) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleNav(path, state);
+    }
   };
 
   return (
@@ -54,37 +61,48 @@ function Navbar({ navItems, title = 'KIDS FIRST', onLogout, isOpen, onClose }) {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <h2>{title}</h2>
-
+        <div className="sidebar-brand" title={title}>
+          <img src="/OFFICIAL PCMS.png" alt="Kids First Pediatric Clinic" />
+          <div>
+            <h2>{title}</h2>
+            <span>PCMS</span>
+          </div>
+        </div>
       </div>
 
-      <ul>
+      <ul className="nav-list">
         {navItems.map((item) => {
           const hasChildren = item.children?.length > 0;
           const childActive =
             hasChildren &&
-            item.children.some((child) => isActive(child.path));
-          const menuOpen = openMenus[item.label] || false;
+            item.children.some((child) => isChildActive(child));
+          const menuOpen = openMenus[item.label] ?? childActive;
           const parentActive = isActive(item.path) || childActive;
 
           return (
             <li key={item.label} className="nav-item">
               <div
                 className={`nav-parent-btn${parentActive ? ' active' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleNav(item.path, item.state)}
+                onKeyDown={(event) => handleNavKeyDown(event, item.path, item.state)}
+                title={item.label}
+                aria-label={item.label}
               >
-                <span
-                  className="nav-label"
-                  onClick={() => handleNav(item.path)}
-                  title={item.label}
-                >
+                <span className="nav-label">
                   <span className={item.icon}></span>
-                  {item.label}
+                  <span className="nav-text">{item.label}</span>
                 </span>
                 {hasChildren && (
-                  <span
-                    className={`nav-arrow ti ti-chevron-${menuOpen ? 'up' : 'down'}`}
+                  <button
+                    className="nav-arrow-btn"
+                    type="button"
+                    aria-label={`${menuOpen ? 'Collapse' : 'Expand'} ${item.label}`}
                     onClick={(e) => { e.stopPropagation(); toggleMenu(item.label); }}
-                  ></span>
+                  >
+                    <span className={`nav-arrow ti ti-chevron-${menuOpen ? 'up' : 'down'}`}></span>
+                  </button>
                 )}
               </div>
 
@@ -93,11 +111,12 @@ function Navbar({ navItems, title = 'KIDS FIRST', onLogout, isOpen, onClose }) {
                   {item.children.map((child) => (
                     <li key={child.path} className="nav-child-item">
                       <button
-                        className={isActive(child.path) ? 'active' : ''}
-                        onClick={() => handleNav(child.path)}
+                        className={isChildActive(child) ? 'active' : ''}
+                        onClick={() => handleNav(child.path, child.state)}
+                        title={child.label}
                       >
                         <span className={child.icon}></span>
-                        {child.label}
+                        <span className="nav-text">{child.label}</span>
                       </button>
                     </li>
                   ))}
@@ -112,7 +131,7 @@ function Navbar({ navItems, title = 'KIDS FIRST', onLogout, isOpen, onClose }) {
         <div className="nav-footer">
           <button className="nav-logout-btn" onClick={onLogout}>
             <span className="ti ti-logout"></span>
-            Logout
+            <span className="nav-text">Logout</span>
           </button>
         </div>
       )}

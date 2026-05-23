@@ -1,7 +1,9 @@
+import { apiUrl } from "./api";
+
 export const authFetch = async (url, options = {}) => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(url, {
+  const res = await fetch(apiUrl(url), {
     ...options,
     headers: {
       ...(options.headers || {}),

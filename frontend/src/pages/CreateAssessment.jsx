@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { apiUrl } from "../utils/api";
+import { notify } from "../utils/notify";
 
-function CreateAssessment() {
+function CreateAssessment({
+  embedded = false,
+  initialQueueItem,
+  queueItems = [],
+  onCancel,
+  onSaved,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const queueItem = location.state || {};
+  const queueItem = initialQueueItem || location.state || {};
   const token = localStorage.getItem("token");
 
   const [form, setForm] = useState({
@@ -24,28 +32,41 @@ function CreateAssessment() {
 
   const [patients, setPatients] = useState([]);
 
+  const handleQueueSelect = (event) => {
+    const selected = queueItems.find((item) => item._id === event.target.value);
+    if (!selected) {
+      setForm({ ...form, queueId: "", patientId: "", patientName: "" });
+      return;
+    }
+
+    setForm({
+      ...form,
+      queueId: selected._id,
+      patientId: selected.patientId,
+      patientName: selected.patientName,
+    });
+  };
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/patients", {
+    fetch(apiUrl("/api/patients"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setPatients(data))
+      .then((data) => {
+        setPatients(data);
+        if (queueItem.patientId && data.length > 0) {
+          const match = data.find((p) => p._id === queueItem.patientId);
+          if (match) {
+            setForm((prev) => ({
+              ...prev,
+              patientId: match._id,
+              patientName: `${match.firstName} ${match.lastName}`,
+            }));
+          }
+        }
+      })
       .catch((err) => console.log(err));
-  }, [token]);
-
-  // auto-select the queue patient once patients list loads
-  useEffect(() => {
-    if (queueItem.patientId && patients.length > 0) {
-      const match = patients.find((p) => p._id === queueItem.patientId);
-      if (match) {
-        setForm((prev) => ({
-          ...prev,
-          patientId: match._id,
-          patientName: `${match.firstName} ${match.lastName}`,
-        }));
-      }
-    }
-  }, [queueItem.patientId, patients]);
+  }, [queueItem.patientId, token]);
 
   const handlePatientSelect = (e) => {
     const selected = patients.find((p) => p._id === e.target.value);
@@ -66,12 +87,12 @@ function CreateAssessment() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!queueItem._id || !form.patientId) {
-  alert("No queue item selected");
+    if (!form.queueId || !form.patientId) {
+  notify("No queue item selected");
   return;
 }
 
-    const res = await fetch("http://localhost:5000/api/assessments", {
+    const res = await fetch(apiUrl("/api/assessments"), {
       method: "POST",
       headers: {
   "Content-Type": "application/json",
@@ -81,22 +102,37 @@ function CreateAssessment() {
     });
 
     if (res.ok) {
-      alert("Assessment saved!");
-      navigate("/staff/queue");
+      notify("Assessment saved!");
+      if (onSaved) onSaved();
+      else navigate("/staff/queue");
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.message || "Failed to save assessment");
+      notify(data.message || "Failed to save assessment");
     }
   };
 
   return (
     <>
-        <h1 className="page-title">Physical Assessment</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>Physical Assessment</h1>
 
         <form onSubmit={handleSubmit}>
+          {embedded && (
+            <div className="form-group queue-form-selector">
+              <label className="form-label">Queue Patient</label>
+              <select value={form.queueId} onChange={handleQueueSelect}>
+                <option value="">Select patient from queue</option>
+                {queueItems.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    #{item.queueNumber} - {item.patientName} ({item.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">Patient</label>
-            <select value={form.patientId} onChange={handlePatientSelect}>
+            <select value={form.patientId} onChange={handlePatientSelect} disabled={embedded}>
               <option value="">Select Patient</option>
               {patients.map((patient) => (
                 <option key={patient._id} value={patient._id}>
@@ -186,9 +222,16 @@ function CreateAssessment() {
             />
           </div>
 
-          <button className="primary-btn" type="submit">
-            Save Assessment
-          </button>
+          <div className="modal-buttons">
+            {embedded && (
+              <button className="secondary-btn" type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button className="primary-btn" type="submit">
+              Save Assessment
+            </button>
+          </div>
         </form>
       </>
     );

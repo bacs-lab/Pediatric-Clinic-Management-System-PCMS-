@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import CreateParent from "./CreateParent";
+import { apiUrl } from "../utils/api";
 
 function ParentList() {
+  const location = useLocation();
   const [parents, setParents] = useState([]);
-  const [search, setSearch] = useState("");
-  const navigate = useNavigate();
+  const [search, setSearch] = useState(() => location.state?.search || "");
+  const [addOpen, setAddOpen] = useState(false);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/parent-profiles", {
+  const fetchParents = () => {
+    fetch(apiUrl("/api/parent-profiles"), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -15,10 +18,33 @@ function ParentList() {
       .then((res) => res.json())
       .then((data) => setParents(data))
       .catch((err) => console.log(err));
+  };
+
+  useEffect(() => {
+    fetchParents();
   }, []);
 
+  useEffect(() => {
+    if (location.state?.modal === "add-guardian" || location.state?.search) {
+      const timer = window.setTimeout(() => {
+        if (location.state?.search) setSearch(location.state.search);
+        if (location.state?.modal === "add-guardian") setAddOpen(true);
+      }, 0);
+      window.history.replaceState({}, document.title);
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
+
   const filteredParents = parents.filter((parent) =>
-    parent.fullName.toLowerCase().includes(search.toLowerCase())
+    [
+      parent.fullName,
+      parent.contactNumber,
+      parent.relationshipToChild,
+      parent.emergencyContact,
+      parent.address,
+    ]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -32,16 +58,20 @@ function ParentList() {
 
         <button
           className="primary-btn"
-          onClick={() => navigate("/staff/create-parent")}
+          onClick={() => setAddOpen(true)}
         >
-          + Add Guardian
+          <span className="ti ti-user-plus" />
+          Add Guardian
         </button>
       </div>
 
       <div className="panel">
         <div className="panel-header">
           <h2>Registered Guardians</h2>
+          <span>{filteredParents.length} guardian(s) found</span>
+        </div>
 
+        <div className="inventory-filters">
           <input
             type="text"
             className="search-input"
@@ -50,10 +80,6 @@ function ParentList() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-
-        <p style={{ margin: "10px 0 20px", color: "#64748b" }}>
-          {filteredParents.length} guardian(s) found
-        </p>
 
         <div className="table-container flat">
           <table>
@@ -85,6 +111,21 @@ function ParentList() {
           </table>
         </div>
       </div>
+
+      {addOpen && (
+        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+            <CreateParent
+              embedded
+              onCancel={() => setAddOpen(false)}
+              onSaved={() => {
+                setAddOpen(false);
+                fetchParents();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

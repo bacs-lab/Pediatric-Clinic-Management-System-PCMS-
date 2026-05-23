@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
+import CreateInventoryItem from "./CreateInventoryItem";
 import { authFetch } from "../utils/authFetch";
+import { apiUrl } from "../utils/api";
+import { exportCsv } from "../utils/exportCsv";
+import { notifyError, notifySuccess } from "../utils/notify";
+
+const EXPIRING_SOON_CUTOFF = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
 function InventoryList() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => location.state?.search || "");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showLowStock, setShowLowStock] = useState(false);
+  const [showExpiring, setShowExpiring] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({
     itemName: "",
@@ -22,7 +32,7 @@ function InventoryList() {
   const token = localStorage.getItem("token");
 
   const fetchItems = () => {
-    authFetch("http://localhost:5000/api/inventory")
+    authFetch("/api/inventory")
       .then((res) => res.json())
       .then((data) => setItems(data))
       .catch(() => {});
@@ -32,13 +42,25 @@ function InventoryList() {
     fetchItems();
   }, []);
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  useEffect(() => {
+    if (location.state?.modal === "add-item" || location.state?.search) {
+      const timer = window.setTimeout(() => {
+        if (location.state?.search) setSearch(location.state.search);
+        if (location.state?.modal === "add-item") setAddOpen(true);
+      }, 0);
+      window.history.replaceState({}, document.title);
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
 
-    console.log("Attempting to delete ID:", id);
+  const requestDelete = (item) => {
+    setPendingDelete(item);
+  };
 
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/inventory/${id}`, {
+      const res = await fetch(apiUrl(`/api/inventory/${pendingDelete._id}`), {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -47,14 +69,17 @@ function InventoryList() {
       });
 
       if (res.ok) {
-        setItems((prev) => prev.filter((item) => item._id !== id));
+        setItems((prev) => prev.filter((item) => item._id !== pendingDelete._id));
+        notifySuccess("Inventory item deleted.");
       } else {
         console.error("Server responded with:", res.status);
         const data = await res.json().catch(() => ({}));
-        alert(data.message || `Delete failed (status ${res.status})`);
+        notifyError(data.message || `Delete failed (status ${res.status})`);
       }
-    } catch (err) {
-      alert("Network error — is the backend server running?");
+    } catch {
+      notifyError("Network error. Is the backend server running?");
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -81,7 +106,7 @@ function InventoryList() {
     e.preventDefault();
 
     if (!editForm.itemName.trim()) {
-      alert("Item name is required");
+      notifyError("Item name is required.");
       return;
     }
 
@@ -94,7 +119,7 @@ function InventoryList() {
     };
 
     const res = await fetch(
-      `http://localhost:5000/api/inventory/${editingItem}`,
+      apiUrl(`/api/inventory/${editingItem}`),
       {
         method: "PUT",
         headers: {
@@ -111,17 +136,18 @@ function InventoryList() {
         prev.map((item) => (item._id === editingItem ? updated : item))
       );
       setEditingItem(null);
+      notifySuccess("Inventory item updated.");
     } else {
-      alert("Failed to update item.");
+      notifyError("Failed to update item.");
     }
   };
 
   const categories = [...new Set(items.map((i) => i.category))];
 
   const filteredItems = items.filter((item) => {
-    const matchesSearch = item.itemName
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch = [item.itemName, item.category, item.status, item.unit]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(search.toLowerCase()));
 
     const matchesCategory = categoryFilter
       ? item.category === categoryFilter
@@ -131,8 +157,30 @@ function InventoryList() {
       ? item.stockQuantity <= item.lowStockLevel
       : true;
 
-    return matchesSearch && matchesCategory && matchesLowStock;
+    const matchesExpiring = showExpiring
+      ? item.expirationDate &&
+        new Date(item.expirationDate) < EXPIRING_SOON_CUTOFF
+      : true;
+
+    return matchesSearch && matchesCategory && matchesLowStock && matchesExpiring;
   });
+
+  const exportInventory = () => {
+    exportCsv("inventory.csv", filteredItems, [
+      { label: "Item", value: (item) => item.itemName },
+      { label: "Category", value: (item) => item.category },
+      { label: "Stock", value: (item) => item.stockQuantity },
+      { label: "Unit", value: (item) => item.unit },
+      { label: "Price", value: (item) => item.price },
+      {
+        label: "Expiration",
+        value: (item) =>
+          item.expirationDate
+            ? new Date(item.expirationDate).toLocaleDateString()
+            : "N/A",
+      },
+    ]);
+  };
 
   const getStatus = (item) => {
     if (item.stockQuantity === 0) return { label: "Out of Stock", cls: "missed" };
@@ -140,8 +188,7 @@ function InventoryList() {
       return { label: "Low Stock", cls: "unpaid" };
     if (
       item.expirationDate &&
-      new Date(item.expirationDate) <
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      new Date(item.expirationDate) < EXPIRING_SOON_CUTOFF
     )
       return { label: "Expiring Soon", cls: "pending" };
     return { label: item.status || "Available", cls: "paid" };
@@ -160,9 +207,10 @@ function InventoryList() {
 
         <button
           className="primary-btn"
-          onClick={() => navigate("/staff/create-inventory")}
+          onClick={() => setAddOpen(true)}
         >
-          + Add Item
+          <span className="ti ti-plus" />
+          Add Item
         </button>
       </div>
 
@@ -204,6 +252,20 @@ function InventoryList() {
             />
             Low Stock Only
           </label>
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showExpiring}
+              onChange={() => setShowExpiring(!showExpiring)}
+            />
+            Expiring Soon
+          </label>
+
+          <button className="secondary-btn" onClick={exportInventory}>
+            <span className="ti ti-download" />
+            Export CSV
+          </button>
         </div>
 
         <div className="table-container flat">
@@ -261,7 +323,7 @@ function InventoryList() {
                           </button>
                           <button
                             className="danger-btn"
-                            onClick={() => handleDelete(item._id, item.itemName)}
+                            onClick={() => requestDelete(item)}
                           >
                             Delete
                           </button>
@@ -275,6 +337,31 @@ function InventoryList() {
           </table>
         </div>
       </div>
+
+      {addOpen && (
+        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <CreateInventoryItem
+              embedded
+              onCancel={() => setAddOpen(false)}
+              onSaved={() => {
+                setAddOpen(false);
+                fetchItems();
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete inventory item?"
+          message={`"${pendingDelete.itemName}" will be removed from inventory. This cannot be undone.`}
+          confirmLabel="Delete Item"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmDelete}
+        />
+      )}
 
       {/* Edit Modal */}
       {editingItem && (

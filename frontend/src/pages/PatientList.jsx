@@ -1,23 +1,58 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
+import CreatePatient from "./CreatePatient";
 import { authFetch } from "../utils/authFetch";
+import { exportCsv } from "../utils/exportCsv";
 
 function PatientList() {
+  const location = useLocation();
   const [patients, setPatients] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => location.state?.search || "");
+  const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    authFetch("http://localhost:5000/api/patients")
+  const fetchPatients = () => {
+    authFetch("/api/patients")
       .then((res) => res.json())
-      .then((data) => setPatients(data));
+      .then((data) => setPatients(Array.isArray(data) ? data : []))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPatients();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.modal === "add-patient" || location.state?.search) {
+      const timer = window.setTimeout(() => {
+        if (location.state?.search) setSearch(location.state.search);
+        if (location.state?.modal === "add-patient") setAddOpen(true);
+      }, 0);
+      window.history.replaceState({}, document.title);
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const filteredPatients = patients.filter((patient) =>
     `${patient.firstName} ${patient.lastName}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
+
+  const exportPatients = () => {
+    exportCsv("patients.csv", filteredPatients, [
+      { label: "Child Name", value: (patient) => `${patient.firstName} ${patient.lastName}` },
+      { label: "Gender", value: (patient) => patient.gender },
+      { label: "Guardian", value: (patient) => patient.guardianName },
+      { label: "Contact", value: (patient) => patient.contactNumber || "" },
+      { label: "Blood Type", value: (patient) => patient.bloodType || "" },
+    ]);
+  };
+
+  if (loading) return <LoadingState title="Loading child patient records..." />;
 
   return (
     <div className="dashboard-bg">
@@ -30,48 +65,56 @@ function PatientList() {
 
         <button
           className="primary-btn"
-          onClick={() => navigate("/staff/create-patient")}
+          onClick={() => setAddOpen(true)}
         >
-          + Add Patient
+          <span className="ti ti-user-plus" />
+          Add Patient
         </button>
       </div>
 
       <div className="panel">
         <div className="panel-header">
           <h2>Registered Patients</h2>
+          <span>{filteredPatients.length} patient(s)</span>
+        </div>
 
+        <div className="inventory-filters">
           <input
             type="text"
             className="search-input"
             placeholder="Search patient..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
+          <button className="secondary-btn" onClick={exportPatients}>
+            <span className="ti ti-download" />
+            Export CSV
+          </button>
         </div>
 
-        <p style={{ margin: "10px 0 20px", color: "#64748b" }}>
-          {filteredPatients.length} patient(s) found
-        </p>
-
-        <div className="table-container flat">
-          <table>
-            <thead>
-              <tr>
-                <th>Child Name</th>
-                <th>Gender</th>
-                <th>Guardian</th>
-                <th>Contact</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredPatients.length === 0 ? (
+        {filteredPatients.length === 0 ? (
+          <EmptyState
+            icon="ti ti-users-off"
+            title="No patients found"
+            message="Try another search or add a new child patient."
+            actionLabel="Add Patient"
+            onAction={() => setAddOpen(true)}
+          />
+        ) : (
+          <div className="table-container flat">
+            <table>
+              <thead>
                 <tr>
-                  <td colSpan="5">No patients found.</td>
+                  <th>Child Name</th>
+                  <th>Gender</th>
+                  <th>Guardian</th>
+                  <th>Contact</th>
+                  <th>Action</th>
                 </tr>
-              ) : (
-                filteredPatients.map((patient) => (
+              </thead>
+
+              <tbody>
+                {filteredPatients.map((patient) => (
                   <tr key={patient._id}>
                     <td>
                       <strong>
@@ -80,24 +123,52 @@ function PatientList() {
                     </td>
                     <td>{patient.gender}</td>
                     <td>{patient.guardianName}</td>
-                    <td>{patient.contactNumber}</td>
+                    <td>{patient.contactNumber || "N/A"}</td>
                     <td>
-                      <button
-                        className="primary-btn"
-                        onClick={() =>
-                          navigate(`/staff/create-record?patientId=${patient._id}`)
-                        }
-                      >
-                        Add EMR
-                      </button>
+                      <div className="table-actions">
+                        <button
+                          className="secondary-btn"
+                          onClick={() => navigate(`/staff/patients/${patient._id}`)}
+                        >
+                          Profile
+                        </button>
+                        <button
+                          className="primary-btn"
+                          onClick={() =>
+                            navigate("/staff/records", {
+                              state: {
+                                modal: "add-record",
+                                patientId: patient._id,
+                              },
+                            })
+                          }
+                        >
+                          Add EMR
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
+
+      {addOpen && (
+        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+            <CreatePatient
+              embedded
+              onCancel={() => setAddOpen(false)}
+              onSaved={() => {
+                setAddOpen(false);
+                fetchPatients();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

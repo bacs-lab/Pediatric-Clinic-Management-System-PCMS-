@@ -1,21 +1,25 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
+import { apiUrl, authHeaders } from "../utils/api";
+import { exportCsv } from "../utils/exportCsv";
+import { notifyError, notifySuccess } from "../utils/notify";
 
 function AppointmentList() {
-  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const fetchAppointments = () => {
-    fetch("http://localhost:5000/api/appointments", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+    fetch(apiUrl("/api/appointments"), {
+      headers: authHeaders(),
     })
       .then((res) => res.json())
-      .then((data) => setAppointments(data))
-      .catch((err) => console.log(err));
+      .then((data) => setAppointments(Array.isArray(data) ? data : []))
+      .catch(() => notifyError("Failed to load appointments."))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -23,26 +27,28 @@ function AppointmentList() {
   }, []);
 
   const updateStatus = async (id, status) => {
-    const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
+    const res = await fetch(apiUrl(`/api/appointments/${id}`), {
       method: "PUT",
-      headers: {
+      headers: authHeaders({
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      }),
       body: JSON.stringify({ status }),
     });
 
-    if (res.ok) fetchAppointments();
-    else alert("Failed to update appointment");
+    if (res.ok) {
+      notifySuccess(`Appointment marked ${status}.`);
+      fetchAppointments();
+    } else {
+      notifyError("Failed to update appointment.");
+    }
   };
 
   const addToQueue = async (appointment) => {
-    const res = await fetch("http://localhost:5000/api/queue", {
+    const res = await fetch(apiUrl("/api/queue"), {
       method: "POST",
-      headers: {
+      headers: authHeaders({
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      }),
       body: JSON.stringify({
         appointmentId: appointment._id,
         patientId: appointment.patientId,
@@ -50,22 +56,43 @@ function AppointmentList() {
       }),
     });
 
-    if (res.ok) alert("Patient added to queue!");
-    else {
-      const data = await res.json();
-      alert(data.message || "Failed to add patient to queue");
+    if (res.ok) {
+      notifySuccess("Patient added to queue.");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      notifyError(data.message || "Failed to add patient to queue.");
     }
   };
 
-  const filtered = appointments.filter((a) => {
-    const matchesSearch =
-      a.patientName?.toLowerCase().includes(search.toLowerCase()) ||
-      a.guardianName?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter ? a.status === statusFilter : true;
-    return matchesSearch && matchesStatus;
-  });
+  const filtered = useMemo(
+    () =>
+      appointments.filter((appointment) => {
+        const matchesSearch =
+          appointment.patientName?.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.guardianName?.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter ? appointment.status === statusFilter : true;
+        const matchesDate = dateFilter
+          ? appointment.appointmentDate?.slice(0, 10) === dateFilter
+          : true;
+        return matchesSearch && matchesStatus && matchesDate;
+      }),
+    [appointments, search, statusFilter, dateFilter]
+  );
 
-  const statuses = [...new Set(appointments.map((a) => a.status))];
+  const statuses = [...new Set(appointments.map((item) => item.status))];
+
+  const exportAppointments = () => {
+    exportCsv("appointments.csv", filtered, [
+      { label: "Patient", value: (item) => item.patientName },
+      { label: "Guardian", value: (item) => item.guardianName },
+      { label: "Date", value: (item) => new Date(item.appointmentDate).toLocaleDateString() },
+      { label: "Time", value: (item) => item.appointmentTime },
+      { label: "Reason", value: (item) => item.reason },
+      { label: "Status", value: (item) => item.status },
+    ]);
+  };
+
+  if (loading) return <LoadingState title="Loading appointment requests..." />;
 
   return (
     <div className="dashboard-bg">
@@ -80,9 +107,7 @@ function AppointmentList() {
       <div className="panel">
         <div className="panel-header">
           <h2>Appointment Requests</h2>
-          <span style={{ color: "#64748b" }}>
-            {filtered.length} request(s)
-          </span>
+          <span>{filtered.length} request(s)</span>
         </div>
 
         <div className="inventory-filters">
@@ -91,41 +116,53 @@ function AppointmentList() {
             className="search-input"
             placeholder="Search patient or guardian..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
           <select
             className="filter-select"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(event) => setStatusFilter(event.target.value)}
           >
             <option value="">All Statuses</option>
-            {statuses.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
+          <input
+            type="date"
+            className="filter-select date-filter"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+          <button className="secondary-btn" onClick={exportAppointments}>
+            <span className="ti ti-download" />
+            Export CSV
+          </button>
         </div>
 
-        <div className="table-container flat">
-          <table>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Guardian</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filtered.length === 0 ? (
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon="ti ti-calendar-off"
+            title="No appointments found"
+            message="Try another filter or wait for parent appointment requests."
+          />
+        ) : (
+          <div className="table-container flat">
+            <table>
+              <thead>
                 <tr>
-                  <td colSpan="7">No appointments found.</td>
+                  <th>Patient</th>
+                  <th>Guardian</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                filtered.map((appointment) => (
+              </thead>
+
+              <tbody>
+                {filtered.map((appointment) => (
                   <tr key={appointment._id}>
                     <td><strong>{appointment.patientName}</strong></td>
                     <td>{appointment.guardianName}</td>
@@ -139,23 +176,27 @@ function AppointmentList() {
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button
-                          className="primary-btn"
-                          onClick={() => updateStatus(appointment._id, "Approved")}
-                        >
-                          Approve
-                        </button>
+                        {appointment.status !== "Approved" && (
+                          <button
+                            className="primary-btn"
+                            onClick={() => updateStatus(appointment._id, "Approved")}
+                          >
+                            Approve
+                          </button>
+                        )}
 
-                        <button
-                          className="danger-btn"
-                          onClick={() => updateStatus(appointment._id, "Cancelled")}
-                        >
-                          Cancel
-                        </button>
+                        {appointment.status !== "Cancelled" && (
+                          <button
+                            className="danger-btn"
+                            onClick={() => updateStatus(appointment._id, "Cancelled")}
+                          >
+                            Cancel
+                          </button>
+                        )}
 
                         {appointment.status === "Approved" && (
                           <button
-                            className="primary-btn"
+                            className="secondary-btn"
                             onClick={() => addToQueue(appointment)}
                           >
                             Add to Queue
@@ -164,11 +205,11 @@ function AppointmentList() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

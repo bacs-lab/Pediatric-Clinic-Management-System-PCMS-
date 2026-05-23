@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
+import LoadingState from "../components/LoadingState";
+import EditRecord from "./EditRecord";
+import { apiUrl, authHeaders } from "../utils/api";
+import { notify } from "../utils/notify";
+
+const formatDate = (date) =>
+  date ? new Date(date).toLocaleDateString() : "N/A";
 
 function RecordDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [record, setRecord] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/records/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+    fetch(apiUrl(`/api/records/${id}`), {
+      headers: authHeaders(),
     })
       .then((res) => res.json())
       .then((data) => setRecord(data))
@@ -18,66 +26,133 @@ function RecordDetails() {
   }, [id]);
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this medical record?"
-    );
-
-    if (!confirmDelete) return;
-
-    const res = await fetch(`http://localhost:5000/api/records/${id}`, {
+    const res = await fetch(apiUrl(`/api/records/${id}`), {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: authHeaders(),
     });
 
     if (res.ok) {
-      alert("Medical record deleted!");
-      navigate("/staff/dashboard");
+      notify("Medical record deleted!");
+      navigate("/staff/records");
     } else {
-      alert("Failed to delete record");
+      setDeleteOpen(false);
+      notify("Failed to delete record");
     }
   };
 
-  if (!record) return <p>Loading...</p>;
+  if (!record) return <LoadingState title="Loading medical record..." />;
 
   return (
     <div className="dashboard-bg">
       <div className="dashboard-hero">
         <div>
           <p className="eyebrow">MEDICAL RECORD</p>
-          <h1>Record Details</h1>
-          <span>{record.patientName}</span>
+          <h1 className="page-heading">
+            <i className="page-heading-icon ti ti-notes-medical" aria-hidden="true" />
+            Record Details
+          </h1>
+          <span>
+            {record.patientName} - Visit date: {formatDate(record.visitDate || record.createdAt)}
+          </span>
         </div>
         <div className="detail-actions">
           <button
-            className="primary-btn"
-            onClick={() => navigate(`/staff/records/${record._id}/edit`)}
+            className="secondary-btn"
+            onClick={() => navigate("/staff/records")}
           >
+            <span className="ti ti-arrow-left" />
+            Back
+          </button>
+          <button
+            className="primary-btn"
+            onClick={() => setEditOpen(true)}
+          >
+            <span className="ti ti-pencil" />
             Edit Record
           </button>
           <button
             className="danger-btn"
-            onClick={handleDelete}
+            onClick={() => setDeleteOpen(true)}
           >
+            <span className="ti ti-trash" />
             Delete Record
           </button>
         </div>
       </div>
 
-      <div className="card">
-        <h2>{record.patientName}</h2>
+      <div className="record-detail-grid">
+        <section className="profile-card record-patient-card">
+          <span className="profile-kicker">Patient Summary</span>
+          <div className="record-patient-heading">
+            <div className="record-avatar">
+              <span className="ti ti-user-heart" />
+            </div>
+            <div>
+              <h2>{record.patientName}</h2>
+              <p>{record.gender || "No gender recorded"} - {record.age ?? "N/A"} yrs</p>
+            </div>
+          </div>
 
-        <p><strong>Age:</strong> {record.age}</p>
-        <p><strong>Gender:</strong> {record.gender}</p>
-        <p><strong>Phone:</strong> {record.phone}</p>
-        <p><strong>Address:</strong> {record.address}</p>
-        <p><strong>Chief Complaint:</strong> {record.chiefComplaint}</p>
-        <p><strong>Diagnosis:</strong> {record.diagnosis}</p>
-        <p><strong>Treatment:</strong> {record.treatment}</p>
-        <p><strong>Prescription:</strong> {record.prescription}</p>
-        <p><strong>Doctor:</strong> {record.doctorName}</p>
+          <div className="profile-facts">
+            <p><strong>Phone</strong><span>{record.phone || "N/A"}</span></p>
+            <p><strong>Address</strong><span>{record.address || "N/A"}</span></p>
+            <p><strong>Doctor</strong><span>{record.doctorName || "N/A"}</span></p>
+            <p><strong>Visit Date</strong><span>{formatDate(record.visitDate || record.createdAt)}</span></p>
+          </div>
+        </section>
+
+        <section className="profile-card record-care-card">
+          <span className="profile-kicker">Clinical Notes</span>
+          <h2>Consultation Details</h2>
+          <div className="record-note-list">
+            <div>
+              <strong>Chief Complaint</strong>
+              <p>{record.chiefComplaint || "No chief complaint recorded."}</p>
+            </div>
+            <div>
+              <strong>Diagnosis</strong>
+              <p>{record.diagnosis || "No diagnosis recorded."}</p>
+            </div>
+            <div>
+              <strong>Treatment</strong>
+              <p>{record.treatment || "No treatment recorded."}</p>
+            </div>
+            <div>
+              <strong>Prescription</strong>
+              <p>{record.prescription || "No prescription recorded."}</p>
+            </div>
+          </div>
+        </section>
       </div>
+
+      {editOpen && (
+        <div className="modal-overlay" onClick={() => setEditOpen(false)}>
+          <div
+            className="modal-content modal-content-wide"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <EditRecord
+              embedded
+              recordId={record._id}
+              onCancel={() => setEditOpen(false)}
+              onSaved={(updatedRecord) => {
+                setRecord(updatedRecord);
+                setEditOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {deleteOpen && (
+        <ConfirmDialog
+          title="Delete medical record?"
+          message={`This will permanently delete the medical record for ${record.patientName}.`}
+          confirmLabel="Delete Record"
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 }
