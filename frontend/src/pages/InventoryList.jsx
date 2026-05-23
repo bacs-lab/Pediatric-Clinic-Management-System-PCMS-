@@ -35,17 +35,14 @@ function InventoryList() {
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
 
-    // DEBUG: Check if ID is actually a string/number and not undefined
-    console.log("Attempting to delete ID:", id); 
+    console.log("Attempting to delete ID:", id);
 
     try {
-      // Try using your authFetch utility if it supports methods
-      // If not, ensure the URL matches exactly what the backend expects
       const res = await fetch(`http://localhost:5000/api/inventory/${id}`, {
         method: "DELETE",
-        headers: { 
+        headers: {
           "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json" 
+          "Content-Type": "application/json"
         },
       });
 
@@ -164,7 +161,6 @@ function InventoryList() {
         <button
           className="primary-btn"
           onClick={() => navigate("/staff/create-inventory")}
-          style={{ whiteSpace: "nowrap" }}
         >
           + Add Item
         </button>
@@ -178,27 +174,19 @@ function InventoryList() {
           </span>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginTop: "16px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
+        <div className="inventory-filters">
           <input
             type="text"
             placeholder="Search inventory..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ maxWidth: "280px", marginBottom: 0 }}
+            className="search-input"
           />
 
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ maxWidth: "160px", marginBottom: 0 }}
+            className="filter-select"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -208,23 +196,11 @@ function InventoryList() {
             ))}
           </select>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: "#64748b",
-              fontSize: "14px",
-              cursor: "pointer",
-              marginBottom: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
+          <label className="checkbox-label">
             <input
               type="checkbox"
               checked={showLowStock}
               onChange={() => setShowLowStock(!showLowStock)}
-              style={{ width: "auto", marginBottom: 0 }}
             />
             Low Stock Only
           </label>
@@ -276,19 +252,15 @@ function InventoryList() {
                         </span>
                       </td>
                       <td>
-                        <div
-                          style={{ display: "flex", gap: "8px" }}
-                        >
+                        <div className="table-actions">
                           <button
                             className="primary-btn"
-                            style={{ padding: "6px 12px", fontSize: "13px" }}
                             onClick={() => openEdit(item)}
                           >
                             Edit
                           </button>
                           <button
                             className="danger-btn"
-                            style={{ padding: "6px 12px", fontSize: "13px" }}
                             onClick={() => handleDelete(item._id, item.itemName)}
                           >
                             Delete
@@ -348,13 +320,7 @@ function InventoryList() {
                 </select>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
+              <div className="form-row-2col">
                 <div className="form-group">
                   <label className="form-label">Stock Quantity</label>
                   <input
@@ -375,13 +341,7 @@ function InventoryList() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
+              <div className="form-row-2col">
                 <div className="form-group">
                   <label className="form-label">Price (₱)</label>
                   <input
@@ -414,14 +374,7 @@ function InventoryList() {
                 />
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "flex-end",
-                  marginTop: "8px",
-                }}
-              >
+              <div className="modal-buttons">
                 <button
                   type="button"
                   className="danger-btn"

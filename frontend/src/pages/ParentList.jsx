@@ -1,108 +1,92 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authFetch } from "../utils/authFetch";
 
-function PatientList() {
-  const [patients, setPatients] = useState([]);
+function ParentList() {
+  const [parents, setParents] = useState([]);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    authFetch("http://localhost:5000/api/patients")
+    fetch("http://localhost:5000/api/parent-profiles", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
       .then((res) => res.json())
-      .then((data) => setPatients(data));
+      .then((data) => setParents(data))
+      .catch((err) => console.log(err));
   }, []);
 
-  const filteredPatients = patients.filter((patient) =>
-    `${patient.firstName} ${patient.lastName}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const filteredParents = parents.filter((parent) =>
+    parent.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="dashboard-bg">
-        <div className="dashboard-hero">
-          <div>
-            <p className="eyebrow">PATIENT MANAGEMENT</p>
-            <h1>Patient List</h1>
-            <span>View, search, and manage child patient records.</span>
-          </div>
-
-          <button
-            className="primary-btn"
-            onClick={() => navigate("/staff/create-patient")}
-          >
-            + Add Patient
-          </button>
+      <div className="dashboard-hero">
+        <div>
+          <p className="eyebrow">GUARDIAN MANAGEMENT</p>
+          <h1>Guardians</h1>
+          <span>Manage registered parents and guardians.</span>
         </div>
 
-        <div className="panel">
-          <div className="panel-header">
-            <h2>Registered Patients</h2>
+        <button
+          className="primary-btn"
+          onClick={() => navigate("/staff/create-parent")}
+        >
+          + Add Guardian
+        </button>
+      </div>
 
-            <input
-              type="text"
-              placeholder="Search patient..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                maxWidth: "320px",
-                marginBottom: 0,
-              }}
-            />
-          </div>
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Registered Guardians</h2>
 
-          <p style={{ margin: "10px 0 20px", color: "#64748b" }}>
-            {filteredPatients.length} patient(s) found
-          </p>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search guardian..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-          <div className="table-container flat">
-            <table>
-              <thead>
+        <p style={{ margin: "10px 0 20px", color: "#64748b" }}>
+          {filteredParents.length} guardian(s) found
+        </p>
+
+        <div className="table-container flat">
+          <table>
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>Contact</th>
+                <th>Relationship</th>
+                <th>Emergency Contact</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredParents.length === 0 ? (
                 <tr>
-                  <th>Child Name</th>
-                  <th>Gender</th>
-                  <th>Guardian</th>
-                  <th>Contact</th>
-                  <th>Action</th>
+                  <td colSpan="4">No guardians found.</td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {filteredPatients.length === 0 ? (
-                  <tr>
-                    <td colSpan="5">No patients found.</td>
+              ) : (
+                filteredParents.map((parent) => (
+                  <tr key={parent._id}>
+                    <td><strong>{parent.fullName}</strong></td>
+                    <td>{parent.contactNumber}</td>
+                    <td>{parent.relationshipToChild || "N/A"}</td>
+                    <td>{parent.emergencyContact || "N/A"}</td>
                   </tr>
-                ) : (
-                  filteredPatients.map((patient) => (
-                    <tr key={patient._id}>
-                      <td>
-                        <strong>
-                          {patient.firstName} {patient.lastName}
-                        </strong>
-                      </td>
-                      <td>{patient.gender}</td>
-                      <td>{patient.guardianName}</td>
-                      <td>{patient.contactNumber}</td>
-                      <td>
-                        <button
-                          className="primary-btn"
-                          onClick={() =>
-                            navigate(`/staff/create-record?patientId=${patient._id}`)
-                          }
-                        >
-                          Add EMR
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
   );
 }
 
-export default PatientList;
+export default ParentList;

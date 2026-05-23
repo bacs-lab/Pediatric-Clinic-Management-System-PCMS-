@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from './Topbar';
 import Navbar from './Navbar';
@@ -6,6 +7,7 @@ import { staffNavItems, parentNavItems } from './navConfig';
 function MainLayout({ children }) {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -24,11 +26,22 @@ function MainLayout({ children }) {
       ? parentNavItems
       : [];
 
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div className="layout">
-      <Navbar navItems={navItems} onLogout={logout} />
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' active' : ''}`}
+        onClick={closeSidebar}
+      />
+      <Navbar
+        navItems={navItems}
+        onLogout={logout}
+        isOpen={sidebarOpen}
+        onClose={closeSidebar}
+      />
       <div className="main-content">
-        <Topbar />
+        <Topbar onMenuClick={() => setSidebarOpen(true)} />
         {children}
       </div>
     </div>

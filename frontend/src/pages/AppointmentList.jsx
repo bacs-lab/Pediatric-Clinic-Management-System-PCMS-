@@ -57,55 +57,56 @@ function AppointmentList() {
 
   return (
     <div className="dashboard-bg">
-        <div className="dashboard-hero">
-          <div>
-            <p className="eyebrow">CLINIC SCHEDULING</p>
-            <h1>Appointments</h1>
-            <span>Review, approve, cancel, and queue appointment requests.</span>
-          </div>
+      <div className="dashboard-hero">
+        <div>
+          <p className="eyebrow">CLINIC SCHEDULING</p>
+          <h1>Appointments</h1>
+          <span>Review, approve, cancel, and queue appointment requests.</span>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Appointment Requests</h2>
+          <span style={{ color: "#64748b" }}>
+            {appointments.length} total request(s)
+          </span>
         </div>
 
-        <div className="panel">
-          <div className="panel-header">
-            <h2>Appointment Requests</h2>
-            <span style={{ color: "#64748b" }}>
-              {appointments.length} total request(s)
-            </span>
-          </div>
+        <div className="table-container flat">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Guardian</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
 
-          <div className="table-container flat">
-            <table>
-              <thead>
+            <tbody>
+              {appointments.length === 0 ? (
                 <tr>
-                  <th>Patient</th>
-                  <th>Guardian</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <td colSpan="7">No appointments found.</td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {appointments.length === 0 ? (
-                  <tr>
-                    <td colSpan="7">No appointments found.</td>
-                  </tr>
-                ) : (
-                  appointments.map((appointment) => (
-                    <tr key={appointment._id}>
-                      <td><strong>{appointment.patientName}</strong></td>
-                      <td>{appointment.guardianName}</td>
-                      <td>{new Date(appointment.appointmentDate).toLocaleDateString()}</td>
-                      <td>{appointment.appointmentTime}</td>
-                      <td>{appointment.reason}</td>
-                      <td>
-                        <span className={`status-badge ${appointment.status.toLowerCase()}`}>
-                          {appointment.status}
-                        </span>
-                      </td>
-                      <td>
+              ) : (
+                appointments.map((appointment) => (
+                  <tr key={appointment._id}>
+                    <td><strong>{appointment.patientName}</strong></td>
+                    <td>{appointment.guardianName}</td>
+                    <td>{new Date(appointment.appointmentDate).toLocaleDateString()}</td>
+                    <td>{appointment.appointmentTime}</td>
+                    <td>{appointment.reason}</td>
+                    <td>
+                      <span className={`status-badge ${appointment.status.toLowerCase()}`}>
+                        {appointment.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions">
                         <button
                           className="primary-btn"
                           onClick={() => updateStatus(appointment._id, "Approved")}
@@ -115,7 +116,6 @@ function AppointmentList() {
 
                         <button
                           className="danger-btn"
-                          style={{ marginLeft: "8px" }}
                           onClick={() => updateStatus(appointment._id, "Cancelled")}
                         >
                           Cancel
@@ -124,20 +124,20 @@ function AppointmentList() {
                         {appointment.status === "Approved" && (
                           <button
                             className="primary-btn"
-                            style={{ marginLeft: "8px" }}
                             onClick={() => addToQueue(appointment)}
                           >
                             Add to Queue
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
   );
 }

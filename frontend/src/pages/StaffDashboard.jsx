@@ -30,7 +30,6 @@ function StaffDashboard() {
       if (loaded >= 3) setLoading(false);
     };
 
-    // Fetch Recent Records
     fetch("http://localhost:5000/api/records", {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -44,7 +43,6 @@ function StaffDashboard() {
         checkDone();
       });
 
-    // Fetch Dashboard Stats
     fetch("http://localhost:5000/api/dashboard/stats", {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -58,7 +56,6 @@ function StaffDashboard() {
         checkDone();
       });
 
-    // Fetch Reminders
     fetch("http://localhost:5000/api/reminders", {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -100,7 +97,6 @@ function StaffDashboard() {
 
   return (
     <div className="dashboard-bg">
-
       <div className="dashboard-hero">
         <div>
           <p className="eyebrow">PEDIATRIC CLINIC MANAGEMENT</p>

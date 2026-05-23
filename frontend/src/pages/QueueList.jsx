@@ -36,53 +36,54 @@ function QueueList() {
 
   return (
     <div className="dashboard-bg">
-        <div className="dashboard-hero">
-          <div>
-            <p className="eyebrow">CLINIC PATIENT FLOW</p>
-            <h1>Queue Management</h1>
-            <span>Track patients from waiting area to billing completion.</span>
-          </div>
+      <div className="dashboard-hero">
+        <div>
+          <p className="eyebrow">CLINIC PATIENT FLOW</p>
+          <h1>Queue Management</h1>
+          <span>Track patients from waiting area to billing completion.</span>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Current Queue</h2>
+          <span style={{ color: "#64748b" }}>
+            {queue.length} queue item(s)
+          </span>
         </div>
 
-        <div className="panel">
-          <div className="panel-header">
-            <h2>Current Queue</h2>
-            <span style={{ color: "#64748b" }}>
-              {queue.length} queue item(s)
-            </span>
-          </div>
+        <div className="table-container flat">
+          <table>
+            <thead>
+              <tr>
+                <th>Queue #</th>
+                <th>Patient</th>
+                <th>Status</th>
+                <th>Update / Action</th>
+              </tr>
+            </thead>
 
-          <div className="table-container flat">
-            <table>
-              <thead>
+            <tbody>
+              {queue.length === 0 ? (
                 <tr>
-                  <th>Queue #</th>
-                  <th>Patient</th>
-                  <th>Status</th>
-                  <th>Update / Action</th>
+                  <td colSpan="4">No patients in queue.</td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {queue.length === 0 ? (
-                  <tr>
-                    <td colSpan="4">No patients in queue.</td>
-                  </tr>
-                ) : (
-                  queue.map((item) => (
-                    <tr key={item._id}>
-                      <td><strong>#{item.queueNumber}</strong></td>
-                      <td><strong>{item.patientName}</strong></td>
-                      <td>
-                        <span className={`status-badge ${item.status.toLowerCase().replaceAll(" ", "-")}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td>
+              ) : (
+                queue.map((item) => (
+                  <tr key={item._id}>
+                    <td><strong>#{item.queueNumber}</strong></td>
+                    <td><strong>{item.patientName}</strong></td>
+                    <td>
+                      <span className={`status-badge ${item.status.toLowerCase().replaceAll(" ", "-")}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions">
                         <select
                           value={item.status}
                           onChange={(e) => updateStatus(item._id, e.target.value)}
-                          style={{ maxWidth: "220px", marginBottom: "0", marginRight: "8px" }}
+                          className="queue-status-select"
                         >
                           <option>Waiting</option>
                           <option>In Assessment</option>
@@ -125,14 +126,15 @@ function QueueList() {
                             Billing
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
   );
 }
