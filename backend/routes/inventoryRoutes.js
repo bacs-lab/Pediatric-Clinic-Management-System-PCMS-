@@ -55,4 +55,23 @@ router.put(
   }
 });
 
+// DELETE item
+router.delete(
+  "/:id",
+  protect,
+  allowRoles("staff", "admin", "secretary"),
+  async (req, res) => {
+  try {
+    const deletedItem = await InventoryItem.findByIdAndDelete(req.params.id);
+
+    if (!deletedItem) {
+      return res.status(404).json({ message: "Inventory item not found" });
+    }
+
+    res.json({ message: "Inventory item removed" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

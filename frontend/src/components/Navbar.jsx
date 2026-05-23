@@ -27,14 +27,6 @@ function Navbar({ navItems, title = 'KIDS FIRST', onLogout }) {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleParentClick = (item) => {
-    if (item.children?.length > 0) {
-      toggleMenu(item.label);
-    } else {
-      navigate(item.path);
-    }
-  };
-
   return (
     <div className="sidebar">
       <h2>{title}</h2>
@@ -50,20 +42,24 @@ function Navbar({ navItems, title = 'KIDS FIRST', onLogout }) {
 
           return (
             <li key={item.label} className="nav-item">
-              <button
+              <div
                 className={`nav-parent-btn${parentActive ? ' active' : ''}`}
-                onClick={() => handleParentClick(item)}
               >
-                <span className="nav-label">
+                <span
+                  className="nav-label"
+                  onClick={() => navigate(item.path)}
+                  title={item.label}
+                >
                   <span className={item.icon}></span>
                   {item.label}
                 </span>
                 {hasChildren && (
                   <span
                     className={`nav-arrow ti ti-chevron-${menuOpen ? 'up' : 'down'}`}
+                    onClick={(e) => { e.stopPropagation(); toggleMenu(item.label); }}
                   ></span>
                 )}
-              </button>
+              </div>
 
               {hasChildren && menuOpen && (
                 <ul className="nav-child-list">
