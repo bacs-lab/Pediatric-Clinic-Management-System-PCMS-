@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreateParent() {
   const navigate = useNavigate();
@@ -82,88 +81,88 @@ function CreateParent() {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>
-              Back
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Create Guardian Account</h1>
 
         <form onSubmit={handleSubmit}>
-          <input
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
+            <input
+              name="fullName"
+              placeholder="Full Name"
+              value={form.fullName}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="contactNumber"
-            placeholder="Contact Number"
-            value={form.contactNumber}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Contact Number</label>
+            <input
+              name="contactNumber"
+              placeholder="Contact Number"
+              value={form.contactNumber}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="address"
-            placeholder="Address"
-            value={form.address}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <input
+              name="address"
+              placeholder="Address"
+              value={form.address}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="relationshipToChild"
-            placeholder="Relationship to Child"
-            value={form.relationshipToChild}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Relationship to Child</label>
+            <input
+              name="relationshipToChild"
+              placeholder="Relationship to Child"
+              value={form.relationshipToChild}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="emergencyContact"
-            placeholder="Emergency Contact"
-            value={form.emergencyContact}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Emergency Contact</label>
+            <input
+              name="emergencyContact"
+              placeholder="Emergency Contact"
+              value={form.emergencyContact}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Create Guardian
           </button>
         </form>
-      </div>
-    </div>
-  );
+      </>
+    );
 }
 
 export default CreateParent;

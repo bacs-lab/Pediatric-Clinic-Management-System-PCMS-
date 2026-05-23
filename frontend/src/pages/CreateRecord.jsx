@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Topbar from "../components/Topbar";
-
 function CreateRecord() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -145,115 +143,102 @@ if (!form.doctorName.trim()) {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>Back</button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Create Medical Record</h1>
 
         <form onSubmit={handleSubmit}>
-          <select name="patientId" value={form.patientId} onChange={handlePatientSelect}>
-            <option value="">Select Patient</option>
+          <div className="form-group">
+            <label className="form-label">Patient</label>
+            <select name="patientId" value={form.patientId} onChange={handlePatientSelect}>
+              <option value="">Select Patient</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {patient.firstName} {patient.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {patients.map((patient) => (
-              <option key={patient._id} value={patient._id}>
-                {patient.firstName} {patient.lastName}
-              </option>
-            ))}
-          </select>
+          {form.patientId && (
+            <div className="form-info-card">
+              <div className="info-item">
+                <span className="info-label">Patient Name</span>
+                <span className="info-value">{form.patientName}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Age</span>
+                <span className="info-value">{form.age}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Gender</span>
+                <span className="info-value">{form.gender}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Phone</span>
+                <span className="info-value">{form.phone}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Address</span>
+                <span className="info-value">{form.address}</span>
+              </div>
+            </div>
+          )}
 
-          <input
-            name="patientName"
-            placeholder="Patient Name"
-            value={form.patientName}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Chief Complaint</label>
+            <input
+              name="chiefComplaint"
+              placeholder="Chief Complaint"
+              value={form.chiefComplaint}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="age"
-            type="number"
-            placeholder="Age"
-            value={form.age}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Diagnosis</label>
+            <input
+              name="diagnosis"
+              placeholder="Diagnosis"
+              value={form.diagnosis}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="gender"
-            placeholder="Gender"
-            value={form.gender}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Treatment</label>
+            <input
+              name="treatment"
+              placeholder="Treatment"
+              value={form.treatment}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Prescription</label>
+            <input
+              name="prescription"
+              placeholder="Prescription"
+              value={form.prescription}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="address"
-            placeholder="Address"
-            value={form.address}
-            readOnly
-          />
-
-          <input
-            name="chiefComplaint"
-            placeholder="Chief Complaint"
-            value={form.chiefComplaint}
-            onChange={handleChange}
-          />
-
-          <input
-            name="diagnosis"
-            placeholder="Diagnosis"
-            value={form.diagnosis}
-            onChange={handleChange}
-          />
-
-          <input
-            name="treatment"
-            placeholder="Treatment"
-            value={form.treatment}
-            onChange={handleChange}
-          />
-
-          <input
-            name="prescription"
-            placeholder="Prescription"
-            value={form.prescription}
-            onChange={handleChange}
-          />
-
-          <input
-            name="doctorName"
-            placeholder="Doctor Name"
-            value={form.doctorName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Doctor Name</label>
+            <input
+              name="doctorName"
+              placeholder="Doctor Name"
+              value={form.doctorName}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Save Record
           </button>
         </form>
-      </div>
-    </div>
+      </>
   );
 }
 

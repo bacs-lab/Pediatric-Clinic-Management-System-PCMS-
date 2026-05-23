@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/authFetch";
-import Topbar from "../components/Topbar";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -21,21 +20,7 @@ function PatientList() {
   );
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>KIDS FIRST</h2>
-
-        <ul>
-          <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate("/staff/create-patient")}>Add Patient</button></li>
-          <li><button onClick={() => navigate("/staff/create-parent")}>Add Guardian</button></li>
-          <li><button onClick={() => navigate("/staff/appointments")}>Appointments</button></li>
-          <li><button onClick={() => navigate("/staff/queue")}>Queue</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content dashboard-bg">
-        <Topbar />
+    <div className="dashboard-bg">
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PATIENT MANAGEMENT</p>
@@ -116,7 +101,6 @@ function PatientList() {
             </table>
           </div>
         </div>
-      </div>
     </div>
   );
 }

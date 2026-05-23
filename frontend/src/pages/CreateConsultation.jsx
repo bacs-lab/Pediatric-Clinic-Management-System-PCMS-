@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreateConsultation() {
   const navigate = useNavigate();
@@ -9,7 +8,7 @@ function CreateConsultation() {
   const queueItem = location.state || {};
   const token = localStorage.getItem("token");
 
-
+  const [patients, setPatients] = useState([]);
   const [assessment, setAssessment] = useState(null);
 
   const [form, setForm] = useState({
@@ -24,6 +23,29 @@ function CreateConsultation() {
     consultationNotes: "",
     followUpDate: "",
   });
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/patients", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPatients(data))
+      .catch((err) => console.log(err));
+  }, [token]);
+
+  // auto-select the queue patient once patients list loads
+  useEffect(() => {
+    if (queueItem.patientId && patients.length > 0) {
+      const match = patients.find((p) => p._id === queueItem.patientId);
+      if (match) {
+        setForm((prev) => ({
+          ...prev,
+          patientId: match._id,
+          patientName: `${match.firstName} ${match.lastName}`,
+        }));
+      }
+    }
+  }, [queueItem.patientId, patients]);
 
   useEffect(() => {
       if (!queueItem.patientId) return;
@@ -81,50 +103,44 @@ function CreateConsultation() {
         {
           method: "PUT",
           headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-},
-          body: JSON.stringify({
-            status: "For Billing",
-          }),
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "For Billing" }),
         }
       );
 
       alert("Consultation completed!");
       navigate("/staff/queue");
     } else {
-      alert("Failed to create consultation");
+      const data = await res.json().catch(() => ({}));
+      alert(data.message || "Failed to create consultation");
     }
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>Doctor Panel</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/queue")}>
-              Queue
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>
-              Back
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">
           Doctor Consultation
         </h1>
 
         <form onSubmit={handleSubmit}>
-          <input value={form.patientName} readOnly />
+          <div className="form-group">
+            <label className="form-label">Patient</label>
+            <select value={form.patientId} onChange={(e) => {
+              const selected = patients.find((p) => p._id === e.target.value);
+              if (selected) {
+                setForm({ ...form, patientId: selected._id, patientName: `${selected.firstName} ${selected.lastName}` });
+              }
+            }}>
+              <option value="">Select Patient</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {patient.firstName} {patient.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {assessment && (
             <div className="card">
@@ -156,49 +172,66 @@ function CreateConsultation() {
               </p>
             </div>
           )}
-          
 
-          <input
-            name="diagnosis"
-            placeholder="Diagnosis"
-            value={form.diagnosis}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Diagnosis</label>
+            <input
+              name="diagnosis"
+              placeholder="Diagnosis"
+              value={form.diagnosis}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="treatment"
-            placeholder="Treatment"
-            value={form.treatment}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Treatment</label>
+            <input
+              name="treatment"
+              placeholder="Treatment"
+              value={form.treatment}
+              onChange={handleChange}
+            />
+          </div>
 
-          <textarea
-            name="prescription"
-            placeholder="Prescription"
-            value={form.prescription}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Prescription</label>
+            <textarea
+              name="prescription"
+              placeholder="Prescription"
+              value={form.prescription}
+              onChange={handleChange}
+            />
+          </div>
 
-          <textarea
-            name="consultationNotes"
-            placeholder="Consultation Notes"
-            value={form.consultationNotes}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Consultation Notes</label>
+            <textarea
+              name="consultationNotes"
+              placeholder="Consultation Notes"
+              value={form.consultationNotes}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            type="date"
-            name="followUpDate"
-            value={form.followUpDate}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Follow-up Date</label>
+            <input
+              type="date"
+              name="followUpDate"
+              value={form.followUpDate}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="doctorName"
-            placeholder="Doctor Name"
-            value={form.doctorName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Doctor Name</label>
+            <input
+              name="doctorName"
+              placeholder="Doctor Name"
+              value={form.doctorName}
+              onChange={handleChange}
+            />
+          </div>
 
           <button
             className="primary-btn"
@@ -207,9 +240,8 @@ function CreateConsultation() {
             Complete Consultation
           </button>
         </form>
-      </div>
-    </div>
-  );
+      </>
+    );
 }
 
 export default CreateConsultation;

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function VaccineList() {
   const navigate = useNavigate();
@@ -17,20 +16,7 @@ function VaccineList() {
   }, []);
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>KIDS FIRST</h2>
-
-        <ul>
-          <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate("/staff/create-vaccine")}>Add Vaccine Record</button></li>
-          <li><button onClick={() => navigate("/staff/inventory")}>Inventory</button></li>
-          <li><button onClick={() => navigate("/staff/reports")}>Reports</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content dashboard-bg">
-        <Topbar />
+    <div className="dashboard-bg">
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">PEDIATRIC IMMUNIZATION</p>
@@ -96,7 +82,6 @@ function VaccineList() {
             </table>
           </div>
         </div>
-      </div>
     </div>
   );
 }

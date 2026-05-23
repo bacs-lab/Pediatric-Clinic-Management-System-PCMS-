@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Topbar from "../components/Topbar";
-
 function ParentVaccines() {
   const navigate = useNavigate();
   const { patientId } = useParams();
@@ -19,18 +17,7 @@ function ParentVaccines() {
   }, [patientId, token]);
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>KIDS FIRST</h2>
-
-        <ul>
-          <li><button onClick={() => navigate("/parent/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate(-1)}>Back</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content dashboard-bg">
-        <Topbar />
+    <div className="dashboard-bg">
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">CHILD IMMUNIZATION</p>
@@ -87,7 +74,6 @@ function ParentVaccines() {
             </table>
           </div>
         </div>
-      </div>
     </div>
   );
 }

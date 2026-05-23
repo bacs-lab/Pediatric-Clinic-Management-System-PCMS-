@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function InventoryList() {
   const navigate = useNavigate();
@@ -31,18 +30,7 @@ function InventoryList() {
   });
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>KIDS FIRST</h2>
-        <ul>
-          <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate("/staff/create-inventory")}>Add Item</button></li>
-          <li><button onClick={() => navigate("/staff/reports")}>Reports</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content dashboard-bg">
-        <Topbar />
+    <div className="dashboard-bg">
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">CLINIC STOCK CONTROL</p>
@@ -129,7 +117,6 @@ function InventoryList() {
             </table>
           </div>
         </div>
-      </div>
     </div>
   );
 }

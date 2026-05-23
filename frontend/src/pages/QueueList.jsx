@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function QueueList() {
   const navigate = useNavigate();
@@ -36,19 +35,7 @@ function QueueList() {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>KIDS FIRST</h2>
-        <ul>
-          <li><button onClick={() => navigate("/staff/dashboard")}>Dashboard</button></li>
-          <li><button onClick={() => navigate("/staff/appointments")}>Appointments</button></li>
-          <li><button onClick={() => navigate("/staff/patients")}>Patients</button></li>
-          <li><button onClick={() => navigate(-1)}>Back</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content dashboard-bg">
-        <Topbar />
+    <div className="dashboard-bg">
         <div className="dashboard-hero">
           <div>
             <p className="eyebrow">CLINIC PATIENT FLOW</p>
@@ -146,7 +133,6 @@ function QueueList() {
             </table>
           </div>
         </div>
-      </div>
     </div>
   );
 }

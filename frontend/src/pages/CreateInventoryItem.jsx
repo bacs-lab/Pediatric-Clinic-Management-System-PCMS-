@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreateInventoryItem() {
   const navigate = useNavigate();
@@ -48,57 +47,81 @@ if (Number(form.lowStockLevel) < 0) {
   return;
 }
 
+    const payload = {
+      ...form,
+      stockQuantity: form.stockQuantity ? Number(form.stockQuantity) : 0,
+      price: form.price ? Number(form.price) : 0,
+      lowStockLevel: form.lowStockLevel ? Number(form.lowStockLevel) : 10,
+      expirationDate: form.expirationDate || undefined,
+      status: "Available",
+    };
+
     const res = await fetch("http://localhost:5000/api/inventory", {
       method: "POST",
       headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-},
-      body: JSON.stringify(form),
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
       alert("Inventory item added!");
       navigate("/staff/inventory");
     } else {
-      alert("Failed to add item");
+      const data = await res.json().catch(() => ({}));
+      alert(data.message || "Failed to add item");
     }
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-        <ul>
-          <li><button onClick={() => navigate("/staff/inventory")}>Inventory</button></li>
-          <li><button onClick={() => navigate(-1)}>Back</button></li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Add Inventory Item</h1>
 
         <form onSubmit={handleSubmit}>
-          <input name="itemName" placeholder="Item Name" value={form.itemName} onChange={handleChange} />
+          <div className="form-group">
+            <label className="form-label">Item Name</label>
+            <input name="itemName" placeholder="Item Name" value={form.itemName} onChange={handleChange} />
+          </div>
 
-          <select name="category" value={form.category} onChange={handleChange}>
-            <option>Medicine</option>
-            <option>Vaccine</option>
-            <option>Supply</option>
-          </select>
+          <div className="form-group">
+            <label className="form-label">Category</label>
+            <select name="category" value={form.category} onChange={handleChange}>
+              <option>Medicine</option>
+              <option>Vaccine</option>
+              <option>Supply</option>
+            </select>
+          </div>
 
-          <input name="stockQuantity" type="number" placeholder="Stock Quantity" value={form.stockQuantity} onChange={handleChange} />
-          <input name="unit" placeholder="Unit" value={form.unit} onChange={handleChange} />
-          <input name="price" type="number" placeholder="Price" value={form.price} onChange={handleChange} />
-          <input name="expirationDate" type="date" value={form.expirationDate} onChange={handleChange} />
-          <input name="lowStockLevel" type="number" placeholder="Low Stock Level" value={form.lowStockLevel} onChange={handleChange} />
+          <div className="form-group">
+            <label className="form-label">Stock Quantity</label>
+            <input name="stockQuantity" type="number" placeholder="Stock Quantity" value={form.stockQuantity} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Unit</label>
+            <input name="unit" placeholder="Unit" value={form.unit} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Price (₱)</label>
+            <input name="price" type="number" placeholder="Price" value={form.price} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Expiration Date</label>
+            <input name="expirationDate" type="date" value={form.expirationDate} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Low Stock Level</label>
+            <input name="lowStockLevel" type="number" placeholder="Low Stock Level" value={form.lowStockLevel} onChange={handleChange} />
+          </div>
 
           <button className="primary-btn" type="submit">Add Item</button>
         </form>
-      </div>
-    </div>
-  );
+      </>
+    );
 }
 
 export default CreateInventoryItem;

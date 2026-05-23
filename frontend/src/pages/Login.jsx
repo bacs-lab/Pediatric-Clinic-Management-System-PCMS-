@@ -57,23 +57,29 @@ function Login() {
         <p>Login to continue</p>
 
         <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email address"
-            value={form.email}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email address"
+              value={form.email}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+            />
+          </div>
 
-          <button className="primary-btn" type="submit">
+          <button className="primary-btn" type="submit" style={{ width: "100%", marginTop: "8px" }}>
             Login
           </button>
         </form>

@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreateAssessment() {
   const navigate = useNavigate();
@@ -22,6 +21,44 @@ function CreateAssessment() {
     reasonForVisit: "",
     remarks: "",
   });
+
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/patients", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setPatients(data))
+      .catch((err) => console.log(err));
+  }, [token]);
+
+  // auto-select the queue patient once patients list loads
+  useEffect(() => {
+    if (queueItem.patientId && patients.length > 0) {
+      const match = patients.find((p) => p._id === queueItem.patientId);
+      if (match) {
+        setForm((prev) => ({
+          ...prev,
+          patientId: match._id,
+          patientName: `${match.firstName} ${match.lastName}`,
+        }));
+      }
+    }
+  }, [queueItem.patientId, patients]);
+
+  const handlePatientSelect = (e) => {
+    const selected = patients.find((p) => p._id === e.target.value);
+    if (!selected) {
+      setForm({ ...form, patientId: "", patientName: "" });
+      return;
+    }
+    setForm({
+      ...form,
+      patientId: selected._id,
+      patientName: `${selected.firstName} ${selected.lastName}`,
+    });
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,94 +84,114 @@ function CreateAssessment() {
       alert("Assessment saved!");
       navigate("/staff/queue");
     } else {
-      alert("Failed to save assessment");
+      const data = await res.json().catch(() => ({}));
+      alert(data.message || "Failed to save assessment");
     }
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/queue")}>Queue</button>
-          </li>
-          <li>
-            <button onClick={() => navigate(-1)}>Back</button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Physical Assessment</h1>
 
         <form onSubmit={handleSubmit}>
-          <input value={form.patientName} readOnly />
+          <div className="form-group">
+            <label className="form-label">Patient</label>
+            <select value={form.patientId} onChange={handlePatientSelect}>
+              <option value="">Select Patient</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {patient.firstName} {patient.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <input
-            name="height"
-            placeholder="Height"
-            value={form.height}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Height (cm)</label>
+            <input
+              name="height"
+              placeholder="e.g. 120"
+              value={form.height}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="weight"
-            placeholder="Weight"
-            value={form.weight}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Weight (kg)</label>
+            <input
+              name="weight"
+              placeholder="e.g. 25"
+              value={form.weight}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="temperature"
-            placeholder="Temperature"
-            value={form.temperature}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Temperature (°C)</label>
+            <input
+              name="temperature"
+              placeholder="e.g. 37.2"
+              value={form.temperature}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="bloodPressure"
-            placeholder="Blood Pressure"
-            value={form.bloodPressure}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Blood Pressure</label>
+            <input
+              name="bloodPressure"
+              placeholder="e.g. 120/80"
+              value={form.bloodPressure}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="heartRate"
-            placeholder="Heart Rate"
-            value={form.heartRate}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Heart Rate (bpm)</label>
+            <input
+              name="heartRate"
+              placeholder="e.g. 80"
+              value={form.heartRate}
+              onChange={handleChange}
+            />
+          </div>
 
-          <textarea
-            name="symptoms"
-            placeholder="Symptoms"
-            value={form.symptoms}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Symptoms</label>
+            <textarea
+              name="symptoms"
+              placeholder="Describe patient symptoms"
+              value={form.symptoms}
+              onChange={handleChange}
+            />
+          </div>
 
-          <textarea
-            name="reasonForVisit"
-            placeholder="Reason for Visit"
-            value={form.reasonForVisit}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Reason for Visit</label>
+            <textarea
+              name="reasonForVisit"
+              placeholder="Reason for Visit"
+              value={form.reasonForVisit}
+              onChange={handleChange}
+            />
+          </div>
 
-          <textarea
-            name="remarks"
-            placeholder="Initial Remarks"
-            value={form.remarks}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Initial Remarks</label>
+            <textarea
+              name="remarks"
+              placeholder="Initial Remarks"
+              value={form.remarks}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Save Assessment
           </button>
         </form>
-      </div>
-    </div>
-  );
+      </>
+    );
 }
 
 export default CreateAssessment;

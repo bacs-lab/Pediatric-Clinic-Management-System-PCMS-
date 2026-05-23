@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
-
 function CreateAppointment() {
   const navigate = useNavigate();
 
@@ -98,84 +96,59 @@ function CreateAppointment() {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>Parent Portal</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/parent/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>
-              Back
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">
           Request Appointment
         </h1>
 
         <form onSubmit={handleSubmit}>
-          <select
-            value={form.patientId}
-            onChange={handlePatientSelect}
-          >
-            <option value="">Select Child</option>
+          <div className="form-group">
+            <label className="form-label">Child</label>
+            <select value={form.patientId} onChange={handlePatientSelect}>
+              <option value="">Select Child</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {patient.firstName} {patient.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {patients.map((patient) => (
-              <option
-                key={patient._id}
-                value={patient._id}
-              >
-                {patient.firstName} {patient.lastName}
-              </option>
-            ))}
-          </select>
+          <div className="form-group">
+            <label className="form-label">Appointment Date</label>
+            <input
+              type="date"
+              name="appointmentDate"
+              value={form.appointmentDate}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            value={form.patientName}
-            readOnly
-            placeholder="Patient Name"
-          />
+          <div className="form-group">
+            <label className="form-label">Appointment Time</label>
+            <input
+              type="time"
+              name="appointmentTime"
+              value={form.appointmentTime}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            type="date"
-            name="appointmentDate"
-            value={form.appointmentDate}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Reason</label>
+            <textarea
+              name="reason"
+              placeholder="Reason for appointment"
+              value={form.reason}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            type="time"
-            name="appointmentTime"
-            value={form.appointmentTime}
-            onChange={handleChange}
-          />
-
-          <textarea
-            name="reason"
-            placeholder="Reason for appointment"
-            value={form.reason}
-            onChange={handleChange}
-          />
-
-          <button
-            className="primary-btn"
-            type="submit"
-          >
+          <button className="primary-btn" type="submit">
             Request Appointment
           </button>
         </form>
-      </div>
-    </div>
+      </>
   );
 }
 

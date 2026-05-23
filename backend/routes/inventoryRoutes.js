@@ -8,7 +8,7 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 router.post(
   "/",
   protect,
-  allowRoles("staff", "admin", "secretary"),
+  allowRoles("staff", "admin", "secretary", "nurse", "doctor"),
   async (req, res) => {
   try {
     const item = await InventoryItem.create(req.body);

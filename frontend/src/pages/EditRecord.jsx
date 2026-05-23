@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function EditRecord() {
   const navigate = useNavigate();
@@ -63,32 +62,13 @@ function EditRecord() {
       alert("Medical record updated!");
       navigate(`/staff/records/${id}`);
     } else {
-      alert("Failed to update record");
+      const data = await res.json().catch(() => ({}));
+      alert(data.message || "Failed to update record");
     }
   };
 
   return (
-  <div className="layout">
-    <div className="sidebar">
-      <h2>KIDS FIRST</h2>
-
-      <ul>
-        <li>
-          <button onClick={() => navigate("/staff/dashboard")}>
-            Dashboard
-          </button>
-        </li>
-
-        <li>
-          <button onClick={() => navigate(-1)}>
-            Back
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <div className="main-content dashboard-bg">
-      <Topbar />
+  <div className="dashboard-bg">
 
       <div className="dashboard-hero">
         <div>
@@ -100,79 +80,109 @@ function EditRecord() {
 
       <div className="panel">
         <form onSubmit={handleSubmit}>
-          <input
-            name="patientName"
-            placeholder="Patient Name"
-            value={form.patientName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Patient Name</label>
+            <input
+              name="patientName"
+              placeholder="Patient Name"
+              value={form.patientName}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="age"
-            type="number"
-            placeholder="Age"
-            value={form.age}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Age</label>
+            <input
+              name="age"
+              type="number"
+              placeholder="Age"
+              value={form.age}
+              onChange={handleChange}
+            />
+          </div>
 
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-          >
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
+          <div className="form-group">
+            <label className="form-label">Gender</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+            >
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
 
-          <input
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Phone</label>
+            <input
+              name="phone"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="address"
-            placeholder="Address"
-            value={form.address}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <input
+              name="address"
+              placeholder="Address"
+              value={form.address}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="chiefComplaint"
-            placeholder="Chief Complaint"
-            value={form.chiefComplaint}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Chief Complaint</label>
+            <input
+              name="chiefComplaint"
+              placeholder="Chief Complaint"
+              value={form.chiefComplaint}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="diagnosis"
-            placeholder="Diagnosis"
-            value={form.diagnosis}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Diagnosis</label>
+            <input
+              name="diagnosis"
+              placeholder="Diagnosis"
+              value={form.diagnosis}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="treatment"
-            placeholder="Treatment"
-            value={form.treatment}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Treatment</label>
+            <input
+              name="treatment"
+              placeholder="Treatment"
+              value={form.treatment}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="prescription"
-            placeholder="Prescription"
-            value={form.prescription}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Prescription</label>
+            <input
+              name="prescription"
+              placeholder="Prescription"
+              value={form.prescription}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="doctorName"
-            placeholder="Doctor Name"
-            value={form.doctorName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Doctor Name</label>
+            <input
+              name="doctorName"
+              placeholder="Doctor Name"
+              value={form.doctorName}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Update Record
@@ -180,8 +190,7 @@ function EditRecord() {
         </form>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default EditRecord;

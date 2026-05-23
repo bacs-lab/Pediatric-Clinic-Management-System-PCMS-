@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreateVaccineRecord() {
   const navigate = useNavigate();
@@ -119,105 +118,96 @@ if (!form.administeredBy.trim()) {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/vaccines")}>
-              Vaccines
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>Back</button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Add Vaccine Record</h1>
 
         <form onSubmit={handleSubmit}>
-          <select value={form.patientId} onChange={handlePatientSelect}>
-            <option value="">Select Patient</option>
+          <div className="form-group">
+            <label className="form-label">Patient</label>
+            <select value={form.patientId} onChange={handlePatientSelect}>
+              <option value="">Select Patient</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {patient.firstName} {patient.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {patients.map((patient) => (
-              <option key={patient._id} value={patient._id}>
-                {patient.firstName} {patient.lastName}
-              </option>
-            ))}
-          </select>
+          <div className="form-group">
+            <label className="form-label">Vaccine</label>
+            <select
+              name="inventoryItemId"
+              value={form.inventoryItemId}
+              onChange={handleVaccineSelect}
+              required
+            >
+              <option value="">Select Vaccine</option>
+              {vaccines.map((vaccine) => (
+                <option key={vaccine._id} value={vaccine._id}>
+                  {vaccine.itemName} — Stock: {vaccine.stockQuantity}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <input value={form.patientName} readOnly placeholder="Patient Name" />
+          <div className="form-group">
+            <label className="form-label">Vaccine Date</label>
+            <input
+              name="vaccineDate"
+              type="date"
+              value={form.vaccineDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <select
-            name="inventoryItemId"
-            value={form.inventoryItemId}
-            onChange={handleVaccineSelect}
-            required
-          >
-            <option value="">Select Vaccine</option>
+          <div className="form-group">
+            <label className="form-label">Next Dose Date</label>
+            <input
+              name="nextDoseDate"
+              type="date"
+              value={form.nextDoseDate}
+              onChange={handleChange}
+            />
+          </div>
 
-            {vaccines.map((vaccine) => (
-              <option key={vaccine._id} value={vaccine._id}>
-                {vaccine.itemName} — Stock: {vaccine.stockQuantity}
-              </option>
-            ))}
-          </select>
+          <div className="form-group">
+            <label className="form-label">Status</label>
+            <select name="status" value={form.status} onChange={handleChange}>
+              <option>Completed</option>
+              <option>Upcoming</option>
+              <option>Missed</option>
+              <option>Rescheduled</option>
+            </select>
+          </div>
 
-          <input
-            name="vaccineName"
-            placeholder="Vaccine Name"
-            value={form.vaccineName}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Administered By</label>
+            <input
+              name="administeredBy"
+              placeholder="Administered By"
+              value={form.administeredBy}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="vaccineDate"
-            type="date"
-            value={form.vaccineDate}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            name="nextDoseDate"
-            type="date"
-            value={form.nextDoseDate}
-            onChange={handleChange}
-          />
-
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option>Completed</option>
-            <option>Upcoming</option>
-            <option>Missed</option>
-            <option>Rescheduled</option>
-          </select>
-
-          <input
-            name="administeredBy"
-            placeholder="Administered By"
-            value={form.administeredBy}
-            onChange={handleChange}
-          />
-
-          <textarea
-            name="remarks"
-            placeholder="Remarks"
-            value={form.remarks}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Remarks</label>
+            <textarea
+              name="remarks"
+              placeholder="Remarks"
+              value={form.remarks}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Save Vaccine Record
           </button>
         </form>
-      </div>
-    </div>
-  );  
+      </>
+    );
 }
 
 export default CreateVaccineRecord;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/authFetch";
-import Topbar from "../components/Topbar";
 
 function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -21,27 +20,7 @@ const filteredPatients = patients.filter((patient) =>
 );
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate("/staff/create-patient")}>
-              Add Patient
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <Topbar />
+    <>
         <h1 className="page-title">Patients</h1>
         <input
   type="text"
@@ -92,8 +71,7 @@ const filteredPatients = patients.filter((patient) =>
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </>
   );
 }
 

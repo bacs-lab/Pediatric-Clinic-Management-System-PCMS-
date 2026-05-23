@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
 function CreatePatient() {
   const navigate = useNavigate();
@@ -112,117 +111,120 @@ if (form.contactNumber.length < 11) {
   };
 
   return (
-    <div className="layout">
-      <div className="sidebar">
-        <h2>PCMS Staff</h2>
-
-        <ul>
-          <li>
-            <button onClick={() => navigate("/staff/dashboard")}>
-              Dashboard
-            </button>
-          </li>
-
-          <li>
-            <button onClick={() => navigate(-1)}>Back</button>
-          </li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-          <Topbar />
+    <>
         <h1 className="page-title">Create Child Patient</h1>
 
         <form onSubmit={handleSubmit}>
-          <select
-            name="guardianId"
-            value={form.guardianId}
-            onChange={handleGuardianSelect}
-          >
-            <option value="">Select Guardian</option>
+          <div className="form-group">
+            <label className="form-label">Guardian</label>
+            <select
+              name="guardianId"
+              value={form.guardianId}
+              onChange={handleGuardianSelect}
+            >
+              <option value="">Select Guardian</option>
+              {guardians.map((guardian) => (
+                <option key={guardian._id} value={guardian.userId}>
+                  {guardian.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {guardians.map((guardian) => (
-              <option key={guardian._id} value={guardian.userId}>
-                {guardian.fullName}
-              </option>
-            ))}
-          </select>
+          <div className="form-group">
+            <label className="form-label">Child First Name</label>
+            <input
+              name="firstName"
+              placeholder="Child First Name"
+              value={form.firstName}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="guardianName"
-            placeholder="Guardian Name"
-            value={form.guardianName}
-            readOnly
-          />
+          <div className="form-group">
+            <label className="form-label">Child Last Name</label>
+            <input
+              name="lastName"
+              placeholder="Child Last Name"
+              value={form.lastName}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="firstName"
-            placeholder="Child First Name"
-            value={form.firstName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Birth Date</label>
+            <input
+              name="birthDate"
+              type="date"
+              value={form.birthDate}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="lastName"
-            placeholder="Child Last Name"
-            value={form.lastName}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Gender</label>
+            <select name="gender" value={form.gender} onChange={handleChange}>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
 
-          <input
-            name="birthDate"
-            type="date"
-            value={form.birthDate}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Contact Number</label>
+            <input
+              name="contactNumber"
+              placeholder="Contact Number"
+              value={form.contactNumber}
+              onChange={handleChange}
+            />
+          </div>
 
-          <select name="gender" value={form.gender} onChange={handleChange}>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <input
+              name="address"
+              placeholder="Address"
+              value={form.address}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="contactNumber"
-            placeholder="Contact Number"
-            value={form.contactNumber}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Blood Type</label>
+            <input
+              name="bloodType"
+              placeholder="Blood Type"
+              value={form.bloodType}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="address"
-            placeholder="Address"
-            value={form.address}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Allergies</label>
+            <input
+              name="allergies"
+              placeholder="Allergies"
+              value={form.allergies}
+              onChange={handleChange}
+            />
+          </div>
 
-          <input
-            name="bloodType"
-            placeholder="Blood Type"
-            value={form.bloodType}
-            onChange={handleChange}
-          />
-
-          <input
-            name="allergies"
-            placeholder="Allergies"
-            value={form.allergies}
-            onChange={handleChange}
-          />
-
-          <input
-            name="notes"
-            placeholder="Notes"
-            value={form.notes}
-            onChange={handleChange}
-          />
+          <div className="form-group">
+            <label className="form-label">Notes</label>
+            <input
+              name="notes"
+              placeholder="Notes"
+              value={form.notes}
+              onChange={handleChange}
+            />
+          </div>
 
           <button className="primary-btn" type="submit">
             Create Patient
           </button>
         </form>
-      </div>
-    </div>
-  );
+      </>
+    );
 }
 
 export default CreatePatient;
