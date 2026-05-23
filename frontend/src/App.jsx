@@ -7,7 +7,6 @@ import MainLayout from './components/MainLayout';
 import CreateRecord from './pages/CreateRecord';
 import EditRecord from './pages/EditRecord';
 import RecordDetails from './pages/RecordDetails';
-import ParentPatientRecords from './pages/ParentPatientRecords';
 import CreateParent from './pages/CreateParent';
 import ParentList from './pages/ParentList';
 import CreatePatient from './pages/CreatePatient';
@@ -63,8 +62,7 @@ function App() {
         <Route path="/parent/appointments" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentAppointments /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/patient/:patientId/billing" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentBilling /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/patient/:patientId/vaccines" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentVaccines /></MainLayout></ProtectedRoute>} />
-        <Route path="/parent/patient/:patientId/records" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentPatientRecords /></MainLayout></ProtectedRoute>} />
-      </Routes>
+              </Routes>
     </BrowserRouter>
   );
 }

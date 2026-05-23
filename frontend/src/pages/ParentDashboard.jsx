@@ -66,13 +66,6 @@ function ParentDashboard() {
               <div className="child-actions">
                 <button
                   className="primary-btn"
-                  onClick={() => navigate(`/parent/patient/${patient._id}/records`)}
-                >
-                  Medical History
-                </button>
-
-                <button
-                  className="primary-btn"
                   onClick={() => navigate(`/parent/patient/${patient._id}/billing`)}
                 >
                   Billing

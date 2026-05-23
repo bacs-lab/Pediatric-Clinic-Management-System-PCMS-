@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 function AppointmentList() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const fetchAppointments = () => {
     fetch("http://localhost:5000/api/appointments", {
@@ -55,6 +57,16 @@ function AppointmentList() {
     }
   };
 
+  const filtered = appointments.filter((a) => {
+    const matchesSearch =
+      a.patientName?.toLowerCase().includes(search.toLowerCase()) ||
+      a.guardianName?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter ? a.status === statusFilter : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  const statuses = [...new Set(appointments.map((a) => a.status))];
+
   return (
     <div className="dashboard-bg">
       <div className="dashboard-hero">
@@ -69,8 +81,28 @@ function AppointmentList() {
         <div className="panel-header">
           <h2>Appointment Requests</h2>
           <span style={{ color: "#64748b" }}>
-            {appointments.length} total request(s)
+            {filtered.length} request(s)
           </span>
+        </div>
+
+        <div className="inventory-filters">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search patient or guardian..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
 
         <div className="table-container flat">
@@ -88,12 +120,12 @@ function AppointmentList() {
             </thead>
 
             <tbody>
-              {appointments.length === 0 ? (
+              {filtered.length === 0 ? (
                 <tr>
                   <td colSpan="7">No appointments found.</td>
                 </tr>
               ) : (
-                appointments.map((appointment) => (
+                filtered.map((appointment) => (
                   <tr key={appointment._id}>
                     <td><strong>{appointment.patientName}</strong></td>
                     <td>{appointment.guardianName}</td>

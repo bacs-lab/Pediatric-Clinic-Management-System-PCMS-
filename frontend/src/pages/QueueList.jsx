@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 function QueueList() {
   const navigate = useNavigate();
   const [queue, setQueue] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const fetchQueue = () => {
     fetch("http://localhost:5000/api/queue", {
@@ -34,6 +36,16 @@ function QueueList() {
     else alert("Failed to update queue");
   };
 
+  const filtered = queue.filter((item) => {
+    const matchesSearch = item.patientName
+      ?.toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesStatus = statusFilter ? item.status === statusFilter : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  const statuses = [...new Set(queue.map((q) => q.status))];
+
   return (
     <div className="dashboard-bg">
       <div className="dashboard-hero">
@@ -48,8 +60,28 @@ function QueueList() {
         <div className="panel-header">
           <h2>Current Queue</h2>
           <span style={{ color: "#64748b" }}>
-            {queue.length} queue item(s)
+            {filtered.length} item(s)
           </span>
+        </div>
+
+        <div className="inventory-filters">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search patient..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
 
         <div className="table-container flat">
@@ -64,12 +96,12 @@ function QueueList() {
             </thead>
 
             <tbody>
-              {queue.length === 0 ? (
+              {filtered.length === 0 ? (
                 <tr>
                   <td colSpan="4">No patients in queue.</td>
                 </tr>
               ) : (
-                queue.map((item) => (
+                filtered.map((item) => (
                   <tr key={item._id}>
                     <td><strong>#{item.queueNumber}</strong></td>
                     <td><strong>{item.patientName}</strong></td>
