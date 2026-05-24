@@ -129,6 +129,21 @@ export const parentNavItems = [
     path: '/parent/dashboard',
   },
   {
+    label: 'Medical Records',
+    icon: 'ti ti-notes',
+    path: '/parent/records',
+  },
+  {
+    label: 'Billing',
+    icon: 'ti ti-receipt',
+    path: '/parent/billing',
+  },
+  {
+    label: 'Vaccines',
+    icon: 'ti ti-vaccine',
+    path: '/parent/vaccines',
+  },
+  {
     label: 'My Appointments',
     icon: 'ti ti-calendar-check',
     path: '/parent/appointments',

@@ -27,6 +27,7 @@ import VaccineList from './pages/VaccineList';
 import CreateVaccineRecord from './pages/CreateVaccineRecord';
 import ParentVaccines from './pages/ParentVaccines';
 import ParentPatientRecords from './pages/ParentPatientRecords';
+import ParentChildList from './pages/ParentChildList';
 import PatientProfile from './pages/PatientProfile';
 import ManageUsers from './pages/ManageUsers';
 import RequestCenter from './pages/RequestCenter';
@@ -70,6 +71,9 @@ function App() {
         <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentDashboard /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/create-appointment" element={<ProtectedRoute allowedRole="parent"><MainLayout><CreateAppointment /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/appointments" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentAppointments /></MainLayout></ProtectedRoute>} />
+        <Route path="/parent/records" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentChildList type="records" title="Medical Records" subtitle="Select a child to view their consultation history and medical records." icon="ti ti-notes" /></MainLayout></ProtectedRoute>} />
+        <Route path="/parent/billing" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentChildList type="billing" title="Billing History" subtitle="Select a child to view their billing and payment records." icon="ti ti-receipt" /></MainLayout></ProtectedRoute>} />
+        <Route path="/parent/vaccines" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentChildList type="vaccines" title="Vaccination History" subtitle="Select a child to view their immunization records." icon="ti ti-vaccine" /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/patient/:patientId/records" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentPatientRecords /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/patient/:patientId/billing" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentBilling /></MainLayout></ProtectedRoute>} />
         <Route path="/parent/patient/:patientId/vaccines" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentVaccines /></MainLayout></ProtectedRoute>} />

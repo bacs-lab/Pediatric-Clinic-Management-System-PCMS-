@@ -46,7 +46,16 @@ function CreatePatient({
   const [form, setForm] = useState(() => buildInitialForm(patient));
 
   useEffect(() => {
-    if (parentMode) return;
+    if (parentMode) {
+      if (!editMode) {
+        setForm((current) => ({
+          ...current,
+          contactNumber: currentUser.contactNumber || "",
+          address: currentUser.address || "",
+        }));
+      }
+      return;
+    }
 
     fetch(apiUrl("/api/parent-profiles"), {
       headers: authHeaders(),
@@ -303,16 +312,6 @@ function CreatePatient({
             name="relationshipToChild"
             placeholder="Mother, father, guardian..."
             value={form.relationshipToChild}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Contact Number</label>
-          <input
-            name="contactNumber"
-            placeholder="Contact Number"
-            value={form.contactNumber}
             onChange={handleChange}
           />
         </div>
