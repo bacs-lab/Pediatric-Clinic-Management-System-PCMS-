@@ -18,8 +18,6 @@ router.post("/register", async (req, res) => {
       password,
       contactNumber,
       address,
-      relationshipToChild,
-      emergencyContact,
     } = req.body;
 
     if (!name?.trim()) {
@@ -51,14 +49,12 @@ router.post("/register", async (req, res) => {
       mustChangePassword: false,
     });
 
-    if (contactNumber || address || relationshipToChild || emergencyContact) {
+    if (contactNumber || address) {
       await ParentProfile.create({
         userId: user._id,
         fullName: user.name,
         contactNumber,
         address,
-        relationshipToChild,
-        emergencyContact,
       });
     }
 

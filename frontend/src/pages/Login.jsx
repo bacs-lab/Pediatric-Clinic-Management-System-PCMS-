@@ -20,8 +20,6 @@ function Login() {
     confirmPassword: "",
     contactNumber: "",
     address: "",
-    relationshipToChild: "",
-    emergencyContact: "",
   });
 
   const handleLoginChange = (event) => {
@@ -116,8 +114,6 @@ function Login() {
           password: signupForm.password,
           contactNumber: signupForm.contactNumber,
           address: signupForm.address,
-          relationshipToChild: signupForm.relationshipToChild,
-          emergencyContact: signupForm.emergencyContact,
         }),
       });
 
@@ -140,8 +136,6 @@ function Login() {
         confirmPassword: "",
         contactNumber: "",
         address: "",
-        relationshipToChild: "",
-        emergencyContact: "",
       });
       setMode("login");
     } finally {
@@ -283,28 +277,6 @@ function Login() {
                     value={signupForm.address}
                     onChange={handleSignupChange}
                   />
-                </div>
-
-                <div className="form-row-2col">
-                  <div className="form-group">
-                    <label className="form-label">Relationship to Child</label>
-                    <input
-                      name="relationshipToChild"
-                      placeholder="Mother, father, guardian..."
-                      value={signupForm.relationshipToChild}
-                      onChange={handleSignupChange}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Emergency Contact</label>
-                    <input
-                      name="emergencyContact"
-                      placeholder="Emergency contact"
-                      value={signupForm.emergencyContact}
-                      onChange={handleSignupChange}
-                    />
-                  </div>
                 </div>
               </div>
 

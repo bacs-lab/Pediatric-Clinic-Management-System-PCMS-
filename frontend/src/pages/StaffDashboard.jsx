@@ -4,6 +4,7 @@ import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import CreatePatient from "./CreatePatient";
 import { apiUrl, authHeaders } from "../utils/api";
+import { FRONT_DESK_ROLES } from "../utils/roles";
 
 const formatNumber = (num) => Number(num || 0).toLocaleString("en-US");
 
@@ -14,6 +15,8 @@ const EXPIRING_SOON_CUTOFF = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
 function StaffDashboard() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const canCreatePatients = FRONT_DESK_ROLES.includes(user.role);
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -127,13 +130,15 @@ function StaffDashboard() {
             <span className="ti ti-calendar" />
             Appointments
           </button>
-          <button
-            className="primary-btn"
-            onClick={() => setAddPatientOpen(true)}
-          >
-            <span className="ti ti-user-plus" />
-            Add Patient
-          </button>
+          {canCreatePatients && (
+            <button
+              className="primary-btn"
+              onClick={() => setAddPatientOpen(true)}
+            >
+              <span className="ti ti-user-plus" />
+              Add Patient
+            </button>
+          )}
         </div>
       </div>
 

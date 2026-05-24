@@ -143,6 +143,9 @@ function PatientProfile() {
     );
   }
 
+  const patientStatus = patient.status || "Active";
+  const isPending = patientStatus === "Pending";
+
   return (
     <div className="dashboard-bg">
       <div className="dashboard-hero patient-hero">
@@ -155,6 +158,11 @@ function PatientProfile() {
             {calculateAge(patient.birthDate)} · {patient.gender} · Guardian:{" "}
             {patient.guardianName}
           </span>
+          <div className="hero-status-row">
+            <span className={`status-badge ${patientStatus.toLowerCase()}`}>
+              {patientStatus}
+            </span>
+          </div>
         </div>
 
         <div className="hero-actions">
@@ -169,17 +177,19 @@ function PatientProfile() {
             <span className="ti ti-download" />
             Export Timeline
           </button>
-          <button
-            className="primary-btn"
-            onClick={() =>
-              navigate("/staff/records", {
-                state: { modal: "add-record", patientId: patient._id },
-              })
-            }
-          >
-            <span className="ti ti-notes-medical" />
-            Add EMR
-          </button>
+          {!isPending && (
+            <button
+              className="primary-btn"
+              onClick={() =>
+                navigate("/staff/records", {
+                  state: { modal: "add-record", patientId: patient._id },
+                })
+              }
+            >
+              <span className="ti ti-notes-medical" />
+              Add EMR
+            </button>
+          )}
         </div>
       </div>
 
@@ -188,9 +198,12 @@ function PatientProfile() {
           <span className="profile-kicker">Child Details</span>
           <h2>Clinical Snapshot</h2>
           <div className="profile-facts">
+            <p><strong>Parent / Guardian</strong><span>{patient.guardianName || "N/A"}</span></p>
             <p><strong>Birth Date</strong><span>{formatDate(patient.birthDate)}</span></p>
             <p><strong>Blood Type</strong><span>{patient.bloodType || "N/A"}</span></p>
             <p><strong>Allergies</strong><span>{patient.allergies || "None recorded"}</span></p>
+            <p><strong>Relationship</strong><span>{patient.relationshipToChild || "N/A"}</span></p>
+            <p><strong>Emergency Contact</strong><span>{patient.emergencyContact || "N/A"}</span></p>
             <p><strong>Contact</strong><span>{patient.contactNumber || "N/A"}</span></p>
             <p><strong>Address</strong><span>{patient.address || "N/A"}</span></p>
           </div>

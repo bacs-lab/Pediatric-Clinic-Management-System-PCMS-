@@ -39,8 +39,6 @@ function ParentList() {
     [
       parent.fullName,
       parent.contactNumber,
-      parent.relationshipToChild,
-      parent.emergencyContact,
       parent.address,
     ]
       .filter(Boolean)
@@ -87,23 +85,21 @@ function ParentList() {
               <tr>
                 <th>Full Name</th>
                 <th>Contact</th>
-                <th>Relationship</th>
-                <th>Emergency Contact</th>
+                <th>Address</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredParents.length === 0 ? (
                 <tr>
-                  <td colSpan="4">No guardians found.</td>
+                  <td colSpan="3">No guardians found.</td>
                 </tr>
               ) : (
                 filteredParents.map((parent) => (
                   <tr key={parent._id}>
                     <td><strong>{parent.fullName}</strong></td>
                     <td>{parent.contactNumber}</td>
-                    <td>{parent.relationshipToChild || "N/A"}</td>
-                    <td>{parent.emergencyContact || "N/A"}</td>
+                    <td>{parent.address || "N/A"}</td>
                   </tr>
                 ))
               )}

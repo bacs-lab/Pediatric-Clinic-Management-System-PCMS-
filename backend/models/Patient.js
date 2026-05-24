@@ -38,6 +38,14 @@ const patientSchema = new mongoose.Schema(
       required: true,
     },
 
+    relationshipToChild: {
+      type: String,
+    },
+
+    emergencyContact: {
+      type: String,
+    },
+
     contactNumber: {
       type: String,
     },
@@ -56,6 +64,26 @@ const patientSchema = new mongoose.Schema(
 
     notes: {
       type: String,
+    },
+
+    status: {
+      type: String,
+      enum: ["Pending", "Active", "Rejected"],
+      default: "Active",
+    },
+
+    requestedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    approvedAt: {
+      type: Date,
     },
   },
   { timestamps: true }

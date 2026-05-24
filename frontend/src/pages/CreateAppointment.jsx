@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiUrl } from "../utils/api";
+import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 function CreateAppointment({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
 
   const [patients, setPatients] = useState([]);
 
@@ -22,14 +21,18 @@ function CreateAppointment({ embedded = false, onCancel, onSaved }) {
 
   useEffect(() => {
     fetch(apiUrl(`/api/patients/guardian/${user.id}`), {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
+      headers: authHeaders(),
+    })
       .then((res) => res.json())
-      .then((data) => setPatients(data))
+      .then((data) =>
+        setPatients(
+          Array.isArray(data)
+            ? data.filter((patient) => (patient.status || "Active") === "Active")
+            : []
+        )
+      )
       .catch((err) => console.log(err));
-  }, [user.id, token]);
+  }, [user.id]);
 
   const handlePatientSelect = (e) => {
     const selectedPatient = patients.find(
@@ -80,10 +83,7 @@ function CreateAppointment({ embedded = false, onCancel, onSaved }) {
     apiUrl("/api/appointments"),
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(form),
     }
   );

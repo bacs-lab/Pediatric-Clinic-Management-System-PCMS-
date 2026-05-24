@@ -77,7 +77,7 @@ export const staffNavItems = [
   },
   {
     label: 'Manage Users',
-    icon: 'ti ti-users-cog',
+    icon: 'ti ti-user-cog',
     path: '/staff/users',
     roles: ADMIN_ONLY,
   },

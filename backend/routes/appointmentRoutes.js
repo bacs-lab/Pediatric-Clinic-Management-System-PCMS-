@@ -6,11 +6,6 @@ const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
 const { ROLES } = require("../constants/roles");
 
-const parentOwnsPatient = async (userId, patientId) => {
-  const patient = await Patient.findById(patientId).select("guardianId");
-  return patient?.guardianId?.toString() === userId;
-};
-
 // CREATE appointment
 router.post(
   "/",
@@ -18,10 +13,24 @@ router.post(
   allowRoles("parent", "staff", "admin", "secretary"),
   async (req, res) => {
     try {
+      const patient = await Patient.findById(req.body.patientId).select(
+        "guardianId status"
+      );
+
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      if ((patient.status || "Active") !== "Active") {
+        return res.status(400).json({
+          message: "Patient request must be approved before booking appointments",
+        });
+      }
+
       if (req.user.role === ROLES.PARENT) {
         if (
           req.body.guardianId !== req.user.id ||
-          !(await parentOwnsPatient(req.user.id, req.body.patientId))
+          patient.guardianId?.toString() !== req.user.id
         ) {
           return res.status(403).json({ message: "Access denied" });
         }

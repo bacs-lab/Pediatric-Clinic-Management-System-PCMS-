@@ -541,10 +541,23 @@ button:disabled {
 
 .notification-item {
   display: flex;
+  width: 100%;
   gap: 12px;
   padding: 12px;
+  border: 0;
   border-radius: 18px;
   background: var(--canvas-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.notification-item {
+  cursor: pointer;
+}
+
+button.notification-item:hover {
+  background: #edf6ff;
 }
 
 .notification-item + .notification-item {
@@ -633,6 +646,19 @@ button:disabled {
   font-family: "Quicksand", "Nunito", sans-serif;
   font-size: clamp(30px, 4vw, 48px);
   line-height: 1;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-status-row {
+  display: flex;
+  margin-top: 12px;
 }
 
 .page-heading {
@@ -1146,7 +1172,8 @@ form:not(.global-search) {
 .status-badge.cancelled,
 .status-badge.unpaid,
 .status-badge.missed,
-.status-badge.expired {
+.status-badge.expired,
+.status-badge.rejected {
   background: var(--coral-soft);
   color: var(--red);
 }
@@ -1248,6 +1275,13 @@ form:not(.global-search) {
   font-family: "Quicksand", "Nunito", sans-serif;
 }
 
+.child-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .child-card p {
   margin: 4px 0;
   color: var(--muted);
@@ -1259,6 +1293,20 @@ form:not(.global-search) {
   display: grid;
   gap: 8px;
   align-content: center;
+}
+
+.child-pending-note {
+  min-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--sun-soft);
+  color: #9b7600;
+  font-weight: 900;
 }
 
 .profile-facts {

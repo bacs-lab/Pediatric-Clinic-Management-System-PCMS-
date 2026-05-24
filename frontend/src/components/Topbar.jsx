@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
+import { PATIENT_APPROVAL_ROLES } from "../utils/roles";
 
 function Topbar({ onMenuClick }) {
   const navigate = useNavigate();
@@ -20,10 +21,12 @@ function Topbar({ onMenuClick }) {
     upcomingFollowUps: [],
     upcomingVaccines: [],
   });
+  const [pendingPatients, setPendingPatients] = useState([]);
 
   const isStaff = ["staff", "admin", "doctor", "nurse", "secretary"].includes(
     user?.role
   );
+  const canApprovePatients = PATIENT_APPROVAL_ROLES.includes(user?.role);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "short",
@@ -47,6 +50,17 @@ function Topbar({ onMenuClick }) {
       )
       .catch(() => {});
   }, [isStaff]);
+
+  useEffect(() => {
+    if (!canApprovePatients) return;
+
+    fetch(apiUrl("/api/patients/pending"), {
+      headers: authHeaders(),
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setPendingPatients(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [canApprovePatients]);
 
   useEffect(() => {
     if (!isStaff) return;
@@ -115,8 +129,17 @@ function Topbar({ onMenuClick }) {
         : item.vaccineName,
     }));
 
-    return [...followUps, ...vaccines];
-  }, [isStaff, reminders]);
+    const patientRequests = pendingPatients.slice(0, 4).map((patient) => ({
+      id: `patient-request-${patient._id}`,
+      icon: "ti ti-user-question",
+      title: `${patient.firstName} ${patient.lastName} pending approval`,
+      body: `Guardian: ${patient.guardianName || "Parent request"}`,
+      path: "/staff/patients",
+      state: { statusFilter: "Pending" },
+    }));
+
+    return [...patientRequests, ...followUps, ...vaccines];
+  }, [isStaff, pendingPatients, reminders]);
 
   const globalSearchItems = useMemo(() => {
     const patients = globalSearchData.patients.map((patient) => {
@@ -143,16 +166,12 @@ function Topbar({ onMenuClick }) {
       type: "Guardian",
       icon: "ti ti-users",
       title: guardian.fullName || "Unnamed guardian",
-      subtitle: `${guardian.relationshipToChild || "Guardian"} - ${
-        guardian.contactNumber || "No contact"
-      }`,
+      subtitle: guardian.contactNumber || guardian.address || "Guardian account",
       path: "/staff/parents",
       state: { search: guardian.fullName || guardian.contactNumber || "" },
       keywords: [
         guardian.fullName,
         guardian.contactNumber,
-        guardian.relationshipToChild,
-        guardian.emergencyContact,
         guardian.address,
       ],
     }));
@@ -238,6 +257,13 @@ function Topbar({ onMenuClick }) {
     setSearch("");
     setSearchOpen(false);
     notify(`Opened ${item.type}: ${item.title}`);
+  };
+
+  const openNotification = (item) => {
+    if (!item.path) return;
+
+    navigate(item.path, item.state ? { state: item.state } : undefined);
+    setNotificationsOpen(false);
   };
 
   const handleSearch = (event) => {
@@ -367,15 +393,30 @@ function Topbar({ onMenuClick }) {
               {notificationItems.length === 0 ? (
                 <p className="notification-empty">No reminders right now.</p>
               ) : (
-                notificationItems.map((item) => (
-                  <div className="notification-item" key={item.id}>
-                    <span className={item.icon} />
-                    <div>
-                      <strong>{item.title}</strong>
-                      <p>{item.body}</p>
+                notificationItems.map((item) =>
+                  item.path ? (
+                    <button
+                      className="notification-item"
+                      key={item.id}
+                      type="button"
+                      onClick={() => openNotification(item)}
+                    >
+                      <span className={item.icon} />
+                      <div>
+                        <strong>{item.title}</strong>
+                        <p>{item.body}</p>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="notification-item" key={item.id}>
+                      <span className={item.icon} />
+                      <div>
+                        <strong>{item.title}</strong>
+                        <p>{item.body}</p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  )
+                )
               )}
             </div>
           )}

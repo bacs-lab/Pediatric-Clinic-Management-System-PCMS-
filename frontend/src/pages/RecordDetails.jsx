@@ -13,16 +13,46 @@ function RecordDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [record, setRecord] = useState(null);
+  const [patient, setPatient] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    fetch(apiUrl(`/api/records/${id}`), {
-      headers: authHeaders(),
-    })
-      .then((res) => res.json())
-      .then((data) => setRecord(data))
-      .catch((err) => console.log(err));
+    let mounted = true;
+
+    const loadRecord = async () => {
+      try {
+        const recordRes = await fetch(apiUrl(`/api/records/${id}`), {
+          headers: authHeaders(),
+        });
+        const recordData = await recordRes.json();
+
+        if (!mounted) return;
+        setRecord(recordData);
+
+        if (!recordData?.patientId) {
+          setPatient(null);
+          return;
+        }
+
+        const patientRes = await fetch(apiUrl(`/api/patients/${recordData.patientId}`), {
+          headers: authHeaders(),
+        });
+        const patientData = await patientRes.json();
+
+        if (mounted && patientRes.ok) {
+          setPatient(patientData);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    loadRecord();
+
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   const handleDelete = async () => {
@@ -94,6 +124,8 @@ function RecordDetails() {
           </div>
 
           <div className="profile-facts">
+            <p><strong>Parent / Guardian</strong><span>{patient?.guardianName || "N/A"}</span></p>
+            <p><strong>Relationship</strong><span>{patient?.relationshipToChild || "N/A"}</span></p>
             <p><strong>Phone</strong><span>{record.phone || "N/A"}</span></p>
             <p><strong>Address</strong><span>{record.address || "N/A"}</span></p>
             <p><strong>Doctor</strong><span>{record.doctorName || "N/A"}</span></p>

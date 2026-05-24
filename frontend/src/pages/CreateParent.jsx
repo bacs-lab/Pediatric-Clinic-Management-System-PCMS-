@@ -12,8 +12,6 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
     password: "",
     contactNumber: "",
     address: "",
-    relationshipToChild: "",
-    emergencyContact: "",
   });
 
   const handleChange = (e) => {
@@ -40,8 +38,6 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
             password: form.password,
             contactNumber: form.contactNumber,
             address: form.address,
-            relationshipToChild: form.relationshipToChild,
-            emergencyContact: form.emergencyContact,
           }),
         }
       );
@@ -114,26 +110,6 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
               name="address"
               placeholder="Address"
               value={form.address}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Relationship to Child</label>
-            <input
-              name="relationshipToChild"
-              placeholder="Relationship to Child"
-              value={form.relationshipToChild}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Emergency Contact</label>
-            <input
-              name="emergencyContact"
-              placeholder="Emergency Contact"
-              value={form.emergencyContact}
               onChange={handleChange}
             />
           </div>
