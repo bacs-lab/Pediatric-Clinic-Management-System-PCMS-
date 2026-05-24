@@ -96,12 +96,6 @@ export const parentNavItems = [
     path: '/parent/dashboard',
   },
   {
-    label: 'Request Appointment',
-    icon: 'ti ti-calendar-plus',
-    path: '/parent/appointments',
-    state: { modal: 'request-appointment' },
-  },
-  {
     label: 'My Appointments',
     icon: 'ti ti-calendar-check',
     path: '/parent/appointments',
