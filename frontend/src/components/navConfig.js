@@ -1,11 +1,38 @@
-import { ADMIN_ONLY, FRONT_DESK_ROLES, MEDICAL_ROLES, STAFF_ROLES } from "../utils/roles";
+import { ADMIN_ONLY, EMR_WRITE_ROLES, FRONT_DESK_ROLES, MEDICAL_ROLES, OPERATIONS_ROLES, PATIENT_APPROVAL_ROLES, STAFF_ROLES } from "../utils/roles";
+
+export const adminNavItems = [
+  {
+    label: 'Manage Users',
+    icon: 'ti ti-user-cog',
+    path: '/staff/users',
+    roles: ADMIN_ONLY,
+  },
+  {
+    label: 'Requests',
+    icon: 'ti ti-mail-opened',
+    path: '/staff/requests',
+    roles: ADMIN_ONLY,
+  },
+  {
+    label: 'Patients',
+    icon: 'ti ti-user-plus',
+    path: '/staff/patients',
+    roles: ADMIN_ONLY,
+  },
+  {
+    label: 'Guardians',
+    icon: 'ti ti-users',
+    path: '/staff/parents',
+    roles: ADMIN_ONLY,
+  },
+];
 
 export const staffNavItems = [
   {
     label: 'Dashboard',
     icon: 'ti ti-home',
     path: '/staff/dashboard',
-    roles: STAFF_ROLES,
+    roles: OPERATIONS_ROLES,
   },
   {
     label: 'Patients',
@@ -22,7 +49,7 @@ export const staffNavItems = [
     path: '/staff/records',
     roles: MEDICAL_ROLES,
     children: [
-      { label: 'Add Record', icon: 'ti ti-plus', path: '/staff/records', state: { modal: 'add-record' } },
+      { label: 'Add Record', icon: 'ti ti-plus', path: '/staff/records', state: { modal: 'add-record' }, roles: EMR_WRITE_ROLES },
     ],
   },
   {
@@ -39,6 +66,12 @@ export const staffNavItems = [
     icon: 'ti ti-calendar',
     path: '/staff/appointments',
     roles: STAFF_ROLES,
+  },
+  {
+    label: 'Requests',
+    icon: 'ti ti-mail-opened',
+    path: '/staff/requests',
+    roles: PATIENT_APPROVAL_ROLES,
   },
   {
     label: 'Queue',

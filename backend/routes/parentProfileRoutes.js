@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
+const Appointment = require("../models/Appointment");
 const ParentProfile = require("../models/ParentProfile");
+const Patient = require("../models/Patient");
+const User = require("../models/User");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
-const { STAFF_ROLES } = require("../constants/roles");
+const { ROLES, STAFF_ROLES } = require("../constants/roles");
 
 const canAccessProfile = (req, profile) =>
   STAFF_ROLES.includes(req.user.role) ||
@@ -84,17 +87,32 @@ router.put("/:id", protect, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const updatedProfile =
-      await ParentProfile.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
+    const updatedProfile = await ParentProfile.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
     if (!updatedProfile) {
       return res.status(404).json({
         message: "Parent profile not found",
       });
+    }
+
+    if (updatedProfile.userId && req.body.fullName?.trim()) {
+      const guardianName = req.body.fullName.trim();
+
+      await Promise.all([
+        User.findByIdAndUpdate(updatedProfile.userId, { name: guardianName }),
+        Patient.updateMany(
+          { guardianId: updatedProfile.userId },
+          { guardianName }
+        ),
+        Appointment.updateMany(
+          { guardianId: updatedProfile.userId },
+          { guardianName }
+        ),
+      ]);
     }
 
     res.json(updatedProfile);
@@ -104,5 +122,28 @@ router.put("/:id", protect, async (req, res) => {
     });
   }
 });
+
+router.delete(
+  "/:id",
+  protect,
+  allowRoles(ROLES.ADMIN),
+  async (req, res) => {
+    try {
+      const profile = await ParentProfile.findByIdAndDelete(req.params.id);
+
+      if (!profile) {
+        return res.status(404).json({
+          message: "Parent profile not found",
+        });
+      }
+
+      res.json({ message: "Guardian profile removed" });
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;

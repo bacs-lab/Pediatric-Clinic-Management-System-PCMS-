@@ -5,7 +5,7 @@ const router = express.Router();
 const Assessment = require("../models/Assessment");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
-const { ROLES } = require("../constants/roles");
+const { OPERATIONS_ROLES, ROLES } = require("../constants/roles");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -16,7 +16,7 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles("staff", "admin", "nurse", "doctor"),
+  allowRoles("staff", "nurse", "doctor"),
   async (req, res) => {
   try {
     const assessment = await Assessment.create(req.body);
@@ -35,7 +35,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "admin", "nurse", "doctor"),
+  allowRoles(...OPERATIONS_ROLES.filter((role) => role !== ROLES.SECRETARY)),
   async (req, res) => {
   try {
     const assessments = await Assessment.find().sort({ createdAt: -1 });
@@ -49,7 +49,7 @@ router.get(
 router.get(
   "/patient/:patientId",
   protect,
-  allowRoles("staff", "admin", "nurse", "doctor", "parent"),
+  allowRoles("staff", "nurse", "doctor", "parent"),
   async (req, res) => {
   try {
     if (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import CreatePatient from "./CreatePatient";
@@ -7,7 +8,7 @@ import { authFetch } from "../utils/authFetch";
 import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
 import { notify } from "../utils/notify";
-import { PATIENT_APPROVAL_ROLES } from "../utils/roles";
+import { EMR_WRITE_ROLES, PATIENT_APPROVAL_ROLES, ROLES } from "../utils/roles";
 
 function PatientList() {
   const location = useLocation();
@@ -21,6 +22,10 @@ function PatientList() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const canApprovePatients = PATIENT_APPROVAL_ROLES.includes(user.role);
+  const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
+  const canAddPatient = user.role !== ROLES.ADMIN;
+  const canDeletePatient = user.role === ROLES.ADMIN;
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const fetchPatients = () => {
     authFetch("/api/patients")
@@ -107,6 +112,26 @@ function PatientList() {
     ]);
   };
 
+  const deletePatient = async () => {
+    if (!pendingDelete) return;
+
+    const res = await fetch(apiUrl(`/api/patients/${pendingDelete._id}`), {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      notify(data.message || "Failed to delete patient");
+      return;
+    }
+
+    setPatients((items) => items.filter((item) => item._id !== pendingDelete._id));
+    setPendingDelete(null);
+    notify("Patient record deleted.");
+  };
+
   if (loading) return <LoadingState title="Loading child patient records..." />;
 
   return (
@@ -118,13 +143,15 @@ function PatientList() {
           <span>View, search, and manage child patient records.</span>
         </div>
 
-        <button
-          className="primary-btn"
-          onClick={() => setAddOpen(true)}
-        >
-          <span className="ti ti-user-plus" />
-          Add Patient
-        </button>
+        {canAddPatient && (
+          <button
+            className="primary-btn"
+            onClick={() => setAddOpen(true)}
+          >
+            <span className="ti ti-user-plus" />
+            Add Patient
+          </button>
+        )}
       </div>
 
       <div className="panel">
@@ -162,8 +189,8 @@ function PatientList() {
             icon="ti ti-users-off"
             title="No patients found"
             message="Try another search or add a new child patient."
-            actionLabel="Add Patient"
-            onAction={() => setAddOpen(true)}
+            actionLabel={canAddPatient ? "Add Patient" : undefined}
+            onAction={canAddPatient ? () => setAddOpen(true) : undefined}
           />
         ) : (
           <div className="table-container flat">
@@ -238,19 +265,29 @@ function PatientList() {
                               >
                                 Profile
                               </button>
-                              <button
-                                className="primary-btn"
-                                onClick={() =>
-                                  navigate("/staff/records", {
-                                    state: {
-                                      modal: "add-record",
-                                      patientId: patient._id,
-                                    },
-                                  })
-                                }
-                              >
-                                Add EMR
-                              </button>
+                              {canDeletePatient && (
+                                <button
+                                  className="danger-btn"
+                                  onClick={() => setPendingDelete(patient)}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              {canWriteEmr && (
+                                <button
+                                  className="primary-btn"
+                                  onClick={() =>
+                                    navigate("/staff/records", {
+                                      state: {
+                                        modal: "add-record",
+                                        patientId: patient._id,
+                                      },
+                                    })
+                                  }
+                                >
+                                  Add EMR
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -266,8 +303,9 @@ function PatientList() {
 
       {addOpen && (
         <div className="modal-overlay" onClick={() => setAddOpen(false)}>
-          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
             <CreatePatient
+              key="patient-list-add"
               embedded
               onCancel={() => setAddOpen(false)}
               onSaved={() => {
@@ -277,6 +315,16 @@ function PatientList() {
             />
           </div>
         </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete patient record?"
+          message={`${pendingDelete.firstName} ${pendingDelete.lastName} and related clinic records will be removed.`}
+          confirmLabel="Delete Patient"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={deletePatient}
+        />
       )}
     </div>
   );

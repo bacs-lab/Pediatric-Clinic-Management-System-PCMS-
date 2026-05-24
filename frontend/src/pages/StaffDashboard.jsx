@@ -4,7 +4,7 @@ import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import CreatePatient from "./CreatePatient";
 import { apiUrl, authHeaders } from "../utils/api";
-import { FRONT_DESK_ROLES } from "../utils/roles";
+import { EMR_WRITE_ROLES, FRONT_DESK_ROLES, PATIENT_APPROVAL_ROLES } from "../utils/roles";
 
 const formatNumber = (num) => Number(num || 0).toLocaleString("en-US");
 
@@ -17,6 +17,8 @@ function StaffDashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const canCreatePatients = FRONT_DESK_ROLES.includes(user.role);
+  const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
+  const canReviewRequests = PATIENT_APPROVAL_ROLES.includes(user.role);
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -123,6 +125,15 @@ function StaffDashboard() {
         </div>
 
         <div className="hero-actions">
+          {canReviewRequests && (
+            <button
+              className="secondary-btn"
+              onClick={() => navigate("/staff/requests")}
+            >
+              <span className="ti ti-mail-opened" />
+              Parent Requests
+            </button>
+          )}
           <button
             className="secondary-btn"
             onClick={() => navigate("/staff/appointments")}
@@ -196,6 +207,13 @@ function StaffDashboard() {
           <strong>Stock Alerts</strong>
           <small>{stockAlerts.length} item(s) need attention</small>
         </button>
+        {canReviewRequests && (
+          <button onClick={() => navigate("/staff/requests")}>
+            <span className="ti ti-user-question" />
+            <strong>Review Requests</strong>
+            <small>Approve child profiles and parent edit requests</small>
+          </button>
+        )}
         <button onClick={() => navigate("/staff/billings")}>
           <span className="ti ti-receipt" />
           <strong>Billing Desk</strong>
@@ -266,7 +284,7 @@ function StaffDashboard() {
             <EmptyState
               icon="ti ti-list"
               title="Queue is clear"
-              message="Patients added from approved appointments will appear here."
+              message="Approved appointments appear here automatically once they are reviewed."
             />
           ) : (
             activeQueue.slice(0, 5).map((item) => (
@@ -279,8 +297,9 @@ function StaffDashboard() {
         </div>
 
         <div className="panel">
-          <div className="panel-header">
-            <h2>Recent Medical Records</h2>
+        <div className="panel-header">
+          <h2>Recent Medical Records</h2>
+          {canWriteEmr && (
             <button
               className="secondary-btn"
               onClick={() =>
@@ -289,7 +308,8 @@ function StaffDashboard() {
             >
               Add Record
             </button>
-          </div>
+          )}
+        </div>
 
           {records.length === 0 ? (
             <EmptyState
@@ -334,8 +354,9 @@ function StaffDashboard() {
 
       {addPatientOpen && (
         <div className="modal-overlay" onClick={() => setAddPatientOpen(false)}>
-          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
             <CreatePatient
+              key="dashboard-add-patient"
               embedded
               onCancel={() => setAddPatientOpen(false)}
               onSaved={() => {

@@ -18,6 +18,17 @@ const queueColumns = [
   "Completed",
 ];
 
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString() : "N/A";
+
+const formatSlot = (item) => {
+  const date = item.appointmentDate ? formatDate(item.appointmentDate) : null;
+  const time = item.appointmentTime || null;
+
+  if (date && time) return `${date} · ${time}`;
+  return date || time || "No slot recorded";
+};
+
 function QueueList() {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -92,7 +103,8 @@ function QueueList() {
       queue.filter((item) => {
         const matchesSearch = item.patientName
           ?.toLowerCase()
-          .includes(search.toLowerCase());
+          .includes(search.toLowerCase()) ||
+          item.guardianName?.toLowerCase().includes(search.toLowerCase());
         const matchesStatus = statusFilter ? item.status === statusFilter : true;
         return matchesSearch && matchesStatus;
       }),
@@ -145,7 +157,7 @@ function QueueList() {
         <div>
           <p className="eyebrow">CLINIC PATIENT FLOW</p>
           <h1>Queue Management</h1>
-          <span>Move patients from waiting room to assessment, consultation, and billing.</span>
+          <span>Approved appointments land here automatically so staff can move patients from waiting to assessment, consultation, and billing.</span>
         </div>
 
         <div className="hero-actions">
@@ -180,7 +192,7 @@ function QueueList() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search patient..."
+            placeholder="Search patient or guardian..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -200,7 +212,7 @@ function QueueList() {
           <EmptyState
             icon="ti ti-list-check"
             title="No queue items found"
-            message="Approved appointments can be added to the queue from the appointments page."
+            message="Approved appointments automatically move into the waiting queue."
           />
         ) : (
           <div className="queue-board">
@@ -219,6 +231,11 @@ function QueueList() {
                       <div>
                         <strong>#{item.queueNumber}</strong>
                         <h4>{item.patientName}</h4>
+                        <div className="queue-card-meta">
+                          <span>{item.guardianName || "Guardian not set"}</span>
+                          <span>Slot: {formatSlot(item)}</span>
+                          <span>Requested: {formatDate(item.requestedAt || item.createdAt)}</span>
+                        </div>
                       </div>
 
                       <select
@@ -252,6 +269,10 @@ function QueueList() {
                   <article className="queue-card" key={item._id}>
                     <strong>#{item.queueNumber}</strong>
                     <h4>{item.patientName}</h4>
+                    <div className="queue-card-meta">
+                      <span>{item.guardianName || "Guardian not set"}</span>
+                      <span>Slot: {formatSlot(item)}</span>
+                    </div>
                   </article>
                 ))}
               </section>

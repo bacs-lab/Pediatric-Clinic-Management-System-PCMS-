@@ -1,19 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import CreateAppointment from "./CreateAppointment";
 import { apiUrl } from "../utils/api";
 
 function ParentAppointments() {
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = user.id || user._id || "";
   const token = localStorage.getItem("token");
   const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchAppointments = useCallback(() => {
-    fetch(apiUrl(`/api/appointments/guardian/${user.id}`), {
+  useEffect(() => {
+    if (!userId) return;
+
+    fetch(apiUrl(`/api/appointments/guardian/${userId}`), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -21,11 +25,7 @@ function ParentAppointments() {
       .then((res) => res.json())
       .then((data) => setAppointments(data))
       .catch((err) => console.log(err));
-  }, [token, user.id]);
-
-  useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+  }, [refreshKey, token, userId]);
 
   useEffect(() => {
     if (location.state?.modal === "request-appointment") {
@@ -136,7 +136,7 @@ function ParentAppointments() {
               onCancel={() => setAddOpen(false)}
               onSaved={() => {
                 setAddOpen(false);
-                fetchAppointments();
+                setRefreshKey((current) => current + 1);
               }}
             />
           </div>

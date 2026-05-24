@@ -2,6 +2,7 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
 
+const Appointment = require("../models/Appointment");
 const Billing = require("../models/Billing");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
@@ -17,7 +18,7 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles("staff", "admin", "secretary"),
+  allowRoles("staff", "secretary"),
   async (req, res) => {
   try {
     const totalAmount =
@@ -31,9 +32,17 @@ router.post(
       totalAmount,
     });
 
-    await Queue.findByIdAndUpdate(req.body.queueId, {
+    const queueItem = await Queue.findByIdAndUpdate(req.body.queueId, {
       status: "Completed",
+    }, {
+      new: true,
     });
+
+    if (queueItem?.appointmentId) {
+      await Appointment.findByIdAndUpdate(queueItem.appointmentId, {
+        status: "Completed",
+      });
+    }
 
     res.status(201).json(billing);
   } catch (error) {
@@ -48,7 +57,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "admin", "secretary"),
+  allowRoles("staff", "secretary"),
   async (req, res) => {
   try {
     const billings = await Billing.find().sort({
@@ -66,7 +75,7 @@ router.get(
 router.get(
   "/patient/:patientId",
   protect,
-  allowRoles("parent", "staff", "admin", "secretary"),
+  allowRoles("parent", "staff", "secretary"),
   async (req, res) => {
   try {
     if (

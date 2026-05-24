@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
+import CreatePatient from "./CreatePatient";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
+import { notify } from "../utils/notify";
+import { EMR_WRITE_ROLES, ROLES } from "../utils/roles";
 
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString() : "N/A";
@@ -14,7 +18,10 @@ const calculateAge = (birthDate) => {
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   const monthOffset = today.getMonth() - birth.getMonth();
-  if (monthOffset < 0 || (monthOffset === 0 && today.getDate() < birth.getDate())) {
+  if (
+    monthOffset < 0 ||
+    (monthOffset === 0 && today.getDate() < birth.getDate())
+  ) {
     age -= 1;
   }
   return `${age} yrs`;
@@ -23,17 +30,23 @@ const calculateAge = (birthDate) => {
 function PatientProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
+  const canDeletePatient = user.role === ROLES.ADMIN;
   const [loading, setLoading] = useState(true);
   const [patient, setPatient] = useState(null);
   const [records, setRecords] = useState([]);
   const [vaccines, setVaccines] = useState([]);
   const [billings, setBillings] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    const loadProfile = async () => {
+    const run = async () => {
       setLoading(true);
       try {
         const patientRes = await fetch(apiUrl(`/api/patients/${id}`), {
@@ -41,54 +54,56 @@ function PatientProfile() {
         });
         const patientData = await patientRes.json();
 
-        const [recordRes, vaccineRes, billingRes, appointmentRes] =
-          await Promise.all([
-            fetch(apiUrl(`/api/records/patient/${id}`), {
-              headers: authHeaders(),
-            }),
-            fetch(apiUrl(`/api/vaccines/patient/${id}`), {
-              headers: authHeaders(),
-            }),
-            fetch(apiUrl(`/api/billings/patient/${id}`), {
-              headers: authHeaders(),
-            }),
-            patientData?.guardianId
-              ? fetch(apiUrl(`/api/appointments/guardian/${patientData.guardianId}`), {
-                  headers: authHeaders(),
-                })
-              : Promise.resolve(null),
-          ]);
+        const [recordRes, vaccineRes, billingRes, appointmentRes] = await Promise.all([
+          fetch(apiUrl(`/api/records/patient/${id}`), {
+            headers: authHeaders(),
+          }),
+          fetch(apiUrl(`/api/vaccines/patient/${id}`), {
+            headers: authHeaders(),
+          }),
+          fetch(apiUrl(`/api/billings/patient/${id}`), {
+            headers: authHeaders(),
+          }),
+          patientData?.guardianId
+            ? fetch(apiUrl(`/api/appointments/guardian/${patientData.guardianId}`), {
+                headers: authHeaders(),
+              })
+            : Promise.resolve(null),
+        ]);
 
-        const [recordData, vaccineData, billingData, appointmentData] =
-          await Promise.all([
-            recordRes.json(),
-            vaccineRes.json(),
-            billingRes.json(),
-            appointmentRes ? appointmentRes.json() : Promise.resolve([]),
-          ]);
+        const [recordData, vaccineData, billingData, appointmentData] = await Promise.all([
+          recordRes.json(),
+          vaccineRes.json(),
+          billingRes.json(),
+          appointmentRes ? appointmentRes.json() : Promise.resolve([]),
+        ]);
 
-        if (!mounted) return;
+        if (!active) return;
+
         setPatient(patientData);
         setRecords(Array.isArray(recordData) ? recordData : []);
         setVaccines(Array.isArray(vaccineData) ? vaccineData : []);
         setBillings(Array.isArray(billingData) ? billingData : []);
         setAppointments(
           Array.isArray(appointmentData)
-            ? appointmentData.filter((appointment) => appointment.patientId === id)
+            ? appointmentData.filter(
+                (appointment) => String(appointment.patientId) === String(id)
+              )
             : []
         );
       } catch {
-        if (mounted) setPatient(null);
+        if (active) setPatient(null);
       } finally {
-        if (mounted) setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
-    loadProfile();
+    run();
+
     return () => {
-      mounted = false;
+      active = false;
     };
-  }, [id]);
+  }, [id, refreshKey]);
 
   const totalBalance = useMemo(
     () =>
@@ -121,12 +136,31 @@ function PatientProfile() {
   }, [records, vaccines]);
 
   const exportProfile = () => {
+    if (!patient) return;
+
     exportCsv(`${patient.firstName}-${patient.lastName}-timeline.csv`, timeline, [
       { label: "Type", value: (item) => item.type },
       { label: "Title", value: (item) => item.title },
       { label: "Date", value: (item) => formatDate(item.date) },
       { label: "Notes", value: (item) => item.note || "" },
     ]);
+  };
+
+  const handleDeletePatient = async () => {
+    const res = await fetch(apiUrl(`/api/patients/${id}`), {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      notify(data.message || "Failed to delete patient");
+      return;
+    }
+
+    notify("Patient record deleted.");
+    navigate("/staff/patients");
   };
 
   if (loading) return <LoadingState title="Building patient profile..." />;
@@ -145,6 +179,7 @@ function PatientProfile() {
 
   const patientStatus = patient.status || "Active";
   const isPending = patientStatus === "Pending";
+  const hasPendingUpdate = patient.pendingUpdateStatus === "Pending";
 
   return (
     <div className="dashboard-bg">
@@ -155,13 +190,16 @@ function PatientProfile() {
             {patient.firstName} {patient.lastName}
           </h1>
           <span>
-            {calculateAge(patient.birthDate)} · {patient.gender} · Guardian:{" "}
+            {calculateAge(patient.birthDate)} | {patient.gender} | Guardian:{" "}
             {patient.guardianName}
           </span>
           <div className="hero-status-row">
             <span className={`status-badge ${patientStatus.toLowerCase()}`}>
               {patientStatus}
             </span>
+            {hasPendingUpdate && (
+              <span className="status-badge pending">Update Review Pending</span>
+            )}
           </div>
         </div>
 
@@ -178,6 +216,18 @@ function PatientProfile() {
             Export Timeline
           </button>
           {!isPending && (
+            <button className="secondary-btn" onClick={() => setEditOpen(true)}>
+              <span className="ti ti-edit" />
+              Edit Details
+            </button>
+          )}
+          {canDeletePatient && (
+            <button className="danger-btn" onClick={() => setDeleteOpen(true)}>
+              <span className="ti ti-trash" />
+              Delete Patient
+            </button>
+          )}
+          {!isPending && canWriteEmr && (
             <button
               className="primary-btn"
               onClick={() =>
@@ -198,14 +248,38 @@ function PatientProfile() {
           <span className="profile-kicker">Child Details</span>
           <h2>Clinical Snapshot</h2>
           <div className="profile-facts">
-            <p><strong>Parent / Guardian</strong><span>{patient.guardianName || "N/A"}</span></p>
-            <p><strong>Birth Date</strong><span>{formatDate(patient.birthDate)}</span></p>
-            <p><strong>Blood Type</strong><span>{patient.bloodType || "N/A"}</span></p>
-            <p><strong>Allergies</strong><span>{patient.allergies || "None recorded"}</span></p>
-            <p><strong>Relationship</strong><span>{patient.relationshipToChild || "N/A"}</span></p>
-            <p><strong>Emergency Contact</strong><span>{patient.emergencyContact || "N/A"}</span></p>
-            <p><strong>Contact</strong><span>{patient.contactNumber || "N/A"}</span></p>
-            <p><strong>Address</strong><span>{patient.address || "N/A"}</span></p>
+            <p>
+              <strong>Parent / Guardian</strong>
+              <span>{patient.guardianName || "N/A"}</span>
+            </p>
+            <p>
+              <strong>Birth Date</strong>
+              <span>{formatDate(patient.birthDate)}</span>
+            </p>
+            <p>
+              <strong>Blood Type</strong>
+              <span>{patient.bloodType || "N/A"}</span>
+            </p>
+            <p>
+              <strong>Allergies</strong>
+              <span>{patient.allergies || "None recorded"}</span>
+            </p>
+            <p>
+              <strong>Relationship</strong>
+              <span>{patient.relationshipToChild || "N/A"}</span>
+            </p>
+            <p>
+              <strong>Emergency Contact</strong>
+              <span>{patient.emergencyContact || "N/A"}</span>
+            </p>
+            <p>
+              <strong>Contact</strong>
+              <span>{patient.contactNumber || "N/A"}</span>
+            </p>
+            <p>
+              <strong>Address</strong>
+              <span>{patient.address || "N/A"}</span>
+            </p>
           </div>
         </section>
 
@@ -213,9 +287,18 @@ function PatientProfile() {
           <span className="profile-kicker">Open Items</span>
           <h2>Care Signals</h2>
           <div className="care-signals">
-            <div><strong>{appointments.filter((a) => a.status !== "Completed").length}</strong><span>Active appointments</span></div>
-            <div><strong>{vaccines.filter((v) => v.nextDoseDate).length}</strong><span>Vaccine follow-ups</span></div>
-            <div><strong>PHP {totalBalance.toLocaleString()}</strong><span>Unpaid balance</span></div>
+            <div>
+              <strong>{appointments.filter((a) => a.status !== "Completed").length}</strong>
+              <span>Active appointments</span>
+            </div>
+            <div>
+              <strong>{vaccines.filter((v) => v.nextDoseDate).length}</strong>
+              <span>Vaccine follow-ups</span>
+            </div>
+            <div>
+              <strong>PHP {totalBalance.toLocaleString()}</strong>
+              <span>Unpaid balance</span>
+            </div>
           </div>
         </section>
       </div>
@@ -266,13 +349,46 @@ function PatientProfile() {
               {appointments.slice(0, 6).map((appointment) => (
                 <div className="mini-item" key={appointment._id}>
                   <strong>{formatDate(appointment.appointmentDate)}</strong>
-                  <span>{appointment.appointmentTime} · {appointment.status}</span>
+                  <span>
+                    {appointment.appointmentTime} | {appointment.status}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </section>
       </div>
+
+      {editOpen && (
+        <div className="modal-overlay" onClick={() => setEditOpen(false)}>
+          <div
+            className="modal-content modal-content-wide"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <CreatePatient
+              key={`patient-edit-${patient._id}-${patient.updatedAt || ""}`}
+              embedded
+              editMode
+              patient={patient}
+              onCancel={() => setEditOpen(false)}
+              onSaved={() => {
+                setEditOpen(false);
+                setRefreshKey((current) => current + 1);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {deleteOpen && (
+        <ConfirmDialog
+          title="Delete patient record?"
+          message={`${patient.firstName} ${patient.lastName} and related clinic records will be removed.`}
+          confirmLabel="Delete Patient"
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={handleDeletePatient}
+        />
+      )}
     </div>
   );
 }

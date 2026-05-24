@@ -1,17 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiUrl } from "../utils/api";
+import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 
-function CreateParent({ embedded = false, onCancel, onSaved }) {
+function CreateParent({
+  embedded = false,
+  editMode = false,
+  parentProfile = null,
+  onCancel,
+  onSaved,
+}) {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    fullName: "",
+    fullName: editMode ? parentProfile?.fullName || "" : "",
     email: "",
     password: "",
-    contactNumber: "",
-    address: "",
+    contactNumber: editMode ? parentProfile?.contactNumber || "" : "",
+    address: editMode ? parentProfile?.address || "" : "",
   });
 
   const handleChange = (e) => {
@@ -25,6 +31,32 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
     e.preventDefault();
 
     try {
+      if (editMode && parentProfile?._id) {
+        const res = await fetch(apiUrl(`/api/parent-profiles/${parentProfile._id}`), {
+          method: "PUT",
+          headers: authHeaders({
+            "Content-Type": "application/json",
+          }),
+          body: JSON.stringify({
+            fullName: form.fullName,
+            contactNumber: form.contactNumber,
+            address: form.address,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          notify("Guardian profile updated!");
+          if (onSaved) onSaved(data);
+          else navigate("/staff/parents");
+        } else {
+          notify(data.message || "Failed to update guardian profile");
+        }
+
+        return;
+      }
+
       const userRes = await fetch(
         apiUrl("/api/auth/register"),
         {
@@ -59,7 +91,9 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
 
   return (
     <>
-        <h1 className={embedded ? "modal-title" : "page-title"}>Create Guardian Account</h1>
+        <h1 className={embedded ? "modal-title" : "page-title"}>
+          {editMode ? "Edit Guardian Profile" : "Create Guardian Account"}
+        </h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -72,27 +106,31 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Email</label>
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-            />
-          </div>
+          {!editMode && (
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleChange}
+              />
+            </div>
+          )}
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-            />
-          </div>
+          {!editMode && (
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label">Contact Number</label>
@@ -121,7 +159,7 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
               </button>
             )}
             <button className="primary-btn" type="submit">
-              Create Guardian
+              {editMode ? "Save Guardian" : "Create Guardian"}
             </button>
           </div>
         </form>

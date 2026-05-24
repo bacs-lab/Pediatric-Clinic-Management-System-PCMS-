@@ -2,13 +2,23 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
 
+const Appointment = require("../models/Appointment");
 const Queue = require("../models/Queue");
+const { OPERATIONS_ROLES } = require("../constants/roles");
+
+const getNextQueueNumber = async () => {
+  const lastQueueItem = await Queue.findOne()
+    .sort({ queueNumber: -1 })
+    .select("queueNumber");
+
+  return (lastQueueItem?.queueNumber || 0) + 1;
+};
 
 // CREATE queue entry
 router.post(
   "/",
   protect,
-  allowRoles("staff", "admin", "secretary", "nurse"),
+  allowRoles(...OPERATIONS_ROLES),
   async (req, res) => {
     try {
       const existingQueue = await Queue.findOne({
@@ -22,11 +32,9 @@ router.post(
         });
       }
 
-      const count = await Queue.countDocuments();
-
       const queue = await Queue.create({
         ...req.body,
-        queueNumber: count + 1,
+        queueNumber: await getNextQueueNumber(),
       });
 
       res.status(201).json(queue);
@@ -40,7 +48,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "admin", "doctor", "nurse", "secretary"),
+  allowRoles(...OPERATIONS_ROLES),
   async (req, res) => {
   try {
     const queue = await Queue.find().sort({ queueNumber: 1 });
@@ -54,17 +62,25 @@ router.get(
 router.put(
   "/:id",
   protect,
-  allowRoles("staff", "admin", "doctor", "nurse", "secretary"),
+  allowRoles(...OPERATIONS_ROLES),
   async (req, res) => {
   try {
+    const existingQueue = await Queue.findById(req.params.id);
+
+    if (!existingQueue) {
+      return res.status(404).json({ message: "Queue entry not found" });
+    }
+
     const updatedQueue = await Queue.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
 
-    if (!updatedQueue) {
-      return res.status(404).json({ message: "Queue entry not found" });
+    if (existingQueue.appointmentId && req.body.status === "Cancelled") {
+      await Appointment.findByIdAndUpdate(existingQueue.appointmentId, {
+        status: "Cancelled",
+      });
     }
 
     res.json(updatedQueue);

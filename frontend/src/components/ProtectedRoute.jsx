@@ -14,11 +14,17 @@ function ProtectedRoute({ children, allowedRole, allowedRoles }) {
   }
 
   if (allowedRole && user.role !== allowedRole) {
-    return <Navigate to="/" />;
+    if (user.role === "admin") {
+      return <Navigate to="/staff/users" replace />;
+    }
+    return <Navigate to={user.role === "parent" ? "/parent/dashboard" : "/staff/dashboard"} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" />;
+    if (user.role === "admin") {
+      return <Navigate to="/staff/users" replace />;
+    }
+    return <Navigate to={user.role === "parent" ? "/parent/dashboard" : "/staff/dashboard"} replace />;
   }
 
   return children;

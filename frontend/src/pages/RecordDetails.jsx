@@ -5,6 +5,7 @@ import LoadingState from "../components/LoadingState";
 import EditRecord from "./EditRecord";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
+import { EMR_WRITE_ROLES } from "../utils/roles";
 
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString() : "N/A";
@@ -12,6 +13,9 @@ const formatDate = (date) =>
 function RecordDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
+  const canDeleteEmr = EMR_WRITE_ROLES.includes(user.role);
   const [record, setRecord] = useState(null);
   const [patient, setPatient] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -93,20 +97,24 @@ function RecordDetails() {
             <span className="ti ti-arrow-left" />
             Back
           </button>
-          <button
-            className="primary-btn"
-            onClick={() => setEditOpen(true)}
-          >
-            <span className="ti ti-pencil" />
-            Edit Record
-          </button>
-          <button
-            className="danger-btn"
-            onClick={() => setDeleteOpen(true)}
-          >
-            <span className="ti ti-trash" />
-            Delete Record
-          </button>
+          {canWriteEmr && (
+            <button
+              className="primary-btn"
+              onClick={() => setEditOpen(true)}
+            >
+              <span className="ti ti-pencil" />
+              Edit Record
+            </button>
+          )}
+          {canDeleteEmr && (
+            <button
+              className="danger-btn"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <span className="ti ti-trash" />
+              Delete Record
+            </button>
+          )}
         </div>
       </div>
 

@@ -18,6 +18,22 @@ const queueSchema = new mongoose.Schema(
       required: true,
     },
 
+    guardianName: {
+      type: String,
+    },
+
+    appointmentDate: {
+      type: Date,
+    },
+
+    appointmentTime: {
+      type: String,
+    },
+
+    requestedAt: {
+      type: Date,
+    },
+
     queueNumber: {
       type: Number,
       required: true,

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PatientEditRequestReviewModal from "./PatientEditRequestReviewModal";
 import PatientRequestReviewModal from "./PatientRequestReviewModal";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
-import { PATIENT_APPROVAL_ROLES } from "../utils/roles";
+import { PATIENT_APPROVAL_ROLES, STAFF_ROLES } from "../utils/roles";
 
 function Topbar({ onMenuClick }) {
   const navigate = useNavigate();
@@ -23,12 +24,12 @@ function Topbar({ onMenuClick }) {
     upcomingVaccines: [],
   });
   const [pendingPatients, setPendingPatients] = useState([]);
+  const [pendingPatientEdits, setPendingPatientEdits] = useState([]);
   const [selectedPatientRequest, setSelectedPatientRequest] = useState(null);
+  const [selectedPatientEditRequest, setSelectedPatientEditRequest] = useState(null);
   const [reviewBusy, setReviewBusy] = useState(false);
 
-  const isStaff = ["staff", "admin", "doctor", "nurse", "secretary"].includes(
-    user?.role
-  );
+  const isStaff = STAFF_ROLES.includes(user?.role);
   const canApprovePatients = PATIENT_APPROVAL_ROLES.includes(user?.role);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -66,6 +67,17 @@ function Topbar({ onMenuClick }) {
   }, [canApprovePatients]);
 
   useEffect(() => {
+    if (!canApprovePatients) return;
+
+    fetch(apiUrl("/api/patients/pending-updates"), {
+      headers: authHeaders(),
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setPendingPatientEdits(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [canApprovePatients]);
+
+  useEffect(() => {
     if (!isStaff) return;
 
     let cancelled = false;
@@ -96,7 +108,7 @@ function Topbar({ onMenuClick }) {
     };
   }, [isStaff]);
 
-  const notificationItems = useMemo(() => {
+  const notificationItems = (() => {
     if (!isStaff) {
       return [
         {
@@ -141,8 +153,17 @@ function Topbar({ onMenuClick }) {
       patient,
     }));
 
-    return [...patientRequests, ...followUps, ...vaccines];
-  }, [isStaff, pendingPatients, reminders]);
+    const patientEditRequests = pendingPatientEdits.slice(0, 4).map((patient) => ({
+      id: `patient-edit-${patient._id}`,
+      icon: "ti ti-edit-circle",
+      title: `${patient.firstName} ${patient.lastName} detail update`,
+      body: `Guardian: ${patient.guardianName || "Parent request"}`,
+      kind: "patient-edit-request",
+      patient,
+    }));
+
+    return [...patientRequests, ...patientEditRequests, ...followUps, ...vaccines];
+  })();
 
   const globalSearchItems = useMemo(() => {
     const patients = globalSearchData.patients.map((patient) => {
@@ -239,7 +260,7 @@ function Topbar({ onMenuClick }) {
     return [...patients, ...guardians, ...inventory, ...vaccines, ...records];
   }, [globalSearchData]);
 
-  const globalResults = useMemo(() => {
+  const globalResults = (() => {
     const query = search.trim().toLowerCase();
     if (!isStaff || query.length < 2) return [];
 
@@ -253,7 +274,7 @@ function Topbar({ onMenuClick }) {
       }))
       .filter((item) => item.haystack.includes(query))
       .slice(0, 12);
-  }, [globalSearchItems, isStaff, search]);
+  })();
 
   const openGlobalResult = (item) => {
     navigate(item.path, item.state ? { state: item.state } : undefined);
@@ -269,9 +290,20 @@ function Topbar({ onMenuClick }) {
       return;
     }
 
+    if (item.kind === "patient-edit-request" && item.patient) {
+      setSelectedPatientEditRequest(item.patient);
+      setNotificationsOpen(false);
+      return;
+    }
+
     if (!item.path) return;
 
     navigate(item.path, item.state ? { state: item.state } : undefined);
+    setNotificationsOpen(false);
+  };
+
+  const openRequestCenter = (requestType) => {
+    navigate("/staff/requests", requestType ? { state: { requestType } } : undefined);
     setNotificationsOpen(false);
   };
 
@@ -313,6 +345,49 @@ function Topbar({ onMenuClick }) {
       );
     } catch {
       notify(`Failed to ${action} patient request`);
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
+  const reviewPatientEditRequest = async (action) => {
+    if (!selectedPatientEditRequest) return;
+
+    setReviewBusy(true);
+
+    try {
+      const route = action === "accept" ? "approve-edit" : "reject-edit";
+      const res = await fetch(
+        apiUrl(`/api/patients/${selectedPatientEditRequest._id}/${route}`),
+        {
+          method: "PUT",
+          headers: authHeaders(),
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify(data.message || `Failed to ${action} patient update request`);
+        return;
+      }
+
+      setPendingPatientEdits((items) =>
+        items.filter((item) => item._id !== selectedPatientEditRequest._id)
+      );
+      setGlobalSearchData((current) => ({
+        ...current,
+        patients: current.patients.map((item) =>
+          item._id === data._id ? data : item
+        ),
+      }));
+      setSelectedPatientEditRequest(null);
+      notify(
+        action === "accept"
+          ? "Patient detail update approved."
+          : "Patient detail update rejected."
+      );
+    } catch {
+      notify(`Failed to ${action} patient update request`);
     } finally {
       setReviewBusy(false);
     }
@@ -440,13 +515,24 @@ function Topbar({ onMenuClick }) {
             <div className="notification-menu">
               <div className="notification-head">
                 <strong>Notifications</strong>
-                <span>{notificationItems.length} item(s)</span>
+                <div className="notification-head-actions">
+                  {canApprovePatients && (
+                    <button
+                      className="notification-link-btn"
+                      type="button"
+                      onClick={() => openRequestCenter()}
+                    >
+                      Open Requests
+                    </button>
+                  )}
+                  <span>{notificationItems.length} item(s)</span>
+                </div>
               </div>
               {notificationItems.length === 0 ? (
                 <p className="notification-empty">No reminders right now.</p>
               ) : (
                 notificationItems.map((item) =>
-                  item.path || item.kind === "patient-request" ? (
+                  item.path || item.kind ? (
                     <button
                       className="notification-item"
                       key={item.id}
@@ -493,6 +579,18 @@ function Topbar({ onMenuClick }) {
           onReject={() => reviewPatientRequest("reject")}
           onClose={() => {
             if (!reviewBusy) setSelectedPatientRequest(null);
+          }}
+        />
+      )}
+
+      {selectedPatientEditRequest && (
+        <PatientEditRequestReviewModal
+          patient={selectedPatientEditRequest}
+          busy={reviewBusy}
+          onAccept={() => reviewPatientEditRequest("accept")}
+          onReject={() => reviewPatientEditRequest("reject")}
+          onClose={() => {
+            if (!reviewBusy) setSelectedPatientEditRequest(null);
           }}
         />
       )}

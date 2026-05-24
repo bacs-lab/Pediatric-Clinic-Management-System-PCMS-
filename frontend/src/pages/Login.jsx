@@ -22,6 +22,23 @@ function Login() {
     address: "",
   });
 
+  const authModeCopy =
+    mode === "login"
+      ? {
+          kicker: "Secure Staff & Parent Access",
+          title: "Welcome Back",
+          description:
+            "Sign in to continue to your clinic workspace, records, and care requests.",
+          submitLabel: saving ? "Logging in..." : "Login",
+        }
+      : {
+          kicker: "Parent / Guardian Registration",
+          title: "Create Account",
+          description:
+            "Register a parent account to manage child requests, appointments, and updates.",
+          submitLabel: saving ? "Creating account..." : "Create Account",
+        };
+
   const handleLoginChange = (event) => {
     setLoginForm({
       ...loginForm,
@@ -62,6 +79,8 @@ function Login() {
       if (data.user.mustChangePassword) {
         notify("You must change your password before continuing.");
         navigate("/change-password");
+      } else if (data.user.role === "admin") {
+        navigate("/staff/users");
       } else if (data.user.role === "parent") {
         navigate("/parent/dashboard");
       } else {
@@ -169,127 +188,129 @@ function Login() {
           </button>
         </div>
 
+        <div className="auth-card-brand">
+          <div className="auth-card-logo" aria-hidden="true">
+            <img src="/OFFICIAL PCMS.png" alt="" />
+          </div>
+
+          <div className="auth-card-copy">
+            <span>{authModeCopy.kicker}</span>
+            <h2>{authModeCopy.title}</h2>
+            <p>{authModeCopy.description}</p>
+          </div>
+        </div>
+
         {mode === "login" ? (
-          <>
-            <h2>Welcome Back</h2>
-            <p>Login to continue</p>
+          <form className="auth-form" onSubmit={handleLogin}>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={loginForm.email}
+                onChange={handleLoginChange}
+              />
+            </div>
 
-            <form onSubmit={handleLogin}>
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  value={loginForm.email}
-                  onChange={handleLoginChange}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={loginForm.password}
+                onChange={handleLoginChange}
+              />
+            </div>
 
+            <button
+              className="primary-btn"
+              type="submit"
+              disabled={saving}
+              style={{ width: "100%", marginTop: "8px" }}
+            >
+              {authModeCopy.submitLabel}
+            </button>
+          </form>
+        ) : (
+          <form className="auth-form" onSubmit={handleSignup}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input
+                name="name"
+                placeholder="Full name"
+                value={signupForm.name}
+                onChange={handleSignupChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={signupForm.email}
+                onChange={handleSignupChange}
+              />
+            </div>
+
+            <div className="form-row-2col">
               <div className="form-group">
                 <label className="form-label">Password</label>
                 <input
                   type="password"
                   name="password"
                   placeholder="Password"
-                  value={loginForm.password}
-                  onChange={handleLoginChange}
-                />
-              </div>
-
-              <button
-                className="primary-btn"
-                type="submit"
-                disabled={saving}
-                style={{ width: "100%", marginTop: "8px" }}
-              >
-                {saving ? "Logging in..." : "Login"}
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <h2>Create Account</h2>
-            <p>Register as a parent or guardian</p>
-
-            <form onSubmit={handleSignup}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input
-                  name="name"
-                  placeholder="Full name"
-                  value={signupForm.name}
+                  value={signupForm.password}
                   onChange={handleSignupChange}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email Address</label>
+                <label className="form-label">Confirm Password</label>
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  value={signupForm.email}
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm password"
+                  value={signupForm.confirmPassword}
+                  onChange={handleSignupChange}
+                />
+              </div>
+            </div>
+
+            <div className="parent-signup-fields">
+              <div className="form-group">
+                <label className="form-label">Contact Number</label>
+                <input
+                  name="contactNumber"
+                  placeholder="Contact number"
+                  value={signupForm.contactNumber}
                   onChange={handleSignupChange}
                 />
               </div>
 
-              <div className="form-row-2col">
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={signupForm.password}
-                    onChange={handleSignupChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Confirm password"
-                    value={signupForm.confirmPassword}
-                    onChange={handleSignupChange}
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Address</label>
+                <input
+                  name="address"
+                  placeholder="Address"
+                  value={signupForm.address}
+                  onChange={handleSignupChange}
+                />
               </div>
+            </div>
 
-              <div className="parent-signup-fields">
-                <div className="form-group">
-                  <label className="form-label">Contact Number</label>
-                  <input
-                    name="contactNumber"
-                    placeholder="Contact number"
-                    value={signupForm.contactNumber}
-                    onChange={handleSignupChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Address</label>
-                  <input
-                    name="address"
-                    placeholder="Address"
-                    value={signupForm.address}
-                    onChange={handleSignupChange}
-                  />
-                </div>
-              </div>
-
-              <button
-                className="primary-btn"
-                type="submit"
-                disabled={saving}
-                style={{ width: "100%", marginTop: "8px" }}
-              >
-                {saving ? "Creating account..." : "Create Account"}
-              </button>
-            </form>
-          </>
+            <button
+              className="primary-btn"
+              type="submit"
+              disabled={saving}
+              style={{ width: "100%", marginTop: "8px" }}
+            >
+              {authModeCopy.submitLabel}
+            </button>
+          </form>
         )}
       </div>
     </div>

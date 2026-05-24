@@ -4,7 +4,7 @@ const router = express.Router();
 const MedicalRecord = require("../models/MedicalRecord");
 const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
-const { MEDICAL_ROLES, ROLES } = require("../constants/roles");
+const { EMR_WRITE_ROLES, MEDICAL_ROLES, ROLES } = require("../constants/roles");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -17,7 +17,7 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles(...MEDICAL_ROLES),
+  allowRoles(...EMR_WRITE_ROLES),
   async (req, res) => {
   try {
     const newRecord = new MedicalRecord(req.body);
@@ -98,7 +98,7 @@ router.get(
 router.put(
   "/:id",
   protect,
-  allowRoles(ROLES.DOCTOR, ROLES.ADMIN),
+  allowRoles(...EMR_WRITE_ROLES),
   async (req, res) => {
   try {
     const updatedRecord = await MedicalRecord.findByIdAndUpdate(
@@ -120,7 +120,7 @@ router.put(
 router.delete(
   "/:id",
   protect,
-  allowRoles(ROLES.ADMIN),
+  allowRoles(...EMR_WRITE_ROLES),
   async (req, res) => {
   try {
     const deletedRecord = await MedicalRecord.findByIdAndDelete(req.params.id);

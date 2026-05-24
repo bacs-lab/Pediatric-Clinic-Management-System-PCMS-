@@ -4,9 +4,9 @@ const router = express.Router();
 const MedicalRecord = require("../models/MedicalRecord");
 const VaccineRecord = require("../models/VaccineRecord");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
-const { STAFF_ROLES } = require("../constants/roles");
+const { OPERATIONS_ROLES } = require("../constants/roles");
 
-router.get("/", protect, allowRoles(...STAFF_ROLES), async (req, res) => {
+router.get("/", protect, allowRoles(...OPERATIONS_ROLES), async (req, res) => {
   try {
     const today = new Date();
 

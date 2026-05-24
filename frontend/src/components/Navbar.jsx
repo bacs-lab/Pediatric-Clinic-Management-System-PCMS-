@@ -1,33 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function Navbar({ navItems, title = 'Kids First', onLogout, isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = useState({});
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setOpenMenus({}), 0);
-    return () => window.clearTimeout(timer);
-  }, [location.pathname]);
-
-  const toggleMenu = (label) => {
-    setOpenMenus((prev) => ({ [label]: !prev[label] }));
-  };
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const isChildActive = (child) => {
-    if (!isActive(child.path)) return false;
-    if (child.state?.modal) {
-      return location.state?.modal === child.state.modal;
-    }
-    return true;
-  };
-
   const handleNav = (path, state) => {
-    setOpenMenus({});
     navigate(path, state ? { state } : undefined);
     onClose();
   };
@@ -71,60 +51,24 @@ function Navbar({ navItems, title = 'Kids First', onLogout, isOpen, onClose }) {
       </div>
 
       <ul className="nav-list">
-        {navItems.map((item) => {
-          const hasChildren = item.children?.length > 0;
-          const childActive =
-            hasChildren &&
-            item.children.some((child) => isChildActive(child));
-          const menuOpen = openMenus[item.label] ?? childActive;
-          const parentActive = isActive(item.path) || childActive;
-
-          return (
-            <li key={item.label} className="nav-item">
-              <div
-                className={`nav-parent-btn${parentActive ? ' active' : ''}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleNav(item.path, item.state)}
-                onKeyDown={(event) => handleNavKeyDown(event, item.path, item.state)}
-                title={item.label}
-                aria-label={item.label}
-              >
-                <span className="nav-label">
-                  <span className={item.icon}></span>
-                  <span className="nav-text">{item.label}</span>
-                </span>
-                {hasChildren && (
-                  <button
-                    className="nav-arrow-btn"
-                    type="button"
-                    aria-label={`${menuOpen ? 'Collapse' : 'Expand'} ${item.label}`}
-                    onClick={(e) => { e.stopPropagation(); toggleMenu(item.label); }}
-                  >
-                    <span className={`nav-arrow ti ti-chevron-${menuOpen ? 'up' : 'down'}`}></span>
-                  </button>
-                )}
-              </div>
-
-              {hasChildren && menuOpen && (
-                <ul className="nav-child-list">
-                  {item.children.map((child) => (
-                    <li key={child.path} className="nav-child-item">
-                      <button
-                        className={isChildActive(child) ? 'active' : ''}
-                        onClick={() => handleNav(child.path, child.state)}
-                        title={child.label}
-                      >
-                        <span className={child.icon}></span>
-                        <span className="nav-text">{child.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          );
-        })}
+        {navItems.map((item) => (
+          <li key={item.label} className="nav-item">
+            <div
+              className={`nav-parent-btn${isActive(item.path) ? ' active' : ''}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleNav(item.path, item.state)}
+              onKeyDown={(event) => handleNavKeyDown(event, item.path, item.state)}
+              title={item.label}
+              aria-label={item.label}
+            >
+              <span className="nav-label">
+                <span className={item.icon}></span>
+                <span className="nav-text">{item.label}</span>
+              </span>
+            </div>
+          </li>
+        ))}
       </ul>
 
       {onLogout && (

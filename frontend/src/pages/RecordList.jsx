@@ -6,6 +6,7 @@ import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
 import CreateRecord from "./CreateRecord";
 import EditRecord from "./EditRecord";
+import { EMR_WRITE_ROLES } from "../utils/roles";
 
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString() : "N/A";
@@ -13,6 +14,8 @@ const formatDate = (date) =>
 function RecordList() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
   const [records, setRecords] = useState([]);
   const [search, setSearch] = useState(() => location.state?.search || "");
   const [loading, setLoading] = useState(true);
@@ -104,10 +107,12 @@ function RecordList() {
           <span>Search consultations, diagnoses, treatment notes, and follow-ups.</span>
         </div>
 
-        <button className="primary-btn" onClick={() => openAddRecord()}>
-          <span className="ti ti-notes-medical" />
-          Add Record
-        </button>
+        {canWriteEmr && (
+          <button className="primary-btn" onClick={() => openAddRecord()}>
+            <span className="ti ti-notes-medical" />
+            Add Record
+          </button>
+        )}
       </div>
 
       <div className="panel">
@@ -135,8 +140,8 @@ function RecordList() {
             icon="ti ti-notes-off"
             title="No medical records found"
             message="Create a record after a consultation, assessment, or patient visit."
-            actionLabel="Add Record"
-            onAction={() => openAddRecord()}
+            actionLabel={canWriteEmr ? "Add Record" : undefined}
+            onAction={canWriteEmr ? () => openAddRecord() : undefined}
           />
         ) : (
           <div className="table-container flat">
@@ -168,12 +173,14 @@ function RecordList() {
                         >
                           View
                         </button>
-                        <button
-                          className="secondary-btn"
-                          onClick={() => setEditingRecordId(record._id)}
-                        >
-                          Edit
-                        </button>
+                        {canWriteEmr && (
+                          <button
+                            className="secondary-btn"
+                            onClick={() => setEditingRecordId(record._id)}
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

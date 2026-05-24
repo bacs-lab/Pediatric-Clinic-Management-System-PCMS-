@@ -12,6 +12,7 @@ function ParentDashboard() {
   const [loading, setLoading] = useState(true);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -118,6 +119,7 @@ function ParentDashboard() {
             const isPending = status === "Pending";
             const isRejected = status === "Rejected";
             const isActive = status === "Active";
+            const hasPendingUpdate = patient.pendingUpdateStatus === "Pending";
 
             return (
               <div className="child-card" key={patient._id}>
@@ -135,6 +137,12 @@ function ParentDashboard() {
                   <p><strong>Emergency Contact:</strong> {patient.emergencyContact || "N/A"}</p>
                   <p><strong>Blood Type:</strong> {patient.bloodType || "N/A"}</p>
                   <p><strong>Allergies:</strong> {patient.allergies || "None"}</p>
+                  {hasPendingUpdate && (
+                    <div className="child-pending-note">
+                      <span className="ti ti-edit-circle" />
+                      Detail update pending clinic review
+                    </div>
+                  )}
                 </div>
 
                 {!isActive ? (
@@ -146,6 +154,12 @@ function ParentDashboard() {
                   </div>
                 ) : (
                   <div className="child-actions">
+                    <button
+                      className="secondary-btn"
+                      onClick={() => setEditingPatient(patient)}
+                    >
+                      Edit Details
+                    </button>
                     <button
                       className="secondary-btn"
                       onClick={() => navigate(`/parent/patient/${patient._id}/records`)}
@@ -178,6 +192,7 @@ function ParentDashboard() {
         <div className="modal-overlay" onClick={() => setChildOpen(false)}>
           <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
             <CreatePatient
+              key="parent-add-child"
               embedded
               parentMode
               onCancel={() => setChildOpen(false)}
@@ -190,9 +205,28 @@ function ParentDashboard() {
         </div>
       )}
 
+      {editingPatient && (
+        <div className="modal-overlay" onClick={() => setEditingPatient(null)}>
+          <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
+            <CreatePatient
+              key={`parent-edit-${editingPatient._id}-${editingPatient.updatedAt || ""}`}
+              embedded
+              parentMode
+              editMode
+              patient={editingPatient}
+              onCancel={() => setEditingPatient(null)}
+              onSaved={() => {
+                setEditingPatient(null);
+                loadPortal();
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {appointmentOpen && (
         <div className="modal-overlay" onClick={() => setAppointmentOpen(false)}>
-          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-content modal-content-wide" onClick={(event) => event.stopPropagation()}>
             <CreateAppointment
               embedded
               onCancel={() => setAppointmentOpen(false)}

@@ -4,7 +4,10 @@ const bcrypt = require("bcryptjs");
 const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
-const { ALLOWED_STAFF_CREATION_ROLES } = require("../constants/roles");
+const {
+  CREATABLE_STAFF_ROLES,
+  MANAGEABLE_STAFF_ROLES,
+} = require("../constants/roles");
 
 const router = express.Router();
 
@@ -28,14 +31,14 @@ const validateStaffPayload = ({ name, email, password, role }) => {
   if (!name?.trim()) return "Name is required";
   if (!email?.trim()) return "Email is required";
   if (!password) return "Temporary password is required.";
-  if (!ALLOWED_STAFF_CREATION_ROLES.includes(role)) return "Invalid staff role.";
+  if (!CREATABLE_STAFF_ROLES.includes(role)) return "Invalid staff role.";
   return null;
 };
 
 router.get("/", protect, allowRoles("admin"), async (req, res) => {
   try {
     const users = await User.find({
-      role: { $in: ALLOWED_STAFF_CREATION_ROLES },
+      role: { $in: MANAGEABLE_STAFF_ROLES },
     })
       .select(staffProjection)
       .sort({ createdAt: -1 });
@@ -101,7 +104,7 @@ router.put("/:id/status", protect, allowRoles("admin"), async (req, res) => {
 
     const user = await User.findById(req.params.id);
 
-    if (!user || !ALLOWED_STAFF_CREATION_ROLES.includes(user.role)) {
+    if (!user || !MANAGEABLE_STAFF_ROLES.includes(user.role)) {
       return res.status(404).json({ message: "Staff account not found." });
     }
 
@@ -134,7 +137,7 @@ router.put("/:id/reset-password", protect, allowRoles("admin"), async (req, res)
 
     const user = await User.findById(req.params.id);
 
-    if (!user || !ALLOWED_STAFF_CREATION_ROLES.includes(user.role)) {
+    if (!user || !MANAGEABLE_STAFF_ROLES.includes(user.role)) {
       return res.status(404).json({ message: "Staff account not found." });
     }
 
@@ -151,6 +154,29 @@ router.put("/:id/reset-password", protect, allowRoles("admin"), async (req, res)
 
     const updatedUser = await User.findById(user._id).select(staffProjection);
     res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/:id", protect, allowRoles("admin"), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user || !MANAGEABLE_STAFF_ROLES.includes(user.role)) {
+      return res.status(404).json({ message: "Staff account not found." });
+    }
+
+    await User.findByIdAndDelete(user._id);
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "Admin deleted staff account",
+      targetUserId: user._id,
+      role: user.role,
+    });
+
+    res.json({ message: "Staff account removed." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

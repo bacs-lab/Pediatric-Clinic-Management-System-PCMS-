@@ -85,6 +85,31 @@ const patientSchema = new mongoose.Schema(
     approvedAt: {
       type: Date,
     },
+
+    pendingUpdate: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    pendingUpdateStatus: {
+      type: String,
+      enum: ["None", "Pending"],
+      default: "None",
+    },
+
+    pendingUpdateRequestedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    pendingUpdateReviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    pendingUpdateReviewedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

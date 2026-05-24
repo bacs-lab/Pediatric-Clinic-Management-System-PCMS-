@@ -5,7 +5,7 @@ const VaccineRecord = require("../models/VaccineRecord");
 const InventoryItem = require("../models/InventoryItem");
 const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
-const { ROLES } = require("../constants/roles");
+const { MEDICAL_ROLES, ROLES } = require("../constants/roles");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -16,7 +16,7 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles("staff", "admin", "nurse", "doctor"),
+  allowRoles("staff", ...MEDICAL_ROLES),
   async (req, res) => {
     try {
       if (req.body.inventoryItemId && req.body.status === "Completed") {
@@ -51,7 +51,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "admin", "nurse", "doctor"),
+  allowRoles("staff", ...MEDICAL_ROLES),
   async (req, res) => {
     try {
       const records = await VaccineRecord.find().sort({ createdAt: -1 });
@@ -66,7 +66,7 @@ router.get(
 router.get(
   "/patient/:patientId",
   protect,
-  allowRoles("parent", "staff", "admin", "nurse", "doctor"),
+  allowRoles("parent", "staff", ...MEDICAL_ROLES),
   async (req, res) => {
     try {
       if (

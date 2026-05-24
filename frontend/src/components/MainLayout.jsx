@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from './Topbar';
 import Navbar from './Navbar';
-import { staffNavItems, parentNavItems } from './navConfig';
+import { adminNavItems, staffNavItems, parentNavItems } from './navConfig';
 
 function MainLayout({ children }) {
   const navigate = useNavigate();
@@ -20,20 +20,17 @@ function MainLayout({ children }) {
     ['staff', 'admin', 'doctor', 'nurse', 'secretary'].includes(user.role);
   const isParent = user?.role === 'parent';
 
-  const navItems = isStaff
-    ? staffNavItems
-    : isParent
-      ? parentNavItems
-      : [];
+  const navItems = user?.role === 'admin'
+    ? adminNavItems
+    : isStaff
+      ? staffNavItems
+      : isParent
+        ? parentNavItems
+        : [];
 
-  const visibleNavItems = navItems
-    .filter((item) => !item.roles || item.roles.includes(user?.role))
-    .map((item) => ({
-      ...item,
-      children: item.children?.filter(
-        (child) => !child.roles || child.roles.includes(user?.role)
-      ),
-    }));
+  const visibleNavItems = navItems.filter(
+    (item) => !item.roles || item.roles.includes(user?.role)
+  );
 
   const closeSidebar = () => setSidebarOpen(false);
 

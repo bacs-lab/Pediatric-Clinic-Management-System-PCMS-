@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import { apiUrl, authHeaders } from "../utils/api";
@@ -6,9 +7,7 @@ import { notifyError, notifySuccess } from "../utils/notify";
 
 const STAFF_ROLE_OPTIONS = [
   { value: "doctor", label: "Doctor" },
-  { value: "nurse", label: "Nurse" },
   { value: "secretary", label: "Secretary" },
-  { value: "staff", label: "Staff" },
 ];
 
 const emptyStaffForm = {
@@ -24,6 +23,7 @@ function ManageUsers() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [resetUser, setResetUser] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [form, setForm] = useState(emptyStaffForm);
   const [saving, setSaving] = useState(false);
@@ -147,6 +147,26 @@ function ManageUsers() {
     notifySuccess("Temporary password reset. Staff must change it at login.");
   };
 
+  const deleteUser = async () => {
+    if (!pendingDelete) return;
+
+    const res = await fetch(apiUrl(`/api/users/${pendingDelete._id}`), {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      notifyError(data.message || "Failed to delete staff account.");
+      return;
+    }
+
+    setUsers((current) => current.filter((item) => item._id !== pendingDelete._id));
+    setPendingDelete(null);
+    notifySuccess("Staff account deleted.");
+  };
+
   if (loading) return <LoadingState title="Loading staff accounts..." />;
 
   return (
@@ -262,6 +282,12 @@ function ManageUsers() {
                         >
                           {user.status === "Disabled" ? "Enable" : "Disable"}
                         </button>
+                        <button
+                          className="danger-btn"
+                          onClick={() => setPendingDelete(user)}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -370,6 +396,16 @@ function ManageUsers() {
             </form>
           </div>
         </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete staff account?"
+          message={`${pendingDelete.name} will be removed from staff account access. This cannot be undone.`}
+          confirmLabel="Delete Account"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={deleteUser}
+        />
       )}
     </div>
   );

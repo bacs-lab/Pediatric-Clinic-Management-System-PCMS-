@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
 import CreateParent from "./CreateParent";
-import { apiUrl } from "../utils/api";
+import { apiUrl, authHeaders } from "../utils/api";
+import { notify } from "../utils/notify";
 
 function ParentList() {
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const canAddGuardian = user.role !== "admin";
+  const canManageGuardians = user.role === "admin";
   const [parents, setParents] = useState([]);
   const [search, setSearch] = useState(() => location.state?.search || "");
   const [addOpen, setAddOpen] = useState(false);
+  const [editingParent, setEditingParent] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const fetchParents = () => {
     fetch(apiUrl("/api/parent-profiles"), {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: authHeaders(),
     })
       .then((res) => res.json())
       .then((data) => setParents(data))
@@ -45,6 +50,26 @@ function ParentList() {
       .some((value) => value.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const deleteGuardian = async () => {
+    if (!pendingDelete) return;
+
+    const res = await fetch(apiUrl(`/api/parent-profiles/${pendingDelete._id}`), {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      notify(data.message || "Failed to delete guardian profile");
+      return;
+    }
+
+    setParents((current) => current.filter((item) => item._id !== pendingDelete._id));
+    setPendingDelete(null);
+    notify("Guardian profile deleted.");
+  };
+
   return (
     <div className="dashboard-bg">
       <div className="dashboard-hero">
@@ -54,13 +79,15 @@ function ParentList() {
           <span>Manage registered parents and guardians.</span>
         </div>
 
-        <button
-          className="primary-btn"
-          onClick={() => setAddOpen(true)}
-        >
-          <span className="ti ti-user-plus" />
-          Add Guardian
-        </button>
+        {canAddGuardian && (
+          <button
+            className="primary-btn"
+            onClick={() => setAddOpen(true)}
+          >
+            <span className="ti ti-user-plus" />
+            Add Guardian
+          </button>
+        )}
       </div>
 
       <div className="panel">
@@ -86,13 +113,14 @@ function ParentList() {
                 <th>Full Name</th>
                 <th>Contact</th>
                 <th>Address</th>
+                {canManageGuardians && <th>Action</th>}
               </tr>
             </thead>
 
             <tbody>
               {filteredParents.length === 0 ? (
                 <tr>
-                  <td colSpan="3">No guardians found.</td>
+                  <td colSpan={canManageGuardians ? 4 : 3}>No guardians found.</td>
                 </tr>
               ) : (
                 filteredParents.map((parent) => (
@@ -100,6 +128,24 @@ function ParentList() {
                     <td><strong>{parent.fullName}</strong></td>
                     <td>{parent.contactNumber}</td>
                     <td>{parent.address || "N/A"}</td>
+                    {canManageGuardians && (
+                      <td>
+                        <div className="table-actions">
+                          <button
+                            className="secondary-btn"
+                            onClick={() => setEditingParent(parent)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="danger-btn"
+                            onClick={() => setPendingDelete(parent)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -121,6 +167,33 @@ function ParentList() {
             />
           </div>
         </div>
+      )}
+
+      {editingParent && (
+        <div className="modal-overlay" onClick={() => setEditingParent(null)}>
+          <div className="modal-content" onClick={(event) => event.stopPropagation()}>
+            <CreateParent
+              embedded
+              editMode
+              parentProfile={editingParent}
+              onCancel={() => setEditingParent(null)}
+              onSaved={() => {
+                setEditingParent(null);
+                fetchParents();
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete guardian profile?"
+          message={`${pendingDelete.fullName} will be removed from the guardian list. This will not remove existing child records.`}
+          confirmLabel="Delete Guardian"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={deleteGuardian}
+        />
       )}
     </div>
   );

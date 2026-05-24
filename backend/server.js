@@ -24,8 +24,6 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const reminderRoutes = require("./routes/reminderRoutes");
 
-const reportRoutes = require("./routes/reportRoutes");
-
 const app = express();
 
 app.use(cors());
@@ -52,8 +50,6 @@ app.use("/api/vaccines", vaccineRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/reminders", reminderRoutes);
-
-app.use("/api/reports", reportRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
