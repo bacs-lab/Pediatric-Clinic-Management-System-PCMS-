@@ -6,12 +6,13 @@ function CreateAppointment({ embedded = false, onCancel, onSaved }) {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id || user?._id || "";
 
   const [patients, setPatients] = useState([]);
 
   const [form, setForm] = useState({
     patientId: "",
-    guardianId: user.id,
+    guardianId: userId,
     patientName: "",
     guardianName: "",
     appointmentDate: "",
@@ -20,7 +21,9 @@ function CreateAppointment({ embedded = false, onCancel, onSaved }) {
   });
 
   useEffect(() => {
-    fetch(apiUrl(`/api/patients/guardian/${user.id}`), {
+    if (!userId) return;
+
+    fetch(apiUrl(`/api/patients/guardian/${userId}`), {
       headers: authHeaders(),
     })
       .then((res) => res.json())
@@ -32,7 +35,7 @@ function CreateAppointment({ embedded = false, onCancel, onSaved }) {
         )
       )
       .catch((err) => console.log(err));
-  }, [user.id]);
+  }, [userId]);
 
   const handlePatientSelect = (e) => {
     const selectedPatient = patients.find(

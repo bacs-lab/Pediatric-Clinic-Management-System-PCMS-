@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PatientRequestReviewModal from "./PatientRequestReviewModal";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 import { PATIENT_APPROVAL_ROLES } from "../utils/roles";
@@ -22,6 +23,8 @@ function Topbar({ onMenuClick }) {
     upcomingVaccines: [],
   });
   const [pendingPatients, setPendingPatients] = useState([]);
+  const [selectedPatientRequest, setSelectedPatientRequest] = useState(null);
+  const [reviewBusy, setReviewBusy] = useState(false);
 
   const isStaff = ["staff", "admin", "doctor", "nurse", "secretary"].includes(
     user?.role
@@ -134,8 +137,8 @@ function Topbar({ onMenuClick }) {
       icon: "ti ti-user-question",
       title: `${patient.firstName} ${patient.lastName} pending approval`,
       body: `Guardian: ${patient.guardianName || "Parent request"}`,
-      path: "/staff/patients",
-      state: { statusFilter: "Pending" },
+      kind: "patient-request",
+      patient,
     }));
 
     return [...patientRequests, ...followUps, ...vaccines];
@@ -260,10 +263,59 @@ function Topbar({ onMenuClick }) {
   };
 
   const openNotification = (item) => {
+    if (item.kind === "patient-request" && item.patient) {
+      setSelectedPatientRequest(item.patient);
+      setNotificationsOpen(false);
+      return;
+    }
+
     if (!item.path) return;
 
     navigate(item.path, item.state ? { state: item.state } : undefined);
     setNotificationsOpen(false);
+  };
+
+  const reviewPatientRequest = async (action) => {
+    if (!selectedPatientRequest) return;
+
+    setReviewBusy(true);
+
+    try {
+      const route = action === "accept" ? "approve" : "reject";
+      const res = await fetch(
+        apiUrl(`/api/patients/${selectedPatientRequest._id}/${route}`),
+        {
+          method: "PUT",
+          headers: authHeaders(),
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify(data.message || `Failed to ${action} patient request`);
+        return;
+      }
+
+      setPendingPatients((items) =>
+        items.filter((item) => item._id !== selectedPatientRequest._id)
+      );
+      setGlobalSearchData((current) => ({
+        ...current,
+        patients: current.patients.some((item) => item._id === data._id)
+          ? current.patients.map((item) => (item._id === data._id ? data : item))
+          : [data, ...current.patients],
+      }));
+      setSelectedPatientRequest(null);
+      notify(
+        action === "accept"
+          ? "Child request accepted."
+          : "Child request rejected."
+      );
+    } catch {
+      notify(`Failed to ${action} patient request`);
+    } finally {
+      setReviewBusy(false);
+    }
   };
 
   const handleSearch = (event) => {
@@ -394,7 +446,7 @@ function Topbar({ onMenuClick }) {
                 <p className="notification-empty">No reminders right now.</p>
               ) : (
                 notificationItems.map((item) =>
-                  item.path ? (
+                  item.path || item.kind === "patient-request" ? (
                     <button
                       className="notification-item"
                       key={item.id}
@@ -432,6 +484,18 @@ function Topbar({ onMenuClick }) {
           </div>
         </div>
       </div>
+
+      {selectedPatientRequest && (
+        <PatientRequestReviewModal
+          patient={selectedPatientRequest}
+          busy={reviewBusy}
+          onAccept={() => reviewPatientRequest("accept")}
+          onReject={() => reviewPatientRequest("reject")}
+          onClose={() => {
+            if (!reviewBusy) setSelectedPatientRequest(null);
+          }}
+        />
+      )}
     </div>
   );
 }

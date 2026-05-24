@@ -14,6 +14,25 @@ const canAccessPatient = (req, patient) =>
   STAFF_ROLES.includes(req.user.role) ||
   patient.guardianId?.toString() === req.user.id;
 
+const loadPendingPatientRequest = async (id) => {
+  const patient = await Patient.findById(id);
+
+  if (!patient) {
+    return { error: { status: 404, message: "Patient not found" } };
+  }
+
+  if ((patient.status || "Active") !== "Pending") {
+    return {
+      error: {
+        status: 400,
+        message: "Only pending child requests can be reviewed",
+      },
+    };
+  }
+
+  return { patient };
+};
+
 // CREATE patient
 router.post(
   "/",
@@ -96,15 +115,39 @@ router.put(
   allowRoles(...PATIENT_APPROVAL_ROLES),
   async (req, res) => {
   try {
-    const patient = await Patient.findById(req.params.id);
+    const { patient, error } = await loadPendingPatientRequest(req.params.id);
 
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+    if (error) {
+      return res.status(error.status).json({ message: error.message });
     }
 
     patient.status = "Active";
     patient.approvedBy = req.user.id;
     patient.approvedAt = new Date();
+
+    const updatedPatient = await patient.save();
+    res.json(updatedPatient);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// REJECT pending patient request
+router.put(
+  "/:id/reject",
+  protect,
+  allowRoles(...PATIENT_APPROVAL_ROLES),
+  async (req, res) => {
+  try {
+    const { patient, error } = await loadPendingPatientRequest(req.params.id);
+
+    if (error) {
+      return res.status(error.status).json({ message: error.message });
+    }
+
+    patient.status = "Rejected";
+    patient.approvedBy = undefined;
+    patient.approvedAt = undefined;
 
     const updatedPatient = await patient.save();
     res.json(updatedPatient);

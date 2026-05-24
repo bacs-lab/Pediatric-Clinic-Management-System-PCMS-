@@ -932,6 +932,17 @@ button.notification-item:hover {
   font-weight: 800;
 }
 
+.request-review-grid {
+  margin-top: 12px;
+}
+
+.request-review-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .text-capitalize {
   text-transform: capitalize;
 }
@@ -1307,6 +1318,11 @@ form:not(.global-search) {
   background: var(--sun-soft);
   color: #9b7600;
   font-weight: 900;
+}
+
+.child-pending-note.rejected {
+  background: var(--coral-soft);
+  color: var(--red);
 }
 
 .profile-facts {

@@ -6,6 +6,7 @@ import { notify } from "../utils/notify";
 function CreatePatient({ embedded = false, parentMode = false, onCancel, onSaved }) {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("user")) || {};
+  const currentUserId = currentUser.id || currentUser._id || "";
 
   const [guardians, setGuardians] = useState([]);
 
@@ -121,7 +122,7 @@ function CreatePatient({ embedded = false, parentMode = false, onCancel, onSaved
       return;
     }
 
-    if (parentMode && !currentUser.id) {
+    if (parentMode && !currentUserId) {
       notify("Please log in again before adding a child");
       return;
     }
@@ -153,7 +154,7 @@ function CreatePatient({ embedded = false, parentMode = false, onCancel, onSaved
 
     const payload = {
       ...form,
-      guardianId: parentMode ? currentUser.id : form.guardianId,
+      guardianId: parentMode ? currentUserId : form.guardianId,
       guardianName: parentMode ? currentUser.name : form.guardianName,
       age: form.birthDate ? Number(calculateAge(form.birthDate)) : undefined,
     };

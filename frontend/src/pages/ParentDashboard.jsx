@@ -15,17 +15,18 @@ function ParentDashboard() {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = user.id || user._id || "";
 
   const loadPortal = useCallback(() => {
-    if (!user.id) {
+    if (!userId) {
       return Promise.resolve().then(() => setLoading(false));
     }
 
     return Promise.all([
-      fetch(apiUrl(`/api/patients/guardian/${user.id}`), {
+      fetch(apiUrl(`/api/patients/guardian/${userId}`), {
         headers: authHeaders(),
       }).then((res) => res.json()),
-      fetch(apiUrl(`/api/appointments/guardian/${user.id}`), {
+      fetch(apiUrl(`/api/appointments/guardian/${userId}`), {
         headers: authHeaders(),
       }).then((res) => res.json()),
     ])
@@ -34,7 +35,7 @@ function ParentDashboard() {
         setAppointments(Array.isArray(appointmentData) ? appointmentData : []);
       })
       .finally(() => setLoading(false));
-  }, [user.id]);
+  }, [userId]);
 
   useEffect(() => {
     loadPortal();
@@ -115,6 +116,8 @@ function ParentDashboard() {
           patients.map((patient) => {
             const status = patient.status || "Active";
             const isPending = status === "Pending";
+            const isRejected = status === "Rejected";
+            const isActive = status === "Active";
 
             return (
               <div className="child-card" key={patient._id}>
@@ -134,10 +137,12 @@ function ParentDashboard() {
                   <p><strong>Allergies:</strong> {patient.allergies || "None"}</p>
                 </div>
 
-                {isPending ? (
-                  <div className="child-pending-note">
-                    <span className="ti ti-clock-hour-4" />
-                    Waiting for clinic approval
+                {!isActive ? (
+                  <div className={`child-pending-note${isRejected ? " rejected" : ""}`}>
+                    <span className={isPending ? "ti ti-clock-hour-4" : "ti ti-alert-circle"} />
+                    {isPending
+                      ? "Waiting for clinic approval"
+                      : "Request was declined by the clinic"}
                   </div>
                 ) : (
                   <div className="child-actions">
@@ -193,7 +198,7 @@ function ParentDashboard() {
               onCancel={() => setAppointmentOpen(false)}
               onSaved={() => {
                 setAppointmentOpen(false);
-                fetch(apiUrl(`/api/appointments/guardian/${user.id}`), {
+                fetch(apiUrl(`/api/appointments/guardian/${userId}`), {
                   headers: authHeaders(),
                 })
                   .then((res) => res.json())

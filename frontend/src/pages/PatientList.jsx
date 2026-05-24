@@ -71,22 +71,27 @@ function PatientList() {
     );
   });
 
-  const approvePatient = async (patient) => {
-    const res = await fetch(apiUrl(`/api/patients/${patient._id}/approve`), {
+  const reviewPatientRequest = async (patient, action) => {
+    const route = action === "accept" ? "approve" : "reject";
+    const res = await fetch(apiUrl(`/api/patients/${patient._id}/${route}`), {
       method: "PUT",
       headers: authHeaders(),
     });
     const data = await res.json();
 
     if (!res.ok) {
-      notify(data.message || "Failed to approve patient request");
+      notify(data.message || `Failed to ${action} patient request`);
       return;
     }
 
     setPatients((items) =>
       items.map((item) => (item._id === patient._id ? data : item))
     );
-    notify("Patient request approved");
+    notify(
+      action === "accept"
+        ? "Patient request approved"
+        : "Patient request rejected"
+    );
   };
 
   const exportPatients = () => {
@@ -178,6 +183,7 @@ function PatientList() {
                 {filteredPatients.map((patient) => {
                   const status = patient.status || "Active";
                   const isPending = status === "Pending";
+                  const isRejected = status === "Rejected";
 
                   return (
                     <tr key={patient._id}>
@@ -198,17 +204,32 @@ function PatientList() {
                         <div className="table-actions">
                           {isPending ? (
                             canApprovePatients ? (
-                              <button
-                                className="primary-btn"
-                                onClick={() => approvePatient(patient)}
-                              >
-                                Accept Request
-                              </button>
+                              <>
+                                <button
+                                  className="primary-btn"
+                                  onClick={() => reviewPatientRequest(patient, "accept")}
+                                >
+                                  Accept Request
+                                </button>
+                                <button
+                                  className="danger-btn"
+                                  onClick={() => reviewPatientRequest(patient, "reject")}
+                                >
+                                  Reject
+                                </button>
+                              </>
                             ) : (
                               <span className="status-badge pending">
                                 Pending review
                               </span>
                             )
+                          ) : isRejected ? (
+                            <button
+                              className="secondary-btn"
+                              onClick={() => navigate(`/staff/patients/${patient._id}`)}
+                            >
+                              Profile
+                            </button>
                           ) : (
                             <>
                               <button
