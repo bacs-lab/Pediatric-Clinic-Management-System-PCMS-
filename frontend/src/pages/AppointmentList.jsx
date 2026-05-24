@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppointmentReviewModal from "../components/AppointmentReviewModal";
 import CreateAppointment from "./CreateAppointment";
+import Pagination from "../components/Pagination";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import { apiUrl, authHeaders } from "../utils/api";
@@ -24,6 +25,9 @@ function AppointmentList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [relativeDateFilter, setRelativeDateFilter] = useState(""); // "", "24h", "7d", "30d"
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
@@ -50,6 +54,10 @@ function AppointmentList() {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, dateFilter, relativeDateFilter]);
 
   const updateStatus = async (appointment, status) => {
     const res = await fetch(apiUrl(`/api/appointments/${appointment._id}`), {
@@ -86,8 +94,10 @@ function AppointmentList() {
   };
 
   const filtered = useMemo(
-    () =>
-      appointments.filter((appointment) => {
+    () => {
+      const sorted = [...appointments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      return sorted.filter((appointment) => {
         const matchesSearch =
           appointment.patientName?.toLowerCase().includes(search.toLowerCase()) ||
           appointment.guardianName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -96,9 +106,29 @@ function AppointmentList() {
         const matchesDate = dateFilter
           ? appointment.appointmentDate?.slice(0, 10) === dateFilter
           : true;
-        return matchesSearch && matchesStatus && matchesDate;
-      }),
-    [appointments, search, statusFilter, dateFilter]
+
+        let matchesRelativeDate = true;
+        if (relativeDateFilter) {
+          const now = new Date();
+          const appointmentDate = new Date(appointment.createdAt);
+          const diffTime = Math.abs(now - appointmentDate);
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+          if (relativeDateFilter === "24h") matchesRelativeDate = diffDays <= 1;
+          else if (relativeDateFilter === "7d") matchesRelativeDate = diffDays <= 7;
+          else if (relativeDateFilter === "30d") matchesRelativeDate = diffDays <= 30;
+        }
+
+        return matchesSearch && matchesStatus && matchesDate && matchesRelativeDate;
+      });
+    },
+    [appointments, search, statusFilter, dateFilter, relativeDateFilter]
+  );
+
+  const totalPages = Math.ceil(filtered.length / recordsPerPage);
+  const currentRecords = filtered.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
   );
 
   const statuses = [...new Set(appointments.map((item) => item.status))];
@@ -175,6 +205,16 @@ function AppointmentList() {
               </option>
             ))}
           </select>
+          <select
+            className="filter-select"
+            value={relativeDateFilter}
+            onChange={(event) => setRelativeDateFilter(event.target.value)}
+          >
+            <option value="">Any Date Range</option>
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+          </select>
           <input
             type="date"
             className="filter-select date-filter"
@@ -212,7 +252,7 @@ function AppointmentList() {
               </thead>
 
               <tbody>
-                {filtered.map((appointment) => (
+                {currentRecords.map((appointment) => (
                   <tr key={appointment._id}>
                     <td>
                       <strong>{appointment.patientName}</strong>
@@ -260,6 +300,12 @@ function AppointmentList() {
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {createOpen && (

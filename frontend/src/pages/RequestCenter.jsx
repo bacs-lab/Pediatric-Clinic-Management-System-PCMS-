@@ -131,7 +131,7 @@ function RequestCenter() {
       const data = await res.json();
 
       if (!res.ok) {
-        notify(data.message || `Failed to ${action} patient request`);
+        notifyError(data.message || `Failed to ${action} patient request`);
         return;
       }
 

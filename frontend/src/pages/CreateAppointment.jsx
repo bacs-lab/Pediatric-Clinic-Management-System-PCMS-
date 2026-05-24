@@ -182,6 +182,24 @@ function CreateAppointment({
       return;
     }
 
+    // Clinic hours and weekday validation
+    const apptDate = new Date(form.appointmentDate);
+    const day = apptDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    if (day === 0 || day === 6) {
+      notify("Appointments can only be scheduled from Monday to Friday.");
+      return;
+    }
+
+    const [hours, minutes] = form.appointmentTime.split(":").map(Number);
+    const timeInMinutes = hours * 60 + minutes;
+    const startMinutes = 9 * 60; // 9:00 AM
+    const endMinutes = 17 * 60; // 5:00 PM
+
+    if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
+      notify("Clinic hours are 9:00 AM – 5:00 PM. Please select a valid time.");
+      return;
+    }
+
     const payload = {
       guardianId: form.guardianId,
       patientId: form.patientId,

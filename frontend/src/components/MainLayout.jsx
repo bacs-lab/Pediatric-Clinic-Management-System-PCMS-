@@ -17,7 +17,7 @@ function MainLayout({ children }) {
 
   const isStaff =
     user?.role &&
-    ['staff', 'admin', 'doctor', 'nurse', 'secretary'].includes(user.role);
+    ['staff', 'admin', 'doctor', 'secretary'].includes(user.role);
   const isParent = user?.role === 'parent';
 
   const navItems = user?.role === 'admin'

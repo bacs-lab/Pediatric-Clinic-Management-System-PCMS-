@@ -52,8 +52,8 @@ function QueueList() {
     fetchQueue();
   }, []);
 
-  const canCreateAssessment = ["admin", "staff", "doctor", "nurse"].includes(user?.role);
-  const canCreateConsultation = MEDICAL_ROLES.includes(user?.role);
+  const canCreateAssessment = ["admin", "staff", "doctor"].includes(user?.role);
+  const canCreateConsultation = MEDICAL_ROLES.includes(user?.role) || user?.role === "admin";
   const canCreateBilling = ["admin", "secretary", "staff"].includes(user?.role);
 
   const canOpenWorkflow = (type) =>

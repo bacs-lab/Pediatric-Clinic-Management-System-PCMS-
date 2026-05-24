@@ -16,7 +16,8 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles("staff", "nurse", "doctor"),
+  allowRoles("staff", "doctor"),
+
   async (req, res) => {
   try {
     const assessment = await Assessment.create(req.body);
@@ -49,7 +50,7 @@ router.get(
 router.get(
   "/patient/:patientId",
   protect,
-  allowRoles("staff", "nurse", "doctor", "parent"),
+  allowRoles("staff", "doctor", "parent"),
   async (req, res) => {
   try {
     if (

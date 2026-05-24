@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CreateParent from "./CreateParent";
+import Pagination from "../components/Pagination";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 
@@ -12,6 +13,9 @@ function ParentList() {
   const canManageGuardians = user.role === "admin";
   const [parents, setParents] = useState([]);
   const [search, setSearch] = useState(() => location.state?.search || "");
+  const [sortBy, setSortBy] = useState("alphabetical"); // "alphabetical" or "newest"
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const [addOpen, setAddOpen] = useState(false);
   const [editingParent, setEditingParent] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -49,6 +53,25 @@ function ParentList() {
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const sortedParents = [...filteredParents].sort((a, b) => {
+    if (sortBy === "alphabetical") {
+      return (a.fullName || "").localeCompare(b.fullName || "");
+    } else if (sortBy === "newest") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedParents.length / recordsPerPage);
+  const currentRecords = sortedParents.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortBy]);
 
   const deleteGuardian = async () => {
     if (!pendingDelete) return;
@@ -104,6 +127,14 @@ function ParentList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <select
+            className="filter-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="alphabetical">Alphabetical (A-Z)</option>
+            <option value="newest">Date (Newest to Oldest)</option>
+          </select>
         </div>
 
         <div className="table-container flat">
@@ -118,12 +149,12 @@ function ParentList() {
             </thead>
 
             <tbody>
-              {filteredParents.length === 0 ? (
+              {currentRecords.length === 0 ? (
                 <tr>
                   <td colSpan={canManageGuardians ? 4 : 3}>No guardians found.</td>
                 </tr>
               ) : (
-                filteredParents.map((parent) => (
+                currentRecords.map((parent) => (
                   <tr key={parent._id}>
                     <td><strong>{parent.fullName}</strong></td>
                     <td>{parent.contactNumber}</td>
@@ -152,6 +183,12 @@ function ParentList() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {addOpen && (

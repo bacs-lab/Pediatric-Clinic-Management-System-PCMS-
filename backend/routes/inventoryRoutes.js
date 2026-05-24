@@ -8,7 +8,7 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 router.post(
   "/",
   protect,
-  allowRoles("staff", "secretary", "nurse", "doctor"),
+  allowRoles("staff", "secretary", "doctor"),
   async (req, res) => {
   try {
     const item = await InventoryItem.create(req.body);
@@ -22,7 +22,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "secretary", "nurse", "doctor"),
+  allowRoles("staff", "secretary", "doctor"),
   async (req, res) => {
   try {
     const items = await InventoryItem.find().sort({ createdAt: -1 });

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
+import Pagination from "../components/Pagination";
 import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
 
@@ -8,7 +9,13 @@ function BillingList() {
   const [billings, setBillings] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     fetch(apiUrl("/api/billings"), {
@@ -20,8 +27,10 @@ function BillingList() {
   }, []);
 
   const filtered = useMemo(
-    () =>
-      billings.filter((billing) => {
+    () => {
+      const sorted = [...billings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      return sorted.filter((billing) => {
         const matchesSearch = billing.patientName
           ?.toLowerCase()
           .includes(search.toLowerCase());
@@ -29,8 +38,15 @@ function BillingList() {
           ? billing.paymentStatus === statusFilter
           : true;
         return matchesSearch && matchesStatus;
-      }),
+      });
+    },
     [billings, search, statusFilter]
+  );
+
+  const totalPages = Math.ceil(filtered.length / recordsPerPage);
+  const currentRecords = filtered.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
   );
 
   const paymentStatuses = [...new Set(billings.map((item) => item.paymentStatus))];
@@ -111,7 +127,7 @@ function BillingList() {
               </thead>
 
               <tbody>
-                {filtered.map((billing) => (
+                {currentRecords.map((billing) => (
                   <tr key={billing._id}>
                     <td><strong>{billing.patientName}</strong></td>
                     <td>PHP {billing.consultationFee}</td>
@@ -130,6 +146,12 @@ function BillingList() {
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

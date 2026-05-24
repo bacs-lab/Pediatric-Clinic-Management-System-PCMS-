@@ -79,7 +79,7 @@ export const staffNavItems = [
     path: '/staff/queue',
     roles: STAFF_ROLES,
     children: [
-      { label: 'New Assessment', icon: 'ti ti-stethoscope', path: '/staff/queue', state: { modal: 'assessment' }, roles: ['admin', 'staff', 'doctor', 'nurse'] },
+      { label: 'New Assessment', icon: 'ti ti-stethoscope', path: '/staff/queue', state: { modal: 'assessment' }, roles: ['admin', 'staff', 'doctor'] },
       { label: 'New Consultation', icon: 'ti ti-notes', path: '/staff/queue', state: { modal: 'consultation' }, roles: MEDICAL_ROLES },
       { label: 'New Billing', icon: 'ti ti-wallet', path: '/staff/queue', state: { modal: 'billing' }, roles: ['admin', 'secretary', 'staff'] },
     ],

@@ -317,4 +317,42 @@ router.put(
   }
 });
 
+// CANCEL appointment (Parent)
+router.put(
+  "/:id/cancel",
+  protect,
+  allowRoles(ROLES.PARENT),
+  async (req, res) => {
+    try {
+      const appointment = await Appointment.findById(req.params.id);
+
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      if (appointment.guardianId?.toString() !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!["Pending", "Approved", "Rescheduled"].includes(appointment.status)) {
+        return res.status(400).json({
+          message: "Only pending or upcoming appointments can be cancelled.",
+        });
+      }
+
+      appointment.status = "Cancelled";
+      appointment.remarks = appointment.remarks
+        ? `${appointment.remarks} (Cancelled by parent)`
+        : "Cancelled by parent";
+
+      const updatedAppointment = await appointment.save();
+      await syncAppointmentQueue(updatedAppointment);
+
+      res.json(updatedAppointment);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 module.exports = router;

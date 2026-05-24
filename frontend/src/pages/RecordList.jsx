@@ -6,6 +6,7 @@ import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
 import CreateRecord from "./CreateRecord";
 import EditRecord from "./EditRecord";
+import Pagination from "../components/Pagination";
 import { EMR_WRITE_ROLES } from "../utils/roles";
 
 const formatDate = (date) =>
@@ -22,6 +23,8 @@ function RecordList() {
   const [addOpen, setAddOpen] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState(null);
   const [prefillPatientId, setPrefillPatientId] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
 
   const fetchRecords = () => {
     fetch(apiUrl("/api/records"), {
@@ -44,6 +47,10 @@ function RecordList() {
   useEffect(() => {
     fetchRecords();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   useEffect(() => {
     if (location.state?.modal === "add-record" || location.state?.search) {
@@ -72,6 +79,12 @@ function RecordList() {
         .some((value) => value.toLowerCase().includes(term))
     );
   }, [records, search]);
+
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+  const currentRecords = filteredRecords.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
   const openAddRecord = (patientId = "") => {
     setPrefillPatientId(patientId);
@@ -158,7 +171,7 @@ function RecordList() {
               </thead>
 
               <tbody>
-                {filteredRecords.map((record) => (
+                {currentRecords.map((record) => (
                   <tr key={record._id}>
                     <td>{formatDate(record.visitDate || record.createdAt)}</td>
                     <td><strong>{record.patientName}</strong></td>
@@ -189,6 +202,12 @@ function RecordList() {
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {addOpen && (

@@ -4,6 +4,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import CreatePatient from "./CreatePatient";
+import Pagination from "../components/Pagination";
 import { authFetch } from "../utils/authFetch";
 import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
@@ -19,6 +20,8 @@ function PatientList() {
   );
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const canApprovePatients = PATIENT_APPROVAL_ROLES.includes(user.role);
@@ -37,6 +40,10 @@ function PatientList() {
   useEffect(() => {
     fetchPatients();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     if (
@@ -77,26 +84,31 @@ function PatientList() {
   });
 
   const reviewPatientRequest = async (patient, action) => {
-    const route = action === "accept" ? "approve" : "reject";
-    const res = await fetch(apiUrl(`/api/patients/${patient._id}/${route}`), {
-      method: "PUT",
-      headers: authHeaders(),
-    });
-    const data = await res.json();
+    try {
+      const route = action === "accept" ? "approve" : "reject";
+      const res = await fetch(apiUrl(`/api/patients/${patient._id}/${route}`), {
+        method: "PUT",
+        headers: authHeaders(),
+      });
+      const data = await res.json();
 
-    if (!res.ok) {
-      notify(data.message || `Failed to ${action} patient request`);
-      return;
+      if (!res.ok) {
+        notify(data.message || `Failed to ${action} patient request`, "error");
+        return;
+      }
+
+      setPatients((items) =>
+        items.map((item) => (item._id === patient._id ? data : item))
+      );
+      notify(
+        action === "accept"
+          ? "Patient request approved"
+          : "Patient request rejected",
+        "success"
+      );
+    } catch {
+      notify(`Failed to ${action} patient request`, "error");
     }
-
-    setPatients((items) =>
-      items.map((item) => (item._id === patient._id ? data : item))
-    );
-    notify(
-      action === "accept"
-        ? "Patient request approved"
-        : "Patient request rejected"
-    );
   };
 
   const exportPatients = () => {
@@ -131,6 +143,12 @@ function PatientList() {
     setPendingDelete(null);
     notify("Patient record deleted.");
   };
+
+  const totalPages = Math.ceil(filteredPatients.length / recordsPerPage);
+  const currentRecords = filteredPatients.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
   if (loading) return <LoadingState title="Loading child patient records..." />;
 
@@ -207,7 +225,7 @@ function PatientList() {
               </thead>
 
               <tbody>
-                {filteredPatients.map((patient) => {
+                {currentRecords.map((patient) => {
                   const status = patient.status || "Active";
                   const isPending = status === "Pending";
                   const isRejected = status === "Rejected";
@@ -299,6 +317,12 @@ function PatientList() {
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {addOpen && (

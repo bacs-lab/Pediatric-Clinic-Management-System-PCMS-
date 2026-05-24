@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
+import ConfirmDialog from "../components/ConfirmDialog";
 import CreateAppointment from "./CreateAppointment";
 import CreatePatient from "./CreatePatient";
 import { apiUrl, authHeaders } from "../utils/api";
+import { notify, notifySuccess } from "../utils/notify";
 
 function ParentDashboard() {
   const [patients, setPatients] = useState([]);
@@ -13,6 +15,7 @@ function ParentDashboard() {
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
+  const [pendingCancelPatient, setPendingCancelPatient] = useState(null);
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -41,6 +44,29 @@ function ParentDashboard() {
   useEffect(() => {
     loadPortal();
   }, [loadPortal]);
+
+  const cancelPatientRequest = async () => {
+    if (!pendingCancelPatient) return;
+
+    try {
+      const res = await fetch(apiUrl(`/api/patients/${pendingCancelPatient._id}/cancel`), {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+
+      if (res.ok) {
+        notifySuccess("Child enrollment request cancelled.");
+        loadPortal();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.message || "Failed to cancel request.");
+      }
+    } catch {
+      notify("Failed to cancel request.");
+    } finally {
+      setPendingCancelPatient(null);
+    }
+  };
 
   const activeChildren = patients.filter(
     (patient) => (patient.status || "Active") === "Active"
@@ -147,10 +173,21 @@ function ParentDashboard() {
 
                 {!isActive ? (
                   <div className={`child-pending-note${isRejected ? " rejected" : ""}`}>
-                    <span className={isPending ? "ti ti-clock-hour-4" : "ti ti-alert-circle"} />
-                    {isPending
-                      ? "Waiting for clinic approval"
-                      : "Request was declined by the clinic"}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={isPending ? "ti ti-clock-hour-4" : "ti ti-alert-circle"} />
+                      {isPending
+                        ? "Waiting for clinic approval"
+                        : "Request was declined by the clinic"}
+                    </div>
+                    {isPending && (
+                      <button 
+                        className="danger-btn" 
+                        style={{ marginTop: '12px', padding: '6px 12px', fontSize: '13px' }}
+                        onClick={() => setPendingCancelPatient(patient)}
+                      >
+                        Cancel Request
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="child-actions">
@@ -243,6 +280,16 @@ function ParentDashboard() {
             />
           </div>
         </div>
+      )}
+
+      {pendingCancelPatient && (
+        <ConfirmDialog
+          title="Cancel child enrollment request?"
+          message={`Are you sure you want to cancel the enrollment request for ${pendingCancelPatient.firstName} ${pendingCancelPatient.lastName}?`}
+          confirmLabel="Yes, Cancel Request"
+          onCancel={() => setPendingCancelPatient(null)}
+          onConfirm={cancelPatientRequest}
+        />
       )}
     </div>
   );

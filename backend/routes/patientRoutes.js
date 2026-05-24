@@ -353,6 +353,37 @@ router.put(
   }
 );
 
+// CANCEL child enrollment request (Parent)
+router.delete(
+  "/:id/cancel",
+  protect,
+  allowRoles(ROLES.PARENT),
+  async (req, res) => {
+    try {
+      const patient = await Patient.findById(req.params.id);
+
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      if (patient.guardianId?.toString() !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if ((patient.status || "Active") !== "Pending") {
+        return res.status(400).json({
+          message: "Only pending child requests can be cancelled.",
+        });
+      }
+
+      await Patient.findByIdAndDelete(patient._id);
+      res.json({ message: "Child enrollment request cancelled" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 router.get("/:id", protect, async (req, res) => {
   try {
     const patient = await Patient.findById(req.params.id);

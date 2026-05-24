@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CreateInventoryItem from "./CreateInventoryItem";
+import Pagination from "../components/Pagination";
 import { authFetch } from "../utils/authFetch";
 import { apiUrl } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
@@ -16,6 +17,8 @@ function InventoryList() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showLowStock, setShowLowStock] = useState(false);
   const [showExpiring, setShowExpiring] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const [addOpen, setAddOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -52,6 +55,10 @@ function InventoryList() {
       return () => window.clearTimeout(timer);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, showLowStock, showExpiring]);
 
   const requestDelete = (item) => {
     setPendingDelete(item);
@@ -164,6 +171,12 @@ function InventoryList() {
 
     return matchesSearch && matchesCategory && matchesLowStock && matchesExpiring;
   });
+
+  const totalPages = Math.ceil(filteredItems.length / recordsPerPage);
+  const currentRecords = filteredItems.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
   const exportInventory = () => {
     exportCsv("inventory.csv", filteredItems, [
@@ -284,14 +297,14 @@ function InventoryList() {
             </thead>
 
             <tbody>
-              {filteredItems.length === 0 ? (
+              {currentRecords.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center" }}>
                     No inventory items found.
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item) => {
+                currentRecords.map((item) => {
                   const status = getStatus(item);
 
                   return (
@@ -336,6 +349,12 @@ function InventoryList() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {addOpen && (
