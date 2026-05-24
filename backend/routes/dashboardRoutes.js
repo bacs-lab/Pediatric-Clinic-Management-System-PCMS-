@@ -6,8 +6,10 @@ const Appointment = require("../models/Appointment");
 const Queue = require("../models/Queue");
 const Billing = require("../models/Billing");
 const InventoryItem = require("../models/InventoryItem");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
+const { STAFF_ROLES } = require("../constants/roles");
 
-router.get("/stats", async (req, res) => {
+router.get("/stats", protect, allowRoles(...STAFF_ROLES), async (req, res) => {
   try {
     const totalPatients = await Patient.countDocuments();
 

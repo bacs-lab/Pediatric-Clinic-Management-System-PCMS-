@@ -3,7 +3,14 @@ const router = express.Router();
 
 const VaccineRecord = require("../models/VaccineRecord");
 const InventoryItem = require("../models/InventoryItem");
+const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
+const { ROLES } = require("../constants/roles");
+
+const parentOwnsPatient = async (userId, patientId) => {
+  const patient = await Patient.findById(patientId).select("guardianId");
+  return patient?.guardianId?.toString() === userId;
+};
 
 // CREATE vaccine record
 router.post(
@@ -62,6 +69,13 @@ router.get(
   allowRoles("parent", "staff", "admin", "nurse", "doctor"),
   async (req, res) => {
     try {
+      if (
+        req.user.role === ROLES.PARENT &&
+        !(await parentOwnsPatient(req.user.id, req.params.patientId))
+      ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
       const records = await VaccineRecord.find({
         patientId: req.params.patientId,
       }).sort({ vaccineDate: -1 });

@@ -23,6 +23,17 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "doctor", "nurse", "secretary", "staff", "parent"],
       required: true,
     },
+
+    status: {
+      type: String,
+      enum: ["Active", "Disabled"],
+      default: "Active",
+    },
+
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

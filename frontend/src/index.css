@@ -742,6 +742,10 @@ button:disabled {
   margin-bottom: 20px;
 }
 
+.users-stats-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .metric-card {
   min-height: 148px;
   padding: 18px;
@@ -894,6 +898,16 @@ button:disabled {
   color: var(--muted);
   font-size: 13px;
   font-weight: 900;
+}
+
+.modal-support-text {
+  margin: -8px 0 16px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
 }
 
 .mini-item {

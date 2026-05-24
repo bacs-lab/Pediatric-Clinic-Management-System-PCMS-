@@ -26,6 +26,15 @@ function MainLayout({ children }) {
       ? parentNavItems
       : [];
 
+  const visibleNavItems = navItems
+    .filter((item) => !item.roles || item.roles.includes(user?.role))
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter(
+        (child) => !child.roles || child.roles.includes(user?.role)
+      ),
+    }));
+
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
@@ -35,7 +44,7 @@ function MainLayout({ children }) {
         onClick={closeSidebar}
       />
       <Navbar
-        navItems={navItems}
+        navItems={visibleNavItems}
         onLogout={logout}
         isOpen={sidebarOpen}
         onClose={closeSidebar}

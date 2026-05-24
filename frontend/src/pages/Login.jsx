@@ -3,15 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../utils/api";
 import { notify } from "../utils/notify";
 
-const ROLE_OPTIONS = [
-  { value: "parent", label: "Parent / Guardian" },
-  { value: "staff", label: "Staff" },
-  { value: "doctor", label: "Doctor" },
-  { value: "nurse", label: "Nurse" },
-  { value: "secretary", label: "Secretary" },
-  { value: "admin", label: "Admin" },
-];
-
 function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("login");
@@ -27,7 +18,6 @@ function Login() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "parent",
     contactNumber: "",
     address: "",
     relationshipToChild: "",
@@ -71,7 +61,10 @@ function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (data.user.role === "parent") {
+      if (data.user.mustChangePassword) {
+        notify("You must change your password before continuing.");
+        navigate("/change-password");
+      } else if (data.user.role === "parent") {
         navigate("/parent/dashboard");
       } else {
         navigate("/staff/dashboard");
@@ -104,7 +97,7 @@ function Login() {
       return;
     }
 
-    if (signupForm.role === "parent" && !signupForm.contactNumber.trim()) {
+    if (!signupForm.contactNumber.trim()) {
       notify("Contact number is required for parent accounts");
       return;
     }
@@ -121,7 +114,10 @@ function Login() {
           name: signupForm.name,
           email: signupForm.email,
           password: signupForm.password,
-          role: signupForm.role,
+          contactNumber: signupForm.contactNumber,
+          address: signupForm.address,
+          relationshipToChild: signupForm.relationshipToChild,
+          emergencyContact: signupForm.emergencyContact,
         }),
       });
 
@@ -130,28 +126,6 @@ function Login() {
       if (!userRes.ok) {
         notify(userData.message || "Failed to create account");
         return;
-      }
-
-      if (signupForm.role === "parent") {
-        const profileRes = await fetch(apiUrl("/api/parent-profiles"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: userData.user._id || userData.user.id,
-            fullName: signupForm.name,
-            contactNumber: signupForm.contactNumber,
-            address: signupForm.address,
-            relationshipToChild: signupForm.relationshipToChild,
-            emergencyContact: signupForm.emergencyContact,
-          }),
-        });
-
-        if (!profileRes.ok) {
-          notify("Account created, but parent profile was not saved");
-          return;
-        }
       }
 
       notify("Account created. Please log in.");
@@ -164,7 +138,6 @@ function Login() {
         email: "",
         password: "",
         confirmPassword: "",
-        role: "parent",
         contactNumber: "",
         address: "",
         relationshipToChild: "",
@@ -243,24 +216,9 @@ function Login() {
         ) : (
           <>
             <h2>Create Account</h2>
-            <p>Register as a parent, staff member, or clinic user</p>
+            <p>Register as a parent or guardian</p>
 
             <form onSubmit={handleSignup}>
-              <div className="form-group">
-                <label className="form-label">Account Role</label>
-                <select
-                  name="role"
-                  value={signupForm.role}
-                  onChange={handleSignupChange}
-                >
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input
@@ -306,51 +264,49 @@ function Login() {
                 </div>
               </div>
 
-              {signupForm.role === "parent" && (
-                <div className="parent-signup-fields">
+              <div className="parent-signup-fields">
+                <div className="form-group">
+                  <label className="form-label">Contact Number</label>
+                  <input
+                    name="contactNumber"
+                    placeholder="Contact number"
+                    value={signupForm.contactNumber}
+                    onChange={handleSignupChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Address</label>
+                  <input
+                    name="address"
+                    placeholder="Address"
+                    value={signupForm.address}
+                    onChange={handleSignupChange}
+                  />
+                </div>
+
+                <div className="form-row-2col">
                   <div className="form-group">
-                    <label className="form-label">Contact Number</label>
+                    <label className="form-label">Relationship to Child</label>
                     <input
-                      name="contactNumber"
-                      placeholder="Contact number"
-                      value={signupForm.contactNumber}
+                      name="relationshipToChild"
+                      placeholder="Mother, father, guardian..."
+                      value={signupForm.relationshipToChild}
                       onChange={handleSignupChange}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Address</label>
+                    <label className="form-label">Emergency Contact</label>
                     <input
-                      name="address"
-                      placeholder="Address"
-                      value={signupForm.address}
+                      name="emergencyContact"
+                      placeholder="Emergency contact"
+                      value={signupForm.emergencyContact}
                       onChange={handleSignupChange}
                     />
-                  </div>
-
-                  <div className="form-row-2col">
-                    <div className="form-group">
-                      <label className="form-label">Relationship to Child</label>
-                      <input
-                        name="relationshipToChild"
-                        placeholder="Mother, father, guardian..."
-                        value={signupForm.relationshipToChild}
-                        onChange={handleSignupChange}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Emergency Contact</label>
-                      <input
-                        name="emergencyContact"
-                        placeholder="Emergency contact"
-                        value={signupForm.emergencyContact}
-                        onChange={handleSignupChange}
-                      />
-                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               <button
                 className="primary-btn"

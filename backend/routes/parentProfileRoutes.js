@@ -2,11 +2,24 @@ const express = require("express");
 const router = express.Router();
 
 const ParentProfile = require("../models/ParentProfile");
+const { protect, allowRoles } = require("../middleware/authMiddleware");
+const { STAFF_ROLES } = require("../constants/roles");
 
+const canAccessProfile = (req, profile) =>
+  STAFF_ROLES.includes(req.user.role) ||
+  profile.userId?.toString() === req.user.id;
 
 // CREATE parent profile
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
+    if (req.user.role === "parent" && req.body.userId !== req.user.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (!STAFF_ROLES.includes(req.user.role) && req.user.role !== "parent") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const profile = await ParentProfile.create(req.body);
 
     res.status(201).json(profile);
@@ -19,7 +32,7 @@ router.post("/", async (req, res) => {
 
 
 // GET all parent profiles
-router.get("/", async (req, res) => {
+router.get("/", protect, allowRoles(...STAFF_ROLES), async (req, res) => {
   try {
     const profiles = await ParentProfile.find();
 
@@ -33,7 +46,7 @@ router.get("/", async (req, res) => {
 
 
 // GET one parent profile
-router.get("/:id", async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
     const profile = await ParentProfile.findById(req.params.id);
 
@@ -41,6 +54,10 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({
         message: "Parent profile not found",
       });
+    }
+
+    if (!canAccessProfile(req, profile)) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     res.json(profile);
@@ -53,8 +70,20 @@ router.get("/:id", async (req, res) => {
 
 
 // UPDATE parent profile
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   try {
+    const profile = await ParentProfile.findById(req.params.id);
+
+    if (!profile) {
+      return res.status(404).json({
+        message: "Parent profile not found",
+      });
+    }
+
+    if (!canAccessProfile(req, profile)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const updatedProfile =
       await ParentProfile.findByIdAndUpdate(
         req.params.id,

@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -12,7 +13,36 @@ const protect = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select(
+      "_id name email role status mustChangePassword"
+    );
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+
+    if (user.status === "Disabled") {
+      return res.status(403).json({ message: "Account is disabled" });
+    }
+
+    req.user = {
+      id: user._id.toString(),
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      mustChangePassword: user.mustChangePassword,
+    };
+
+    if (
+      user.mustChangePassword &&
+      !req.originalUrl.startsWith("/api/auth/change-password")
+    ) {
+      return res.status(403).json({
+        message: "You must change your password before continuing.",
+      });
+    }
 
     next();
   } catch (error) {

@@ -3,7 +3,14 @@ const express = require("express");
 const router = express.Router();
 
 const Assessment = require("../models/Assessment");
+const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
+const { ROLES } = require("../constants/roles");
+
+const parentOwnsPatient = async (userId, patientId) => {
+  const patient = await Patient.findById(patientId).select("guardianId");
+  return patient?.guardianId?.toString() === userId;
+};
 
 // CREATE assessment
 router.post(
@@ -45,6 +52,13 @@ router.get(
   allowRoles("staff", "admin", "nurse", "doctor", "parent"),
   async (req, res) => {
   try {
+    if (
+      req.user.role === ROLES.PARENT &&
+      !(await parentOwnsPatient(req.user.id, req.params.patientId))
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const assessments = await Assessment.find({
       patientId: req.params.patientId,
     }).sort({ createdAt: -1 });

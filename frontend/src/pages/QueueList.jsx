@@ -7,6 +7,7 @@ import CreateBilling from "./CreateBilling";
 import CreateConsultation from "./CreateConsultation";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notifyError, notifySuccess } from "../utils/notify";
+import { MEDICAL_ROLES } from "../utils/roles";
 
 const queueColumns = [
   "Waiting",
@@ -19,6 +20,7 @@ const queueColumns = [
 
 function QueueList() {
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem("user"));
   const [queue, setQueue] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -39,16 +41,34 @@ function QueueList() {
     fetchQueue();
   }, []);
 
+  const canCreateAssessment = ["admin", "staff", "doctor", "nurse"].includes(user?.role);
+  const canCreateConsultation = MEDICAL_ROLES.includes(user?.role);
+  const canCreateBilling = ["admin", "secretary", "staff"].includes(user?.role);
+
+  const canOpenWorkflow = (type) =>
+    (type === "assessment" && canCreateAssessment) ||
+    (type === "consultation" && canCreateConsultation) ||
+    (type === "billing" && canCreateBilling);
+
   useEffect(() => {
-    if (["assessment", "consultation", "billing"].includes(location.state?.modal)) {
+    const modalType = location.state?.modal;
+    const modalAllowed =
+      (modalType === "assessment" && canCreateAssessment) ||
+      (modalType === "consultation" && canCreateConsultation) ||
+      (modalType === "billing" && canCreateBilling);
+
+    if (
+      ["assessment", "consultation", "billing"].includes(modalType) &&
+      modalAllowed
+    ) {
       const timer = window.setTimeout(
-        () => setWorkflowModal({ type: location.state.modal, item: null }),
+        () => setWorkflowModal({ type: modalType, item: null }),
         0
       );
       window.history.replaceState({}, document.title);
       return () => window.clearTimeout(timer);
     }
-  }, [location.state]);
+  }, [canCreateAssessment, canCreateBilling, canCreateConsultation, location.state]);
 
   const updateStatus = async (id, status) => {
     const res = await fetch(apiUrl(`/api/queue/${id}`), {
@@ -91,6 +111,10 @@ function QueueList() {
   );
 
   const openWorkflow = (type, item = null) => {
+    if (!canOpenWorkflow(type)) {
+      notifyError("Access denied for this workflow.");
+      return;
+    }
     setWorkflowModal({ type, item });
   };
 
@@ -125,18 +149,24 @@ function QueueList() {
         </div>
 
         <div className="hero-actions">
-          <button className="secondary-btn" onClick={() => openWorkflow("assessment")}>
-            <span className="ti ti-stethoscope" />
-            New Assessment
-          </button>
-          <button className="secondary-btn" onClick={() => openWorkflow("consultation")}>
-            <span className="ti ti-notes" />
-            New Consultation
-          </button>
-          <button className="primary-btn" onClick={() => openWorkflow("billing")}>
-            <span className="ti ti-wallet" />
-            New Billing
-          </button>
+          {canCreateAssessment && (
+            <button className="secondary-btn" onClick={() => openWorkflow("assessment")}>
+              <span className="ti ti-stethoscope" />
+              New Assessment
+            </button>
+          )}
+          {canCreateConsultation && (
+            <button className="secondary-btn" onClick={() => openWorkflow("consultation")}>
+              <span className="ti ti-notes" />
+              New Consultation
+            </button>
+          )}
+          {canCreateBilling && (
+            <button className="primary-btn" onClick={() => openWorkflow("billing")}>
+              <span className="ti ti-wallet" />
+              New Billing
+            </button>
+          )}
         </div>
       </div>
 

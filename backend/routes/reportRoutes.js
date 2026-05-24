@@ -12,7 +12,7 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 router.get(
   "/summary",
   protect,
-  allowRoles("staff", "admin", "secretary", "doctor", "nurse"),
+  allowRoles("admin"),
   async (req, res) => {
     try {
       const totalPatients = await Patient.countDocuments();

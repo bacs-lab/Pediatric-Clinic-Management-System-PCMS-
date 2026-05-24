@@ -2,7 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const MedicalRecord = require("../models/MedicalRecord");
+const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
+const { MEDICAL_ROLES, ROLES } = require("../constants/roles");
+
+const parentOwnsPatient = async (userId, patientId) => {
+  const patient = await Patient.findById(patientId).select("guardianId");
+  return patient?.guardianId?.toString() === userId;
+};
 
 
 
@@ -10,7 +17,7 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 router.post(
   "/",
   protect,
-  allowRoles("staff", "doctor", "nurse", "admin"),
+  allowRoles(...MEDICAL_ROLES),
   async (req, res) => {
   try {
     const newRecord = new MedicalRecord(req.body);
@@ -28,7 +35,7 @@ router.post(
 router.get(
   "/",
   protect,
-  allowRoles("staff", "doctor", "nurse", "admin"),
+  allowRoles(...MEDICAL_ROLES),
   async (req, res) => {
   try {
     const records = await MedicalRecord.find();
@@ -42,9 +49,16 @@ router.get(
 router.get(
   "/patient/:patientId",
   protect,
-  allowRoles("staff", "doctor", "nurse", "admin", "parent"),
+  allowRoles(...MEDICAL_ROLES, ROLES.PARENT),
   async (req, res) => {
   try {
+    if (
+      req.user.role === ROLES.PARENT &&
+      !(await parentOwnsPatient(req.user.id, req.params.patientId))
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const records = await MedicalRecord.find({
       patientId: req.params.patientId,
     });
@@ -59,13 +73,20 @@ router.get(
 router.get(
   "/:id",
   protect,
-  allowRoles("staff", "doctor", "nurse", "admin", "parent"),
+  allowRoles(...MEDICAL_ROLES, ROLES.PARENT),
   async (req, res) => {
   try {
     const record = await MedicalRecord.findById(req.params.id);
 
     if (!record) {
       return res.status(404).json({ message: "Record not found" });
+    }
+
+    if (
+      req.user.role === ROLES.PARENT &&
+      !(await parentOwnsPatient(req.user.id, record.patientId))
+    ) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     res.json(record);
@@ -77,7 +98,7 @@ router.get(
 router.put(
   "/:id",
   protect,
-  allowRoles("staff", "doctor", "admin"),
+  allowRoles(ROLES.DOCTOR, ROLES.ADMIN),
   async (req, res) => {
   try {
     const updatedRecord = await MedicalRecord.findByIdAndUpdate(
@@ -99,7 +120,7 @@ router.put(
 router.delete(
   "/:id",
   protect,
-  allowRoles("admin"),
+  allowRoles(ROLES.ADMIN),
   async (req, res) => {
   try {
     const deletedRecord = await MedicalRecord.findByIdAndDelete(req.params.id);

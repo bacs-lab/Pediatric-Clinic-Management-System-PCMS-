@@ -27,7 +27,6 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
     e.preventDefault();
 
     try {
-      // CREATE USER ACCOUNT
       const userRes = await fetch(
         apiUrl("/api/auth/register"),
         {
@@ -39,29 +38,6 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
             name: form.fullName,
             email: form.email,
             password: form.password,
-            role: "parent",
-          }),
-        }
-      );
-
-      const userData = await userRes.json();
-
-      if (!userRes.ok) {
-        notify(userData.message || "Failed to create parent account");
-        return;
-      }
-
-      // CREATE PARENT PROFILE
-      const profileRes = await fetch(
-        apiUrl("/api/parent-profiles"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: userData.user._id,
-            fullName: form.fullName,
             contactNumber: form.contactNumber,
             address: form.address,
             relationshipToChild: form.relationshipToChild,
@@ -70,12 +46,14 @@ function CreateParent({ embedded = false, onCancel, onSaved }) {
         }
       );
 
-      if (profileRes.ok) {
+      const userData = await userRes.json();
+
+      if (userRes.ok) {
         notify("Parent account and profile created!");
         if (onSaved) onSaved();
         else navigate("/staff/dashboard");
       } else {
-        notify("Failed to create parent profile");
+        notify(userData.message || "Failed to create parent account");
       }
     } catch (error) {
       console.log(error);

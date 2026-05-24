@@ -11,6 +11,15 @@ export const authFetch = async (url, options = {}) => {
     },
   });
 
+  if (res.status === 403) {
+    const data = await res.clone().json().catch(() => ({}));
+
+    if (data.message === "You must change your password before continuing.") {
+      window.location.href = "/change-password";
+      return;
+    }
+  }
+
   if (res.status === 401 || res.status === 403) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

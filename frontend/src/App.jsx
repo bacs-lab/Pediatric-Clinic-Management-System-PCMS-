@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
 import StaffDashboard from './pages/StaffDashboard';
 import ParentDashboard from './pages/ParentDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,9 +29,9 @@ import ParentVaccines from './pages/ParentVaccines';
 import Reports from './pages/Reports';
 import ParentPatientRecords from './pages/ParentPatientRecords';
 import PatientProfile from './pages/PatientProfile';
+import ManageUsers from './pages/ManageUsers';
 import ToastProvider from './components/ToastProvider';
-
-const STAFF_ROLES = ['staff', 'admin', 'doctor', 'nurse', 'secretary'];
+import { ADMIN_ONLY, FRONT_DESK_ROLES, MEDICAL_ROLES, STAFF_ROLES } from './utils/roles';
 
 function App() {
   return (
@@ -38,29 +39,31 @@ function App() {
       <ToastProvider />
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
 
         {/* Staff routes */}
         <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><StaffDashboard /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-record" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><Navigate to="/staff/records" replace state={{ modal: 'add-record' }} /></ProtectedRoute>} />
-        <Route path="/staff/create-parent" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateParent /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/parents" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><ParentList /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-patient" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreatePatient /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-record" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><Navigate to="/staff/records" replace state={{ modal: 'add-record' }} /></ProtectedRoute>} />
+        <Route path="/staff/create-parent" element={<ProtectedRoute allowedRoles={FRONT_DESK_ROLES}><MainLayout><CreateParent /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/parents" element={<ProtectedRoute allowedRoles={FRONT_DESK_ROLES}><MainLayout><ParentList /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-patient" element={<ProtectedRoute allowedRoles={FRONT_DESK_ROLES}><MainLayout><CreatePatient /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/patients" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><PatientList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/patients/:id" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><PatientProfile /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/appointments" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><AppointmentList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/queue" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><QueueList /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-assessment" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateAssessment /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-consultation" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateConsultation /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-billing" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateBilling /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/billings" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><BillingList /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-assessment" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'doctor', 'nurse']}><MainLayout><CreateAssessment /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-consultation" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><CreateConsultation /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-billing" element={<ProtectedRoute allowedRoles={['admin', 'secretary', 'staff']}><MainLayout><CreateBilling /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/billings" element={<ProtectedRoute allowedRoles={['admin', 'secretary', 'staff']}><MainLayout><BillingList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/inventory" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><InventoryList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/create-inventory" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateInventoryItem /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/vaccines" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><VaccineList /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-vaccine" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><CreateVaccineRecord /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/records" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><RecordList /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/records/:id/edit" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><EditRecord /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/records/:id" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><RecordDetails /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/reports" element={<ProtectedRoute allowedRoles={STAFF_ROLES}><MainLayout><Reports /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/vaccines" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><VaccineList /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-vaccine" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><CreateVaccineRecord /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/records" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><RecordList /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/records/:id/edit" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><EditRecord /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/records/:id" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><RecordDetails /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/users" element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><MainLayout><ManageUsers /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/reports" element={<ProtectedRoute allowedRoles={ADMIN_ONLY}><MainLayout><Reports /></MainLayout></ProtectedRoute>} />
 
         {/* Parent routes */}
         <Route path="/parent/dashboard" element={<ProtectedRoute allowedRole="parent"><MainLayout><ParentDashboard /></MainLayout></ProtectedRoute>} />
