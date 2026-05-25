@@ -732,7 +732,13 @@ button.notification-item:hover {
 .metric-card.violet > span { background: var(--violet-soft); color: #735eda; }
 .metric-card.red > span { background: var(--coral-soft); color: var(--red); }
 
-.quick-actions-grid,
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
 .parent-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -740,10 +746,10 @@ button.notification-item:hover {
   margin-bottom: 20px;
 }
 
-.quick-actions-grid button,
+.quick-action-card,
 .summary-pill {
-  min-height: 98px;
-  padding: 16px;
+  min-height: 132px;
+  padding: 18px;
   border: 1px solid var(--line);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.86);
@@ -751,15 +757,27 @@ button.notification-item:hover {
   text-align: left;
 }
 
-.quick-actions-grid button {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  align-items: center;
-  column-gap: 12px;
+.summary-pill {
+  min-height: 98px;
+  padding: 16px;
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
   color: var(--ink);
 }
 
-.quick-actions-grid span,
+.quick-action-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quick-action-head > span:first-child,
 .summary-pill > span {
   width: 42px;
   height: 42px;
@@ -771,10 +789,37 @@ button.notification-item:hover {
   font-size: 22px;
 }
 
-.quick-actions-grid small,
+.quick-action-badge {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--canvas-2);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.quick-action-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-action-copy strong {
+  font-family: "Quicksand", "Nunito", sans-serif;
+  font-size: 26px;
+  line-height: 1.05;
+}
+
+.quick-action-copy small,
 .summary-pill small {
   color: var(--muted);
   font-weight: 800;
+  line-height: 1.5;
+  white-space: normal;
 }
 
 .summary-pill {

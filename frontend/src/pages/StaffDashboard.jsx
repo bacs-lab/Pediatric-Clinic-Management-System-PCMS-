@@ -7,6 +7,7 @@ import { apiUrl, authHeaders } from "../utils/api";
 import { EMR_WRITE_ROLES, FRONT_DESK_ROLES, PATIENT_APPROVAL_ROLES } from "../utils/roles";
 
 const formatNumber = (num) => Number(num || 0).toLocaleString("en-US");
+const BILLING_ROLES = ["secretary", "staff"];
 
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString() : "N/A";
@@ -19,11 +20,14 @@ function StaffDashboard() {
   const canCreatePatients = FRONT_DESK_ROLES.includes(user.role);
   const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
   const canReviewRequests = PATIENT_APPROVAL_ROLES.includes(user.role);
+  const canManageBilling = BILLING_ROLES.includes(user.role);
+  const canReviewVaccines = canWriteEmr;
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [queue, setQueue] = useState([]);
   const [inventory, setInventory] = useState([]);
+  const [pendingGuardianCount, setPendingGuardianCount] = useState(0);
   const [addPatientOpen, setAddPatientOpen] = useState(false);
   const [reminders, setReminders] = useState({
     upcomingFollowUps: [],
@@ -48,6 +52,7 @@ function StaffDashboard() {
         appointmentsRes,
         queueRes,
         inventoryRes,
+        guardianRequestsRes,
       ] = await Promise.all([
         fetch(apiUrl("/api/records"), { headers: authHeaders() }),
         fetch(apiUrl("/api/dashboard/stats"), { headers: authHeaders() }),
@@ -55,6 +60,11 @@ function StaffDashboard() {
         fetch(apiUrl("/api/appointments"), { headers: authHeaders() }),
         fetch(apiUrl("/api/queue"), { headers: authHeaders() }),
         fetch(apiUrl("/api/inventory"), { headers: authHeaders() }),
+        canReviewRequests
+          ? fetch(apiUrl("/api/parent-profiles/pending"), { headers: authHeaders() })
+          : Promise.resolve({
+              json: async () => [],
+            }),
       ]);
 
       const [
@@ -64,6 +74,7 @@ function StaffDashboard() {
         appointmentsData,
         queueData,
         inventoryData,
+        guardianRequestsData,
       ] = await Promise.all([
         recordsRes.json(),
         statsRes.json(),
@@ -71,6 +82,7 @@ function StaffDashboard() {
         appointmentsRes.json(),
         queueRes.json(),
         inventoryRes.json(),
+        guardianRequestsRes.json(),
       ]);
 
       setRecords(Array.isArray(recordsData) ? recordsData : []);
@@ -82,6 +94,9 @@ function StaffDashboard() {
       setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
       setQueue(Array.isArray(queueData) ? queueData : []);
       setInventory(Array.isArray(inventoryData) ? inventoryData : []);
+      setPendingGuardianCount(
+        Array.isArray(guardianRequestsData) ? guardianRequestsData.length : 0
+      );
     } finally {
       setLoading(false);
     }
@@ -112,6 +127,79 @@ function StaffDashboard() {
           new Date(item.expirationDate) < EXPIRING_SOON_CUTOFF)
     )
     .slice(0, 5);
+
+  const quickActions = useMemo(() => {
+    const items = [
+      {
+        key: "queue",
+        icon: "ti ti-stethoscope",
+        title: "Run Queue",
+        badge:
+          activeQueue.length === 1 ? "1 active patient" : `${activeQueue.length} active patients`,
+        description: "Move patients through assessment, consultation, and billing.",
+        onClick: () => navigate("/staff/queue"),
+      },
+      {
+        key: "inventory",
+        icon: "ti ti-package",
+        title: "Stock Alerts",
+        badge:
+          stockAlerts.length === 1 ? "1 supply flagged" : `${stockAlerts.length} supplies flagged`,
+        description: "Review low stock items and medicines nearing expiry.",
+        onClick: () => navigate("/staff/inventory"),
+      },
+    ];
+
+    if (canReviewVaccines) {
+      items.splice(1, 0, {
+        key: "vaccines",
+        icon: "ti ti-vaccine",
+        title: "Review Vaccines",
+        badge:
+          reminders.upcomingVaccines.length === 1
+            ? "1 dose due soon"
+            : `${reminders.upcomingVaccines.length} doses due soon`,
+        description: "Check upcoming immunization reminders and due schedules.",
+        onClick: () => navigate("/staff/vaccines"),
+      });
+    }
+
+    if (canReviewRequests) {
+      items.push({
+        key: "requests",
+        icon: "ti ti-user-question",
+        title: "Review Requests",
+        badge:
+          pendingGuardianCount === 1
+            ? "1 account request"
+            : `${pendingGuardianCount} account requests`,
+        description: "Approve new parent and guardian access requests.",
+        onClick: () => navigate("/staff/requests"),
+      });
+    }
+
+    if (canManageBilling) {
+      items.push({
+        key: "billing",
+        icon: "ti ti-receipt",
+        title: "Billing Desk",
+        badge: "Payment follow-up",
+        description: "Review unpaid and partially paid clinic balances.",
+        onClick: () => navigate("/staff/billings"),
+      });
+    }
+
+    return items;
+  }, [
+    activeQueue.length,
+    canManageBilling,
+    canReviewRequests,
+    canReviewVaccines,
+    navigate,
+    pendingGuardianCount,
+    reminders.upcomingVaccines.length,
+    stockAlerts.length,
+  ]);
 
   if (loading) return <LoadingState title="Preparing clinic dashboard..." />;
 
@@ -192,33 +280,22 @@ function StaffDashboard() {
       </div>
 
       <div className="quick-actions-grid">
-        <button onClick={() => navigate("/staff/queue")}>
-          <span className="ti ti-stethoscope" />
-          <strong>Run Queue</strong>
-          <small>{activeQueue.length} active patient(s)</small>
-        </button>
-        <button onClick={() => navigate("/staff/vaccines")}>
-          <span className="ti ti-vaccine" />
-          <strong>Review Vaccines</strong>
-          <small>{reminders.upcomingVaccines.length} upcoming dose(s)</small>
-        </button>
-        <button onClick={() => navigate("/staff/inventory")}>
-          <span className="ti ti-package" />
-          <strong>Stock Alerts</strong>
-          <small>{stockAlerts.length} item(s) need attention</small>
-        </button>
-        {canReviewRequests && (
-          <button onClick={() => navigate("/staff/requests")}>
-            <span className="ti ti-user-question" />
-            <strong>Review Requests</strong>
-            <small>Approve guardian account signups</small>
+        {quickActions.map((action) => (
+          <button
+            key={action.key}
+            className="quick-action-card"
+            onClick={action.onClick}
+          >
+            <div className="quick-action-head">
+              <span className={action.icon} />
+              <span className="quick-action-badge">{action.badge}</span>
+            </div>
+            <div className="quick-action-copy">
+              <strong>{action.title}</strong>
+              <small>{action.description}</small>
+            </div>
           </button>
-        )}
-        <button onClick={() => navigate("/staff/billings")}>
-          <span className="ti ti-receipt" />
-          <strong>Billing Desk</strong>
-          <small>Check unpaid and partial bills</small>
-        </button>
+        ))}
       </div>
 
       <div className="dashboard-sections">
