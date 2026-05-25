@@ -202,9 +202,7 @@ function RequestCenter() {
                     </td>
                     <td>
                       <strong>{guardian.fullName}</strong>
-                      <span className="request-row-detail">
-                        {guardian.address || "Address not provided"}
-                      </span>
+
                     </td>
                     <td>{guardian.email || "N/A"}</td>
                     <td>{guardian.contactNumber || "N/A"}</td>
