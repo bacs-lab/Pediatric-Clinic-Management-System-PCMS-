@@ -170,6 +170,16 @@ router.post(
         });
       }
 
+      const appointmentDate = new Date(req.body.appointmentDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (appointmentDate < today) {
+        return res.status(400).json({
+          message: "Appointment date cannot be in the past.",
+        });
+      }
+
       const appointment = await Appointment.create(
         buildAppointmentPayload({
           patient,
@@ -298,6 +308,16 @@ router.put(
           message: "This patient already has an appointment at this schedule",
         });
       }
+    }
+
+    const appointmentDate = new Date(mergedInput.appointmentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (appointmentDate < today) {
+      return res.status(400).json({
+        message: "Appointment date cannot be in the past.",
+      });
     }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(

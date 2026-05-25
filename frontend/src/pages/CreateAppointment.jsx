@@ -172,6 +172,15 @@ function CreateAppointment({
       return;
     }
 
+    const selectedDate = new Date(form.appointmentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      notify("Appointment date cannot be in the past.");
+      return;
+    }
+
     if (!form.appointmentTime) {
       notify("Please select appointment time");
       return;

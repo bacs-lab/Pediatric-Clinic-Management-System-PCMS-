@@ -138,6 +138,7 @@ function ParentAppointments() {
                 <th>Patient</th>
                 <th>Date</th>
                 <th>Time</th>
+                <th>Date Requested</th>
                 <th>Reason</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -147,7 +148,7 @@ function ParentAppointments() {
             <tbody>
               {currentRecords.length === 0 ? (
                 <tr>
-                  <td colSpan="6">No appointments found.</td>
+                  <td colSpan="7">No appointments found.</td>
                 </tr>
               ) : (
                 currentRecords.map((appointment) => (
@@ -155,6 +156,7 @@ function ParentAppointments() {
                     <td><strong>{appointment.patientName}</strong></td>
                     <td>{new Date(appointment.appointmentDate).toLocaleDateString()}</td>
                     <td>{appointment.appointmentTime}</td>
+                    <td>{new Date(appointment.createdAt).toLocaleDateString()}</td>
                     <td>{appointment.reason}</td>
                     <td>
                       <span className={`status-badge ${appointment.status.toLowerCase()}`}>
