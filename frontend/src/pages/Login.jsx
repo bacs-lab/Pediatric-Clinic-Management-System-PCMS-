@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PasswordField from "../components/PasswordField";
 import { apiUrl } from "../utils/api";
 import { notify } from "../utils/notify";
 
@@ -239,8 +240,7 @@ function Login() {
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input
-                type="password"
+              <PasswordField
                 name="password"
                 placeholder="Password"
                 value={loginForm.password}
@@ -298,8 +298,7 @@ function Login() {
             <div className="form-row-2col">
               <div className="form-group">
                 <label className="form-label">Password</label>
-                <input
-                  type="password"
+                <PasswordField
                   name="password"
                   placeholder="Password"
                   value={signupForm.password}
@@ -309,8 +308,7 @@ function Login() {
 
               <div className="form-group">
                 <label className="form-label">Confirm Password</label>
-                <input
-                  type="password"
+                <PasswordField
                   name="confirmPassword"
                   placeholder="Confirm password"
                   value={signupForm.confirmPassword}

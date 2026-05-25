@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingState from "../components/LoadingState";
+import PasswordField from "../components/PasswordField";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notifyError, notifySuccess } from "../utils/notify";
 
@@ -266,9 +267,8 @@ function AccountSettings() {
 
           <div className="form-group">
             <label className="form-label">Current Password</label>
-            <input
+            <PasswordField
               name="currentPassword"
-              type="password"
               placeholder="Current password"
               value={form.currentPassword}
               onChange={handleChange}
@@ -277,9 +277,8 @@ function AccountSettings() {
 
           <div className="form-group">
             <label className="form-label">New Password</label>
-            <input
+            <PasswordField
               name="newPassword"
-              type="password"
               placeholder="Leave blank to keep current password"
               value={form.newPassword}
               onChange={handleChange}
@@ -288,9 +287,8 @@ function AccountSettings() {
 
           <div className="form-group">
             <label className="form-label">Confirm New Password</label>
-            <input
+            <PasswordField
               name="confirmPassword"
-              type="password"
               placeholder="Confirm new password"
               value={form.confirmPassword}
               onChange={handleChange}
