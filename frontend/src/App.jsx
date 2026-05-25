@@ -17,9 +17,6 @@ import CreateAppointment from './pages/CreateAppointment';
 import AppointmentList from './pages/AppointmentList';
 import ParentAppointments from './pages/ParentAppointments';
 import QueueList from './pages/QueueList';
-import CreateAssessment from './pages/CreateAssessment';
-import CreateConsultation from './pages/CreateConsultation';
-import CreateBilling from './pages/CreateBilling';
 import BillingList from './pages/BillingList';
 import ParentBilling from './pages/ParentBilling';
 import InventoryList from './pages/InventoryList';
@@ -55,10 +52,10 @@ function App() {
         <Route path="/staff/requests" element={<ProtectedRoute allowedRoles={PATIENT_APPROVAL_ROLES}><MainLayout><RequestCenter /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/appointments" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><MainLayout><AppointmentList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/queue" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><MainLayout><QueueList /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-assessment" element={<ProtectedRoute allowedRoles={['staff', 'doctor']}><MainLayout><CreateAssessment /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-assessment" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><Navigate to="/staff/queue" replace /></ProtectedRoute>} />
 
-        <Route path="/staff/create-consultation" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><MainLayout><CreateConsultation /></MainLayout></ProtectedRoute>} />
-        <Route path="/staff/create-billing" element={<ProtectedRoute allowedRoles={['secretary', 'staff']}><MainLayout><CreateBilling /></MainLayout></ProtectedRoute>} />
+        <Route path="/staff/create-consultation" element={<ProtectedRoute allowedRoles={MEDICAL_ROLES}><Navigate to="/staff/queue" replace /></ProtectedRoute>} />
+        <Route path="/staff/create-billing" element={<ProtectedRoute allowedRoles={['secretary', 'staff']}><Navigate to="/staff/queue" replace /></ProtectedRoute>} />
         <Route path="/staff/billings" element={<ProtectedRoute allowedRoles={['secretary', 'staff']}><MainLayout><BillingList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/inventory" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><MainLayout><InventoryList /></MainLayout></ProtectedRoute>} />
         <Route path="/staff/create-inventory" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><MainLayout><CreateInventoryItem /></MainLayout></ProtectedRoute>} />

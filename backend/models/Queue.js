@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { QUEUE_STATUS_VALUES } = require("../constants/queueWorkflow");
 
 const queueSchema = new mongoose.Schema(
   {
@@ -41,15 +42,7 @@ const queueSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "Waiting",
-        "In Assessment",
-        "For Consultation",
-        "In Consultation",
-        "For Billing",
-        "Completed",
-        "Cancelled",
-      ],
+      enum: QUEUE_STATUS_VALUES,
       default: "Waiting",
     },
   },

@@ -7,6 +7,10 @@ const Billing = require("../models/Billing");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
 const { ROLES } = require("../constants/roles");
+const {
+  QUEUE_STATUSES,
+  normalizeQueueStatus,
+} = require("../constants/queueWorkflow");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -21,6 +25,37 @@ router.post(
   allowRoles("staff", "secretary"),
   async (req, res) => {
   try {
+    const queueItem = await Queue.findById(req.body.queueId);
+
+    if (!queueItem) {
+      return res.status(404).json({ message: "Queue entry not found" });
+    }
+
+    queueItem.status = normalizeQueueStatus(queueItem.status);
+
+    if (queueItem.status !== QUEUE_STATUSES.BILLING) {
+      return res.status(400).json({
+        message: "Billing can only be saved for queue items in Billing.",
+      });
+    }
+
+    if (
+      req.body.patientId &&
+      req.body.patientId !== queueItem.patientId.toString()
+    ) {
+      return res.status(400).json({
+        message: "Billing must use the selected queue patient.",
+      });
+    }
+
+    const existingBilling = await Billing.findOne({ queueId: queueItem._id });
+
+    if (existingBilling) {
+      return res.status(400).json({
+        message: "Billing already exists for this queue item.",
+      });
+    }
+
     const totalAmount =
       Number(req.body.consultationFee || 0) +
       Number(req.body.medicineFee || 0) +
@@ -29,14 +64,14 @@ router.post(
 
     const billing = await Billing.create({
       ...req.body,
+      queueId: queueItem._id,
+      patientId: queueItem.patientId,
+      patientName: queueItem.patientName,
       totalAmount,
     });
 
-    const queueItem = await Queue.findByIdAndUpdate(req.body.queueId, {
-      status: "Completed",
-    }, {
-      new: true,
-    });
+    queueItem.status = QUEUE_STATUSES.COMPLETED;
+    await queueItem.save();
 
     if (queueItem?.appointmentId) {
       await Appointment.findByIdAndUpdate(queueItem.appointmentId, {

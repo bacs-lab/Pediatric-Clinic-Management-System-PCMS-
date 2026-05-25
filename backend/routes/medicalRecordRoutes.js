@@ -3,8 +3,13 @@ const router = express.Router();
 
 const MedicalRecord = require("../models/MedicalRecord");
 const Patient = require("../models/Patient");
+const Queue = require("../models/Queue");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
 const { EMR_WRITE_ROLES, MEDICAL_ROLES, ROLES } = require("../constants/roles");
+const {
+  QUEUE_STATUSES,
+  normalizeQueueStatus,
+} = require("../constants/queueWorkflow");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -20,7 +25,55 @@ router.post(
   allowRoles(...EMR_WRITE_ROLES),
   async (req, res) => {
   try {
-    const newRecord = new MedicalRecord(req.body);
+    const payload = { ...req.body };
+
+    if (req.body.queueId) {
+      const queueItem = await Queue.findById(req.body.queueId);
+
+      if (!queueItem) {
+        return res.status(404).json({ message: "Queue entry not found" });
+      }
+
+      queueItem.status = normalizeQueueStatus(queueItem.status);
+
+      if (queueItem.status !== QUEUE_STATUSES.CONSULTATION) {
+        return res.status(400).json({
+          message:
+            "Consultation records can only be saved for queue items in Consultation.",
+        });
+      }
+
+      if (
+        req.body.patientId &&
+        req.body.patientId !== queueItem.patientId.toString()
+      ) {
+        return res.status(400).json({
+          message: "Consultation must use the selected queue patient.",
+        });
+      }
+
+      if (queueItem.isModified("status")) {
+        await queueItem.save();
+      }
+
+      const patient = await Patient.findById(queueItem.patientId).select(
+        "age gender contactNumber address"
+      );
+
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      payload.queueId = queueItem._id;
+      payload.patientId = queueItem.patientId;
+      payload.patientName = queueItem.patientName;
+      payload.age = patient.age;
+      payload.gender = patient.gender;
+      payload.phone = patient.contactNumber;
+      payload.address = patient.address;
+    }
+
+    const newRecord = new MedicalRecord(payload);
 
     const savedRecord = await newRecord.save();
 

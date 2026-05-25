@@ -6,7 +6,6 @@ import { notify } from "../utils/notify";
 function CreateConsultation({
   embedded = false,
   initialQueueItem,
-  queueItems = [],
   onCancel,
   onSaved,
 }) {
@@ -15,6 +14,7 @@ function CreateConsultation({
 
   const queueItem = initialQueueItem || location.state || {};
   const token = localStorage.getItem("token");
+  const lockedQueuePatient = embedded && Boolean(queueItem?._id);
 
   const [patients, setPatients] = useState([]);
   const [assessment, setAssessment] = useState(null);
@@ -32,29 +32,9 @@ function CreateConsultation({
     followUpDate: "",
   });
 
-  const handleQueueSelect = (event) => {
-    const selected = queueItems.find((item) => item._id === event.target.value);
-    if (!selected) {
-      setForm({
-        ...form,
-        queueId: "",
-        patientId: "",
-        patientName: "",
-        assessmentId: "",
-      });
-      setAssessment(null);
-      return;
-    }
-
-    setForm({
-      ...form,
-      queueId: selected._id,
-      patientId: selected.patientId,
-      patientName: selected.patientName,
-    });
-  };
-
   useEffect(() => {
+    if (lockedQueuePatient) return;
+
     fetch(apiUrl("/api/patients"), {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -73,7 +53,7 @@ function CreateConsultation({
         }
       })
       .catch((err) => console.log(err));
-  }, [queueItem.patientId, token]);
+  }, [lockedQueuePatient, queueItem.patientId, token]);
 
   useEffect(() => {
       if (!form.patientId) return;
@@ -108,37 +88,34 @@ function CreateConsultation({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.queueId || !form.patientId) {
-    notify("No queue item selected");
-    return;
-  }
+    const payload = lockedQueuePatient
+      ? {
+          ...form,
+          queueId: queueItem._id,
+          patientId: queueItem.patientId,
+          patientName: queueItem.patientName,
+        }
+      : form;
+
+    if (!payload.queueId || !payload.patientId) {
+      notify("No queue item selected");
+      return;
+    }
 
     const res = await fetch(
       apiUrl("/api/records"),
       {
         method: "POST",
         headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-},
-        body: JSON.stringify(form),
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       }
     );
 
     if (res.ok) {
-      await fetch(
-        apiUrl(`/api/queue/${form.queueId}`),
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: "For Billing" }),
-        }
-      );
-
-      notify("Consultation completed!");
+      notify("Consultation saved.");
       if (onSaved) onSaved();
       else navigate("/staff/queue");
     } else {
@@ -154,35 +131,28 @@ function CreateConsultation({
         </h1>
 
         <form onSubmit={handleSubmit}>
-          {embedded && (
-            <div className="form-group queue-form-selector">
-              <label className="form-label">Queue Patient</label>
-              <select value={form.queueId} onChange={handleQueueSelect}>
-                <option value="">Select patient from queue</option>
-                {queueItems.map((item) => (
-                  <option key={item._id} value={item._id}>
-                    #{item.queueNumber} - {item.patientName} ({item.status})
+          <div className="form-group">
+            <label className="form-label">Patient</label>
+            {lockedQueuePatient ? (
+              <input
+                value={`#${queueItem.queueNumber} - ${queueItem.patientName}`}
+                readOnly
+              />
+            ) : (
+              <select value={form.patientId} onChange={(e) => {
+                const selected = patients.find((p) => p._id === e.target.value);
+                if (selected) {
+                  setForm({ ...form, patientId: selected._id, patientName: `${selected.firstName} ${selected.lastName}` });
+                }
+              }}>
+                <option value="">Select Patient</option>
+                {patients.map((patient) => (
+                  <option key={patient._id} value={patient._id}>
+                    {patient.firstName} {patient.lastName}
                   </option>
                 ))}
               </select>
-            </div>
-          )}
-
-          <div className="form-group">
-            <label className="form-label">Patient</label>
-            <select value={form.patientId} disabled={embedded} onChange={(e) => {
-              const selected = patients.find((p) => p._id === e.target.value);
-              if (selected) {
-                setForm({ ...form, patientId: selected._id, patientName: `${selected.firstName} ${selected.lastName}` });
-              }
-            }}>
-              <option value="">Select Patient</option>
-              {patients.map((patient) => (
-                <option key={patient._id} value={patient._id}>
-                  {patient.firstName} {patient.lastName}
-                </option>
-              ))}
-            </select>
+            )}
           </div>
 
           {assessment && (

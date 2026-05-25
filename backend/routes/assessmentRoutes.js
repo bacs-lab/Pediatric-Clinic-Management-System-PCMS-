@@ -6,6 +6,10 @@ const Assessment = require("../models/Assessment");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
 const { OPERATIONS_ROLES, ROLES } = require("../constants/roles");
+const {
+  QUEUE_STATUSES,
+  normalizeQueueStatus,
+} = require("../constants/queueWorkflow");
 
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
@@ -16,14 +20,42 @@ const parentOwnsPatient = async (userId, patientId) => {
 router.post(
   "/",
   protect,
-  allowRoles("staff", "doctor"),
+  allowRoles("staff", "secretary", "doctor"),
 
   async (req, res) => {
   try {
-    const assessment = await Assessment.create(req.body);
+    const queueItem = await Queue.findById(req.body.queueId);
 
-    await Queue.findByIdAndUpdate(req.body.queueId, {
-      status: "For Consultation",
+    if (!queueItem) {
+      return res.status(404).json({ message: "Queue entry not found" });
+    }
+
+    queueItem.status = normalizeQueueStatus(queueItem.status);
+
+    if (queueItem.status !== QUEUE_STATUSES.ASSESSMENT) {
+      return res.status(400).json({
+        message: "Assessment can only be saved for queue items in Assessment.",
+      });
+    }
+
+    if (
+      req.body.patientId &&
+      req.body.patientId !== queueItem.patientId.toString()
+    ) {
+      return res.status(400).json({
+        message: "Assessment must use the selected queue patient.",
+      });
+    }
+
+    if (queueItem.isModified("status")) {
+      await queueItem.save();
+    }
+
+    const assessment = await Assessment.create({
+      ...req.body,
+      queueId: queueItem._id,
+      patientId: queueItem.patientId,
+      patientName: queueItem.patientName,
     });
 
     res.status(201).json(assessment);

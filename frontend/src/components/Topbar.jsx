@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom"; // <-- Added this import
 import { useNavigate } from "react-router-dom";
 import GuardianRequestReviewModal from "./GuardianRequestReviewModal";
 import { apiUrl, authHeaders } from "../utils/api";
@@ -188,7 +189,6 @@ function Topbar({ onMenuClick }) {
       </div>
 
       <div className="topbar-right">
-
         <div className="notification-wrap">
           <button
             className="icon-btn notification-btn"
@@ -200,8 +200,12 @@ function Topbar({ onMenuClick }) {
             {notificationItems.length > 0 && <i>{notificationItems.length}</i>}
           </button>
 
-          {notificationsOpen && (
-            <div className="notification-menu">
+          {/* PORTAL ADDED HERE: Keeps your exact design and classes */}
+          {notificationsOpen && createPortal(
+            <div 
+              className="notification-menu" 
+              style={{ position: 'fixed', top: '70px', right: '110px', zIndex: 9999 }}
+            >
               <div className="notification-head">
                 <strong>Notifications</strong>
                 <div className="notification-head-actions">
@@ -245,7 +249,8 @@ function Topbar({ onMenuClick }) {
                   )
                 )
               )}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
@@ -265,7 +270,8 @@ function Topbar({ onMenuClick }) {
         </button>
       </div>
 
-      {selectedGuardianRequest && (
+      {/* PORTAL ADDED HERE: Ensures Modal breaks out of the topbar */}
+      {selectedGuardianRequest && createPortal(
         <GuardianRequestReviewModal
           guardian={selectedGuardianRequest}
           busy={reviewBusy}
@@ -274,7 +280,8 @@ function Topbar({ onMenuClick }) {
           onClose={() => {
             if (!reviewBusy) setSelectedGuardianRequest(null);
           }}
-        />
+        />,
+        document.body
       )}
     </div>
   );

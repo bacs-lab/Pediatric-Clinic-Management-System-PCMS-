@@ -473,7 +473,7 @@ const seedData = async () => {
     reason: "Fever and cough",
     appointmentStatus: "Approved",
     queueNumber: 1,
-    queueStatus: "In Consultation",
+    queueStatus: "Consultation",
     requestedAt: "2026-05-17",
     remarks: "Currently being seen by the doctor.",
   });
@@ -486,9 +486,9 @@ const seedData = async () => {
     reason: "Follow-up consultation",
     appointmentStatus: "Approved",
     queueNumber: 2,
-    queueStatus: "For Consultation",
+    queueStatus: "Assessment",
     requestedAt: "2026-05-20",
-    remarks: "Assessment completed, ready for doctor consultation.",
+    remarks: "Assessment in progress before doctor consultation.",
   });
 
   const neilCheckup = await createAppointmentWithQueue({

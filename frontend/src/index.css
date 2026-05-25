@@ -1214,8 +1214,8 @@ form {
 .status-badge.pending,
 .status-badge.partial,
 .status-badge.rescheduled,
-.status-badge.for-consultation,
-.status-badge.for-billing {
+.status-badge.assessment,
+.status-badge.billing {
   background: var(--sun-soft);
   color: #9b7600;
 }
@@ -1230,8 +1230,7 @@ form {
 }
 
 .status-badge.waiting,
-.status-badge.in-assessment,
-.status-badge.in-consultation,
+.status-badge.consultation,
 .status-badge.upcoming {
   background: var(--violet-soft);
   color: #735eda;
@@ -1239,7 +1238,7 @@ form {
 
 .queue-board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(220px, 1fr));
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 6px;
@@ -1294,6 +1293,13 @@ form {
   color: var(--blue);
 }
 
+.queue-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .queue-card h4 {
   margin: 3px 0 0;
 }
@@ -1318,9 +1324,17 @@ form {
   font-weight: 800;
 }
 
-.queue-status-select {
-  max-width: 100%;
-  margin: 0;
+.queue-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.queue-card-actions .primary-btn,
+.queue-card-actions .secondary-btn {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
 .child-card {

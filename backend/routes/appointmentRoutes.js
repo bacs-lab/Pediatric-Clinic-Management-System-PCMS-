@@ -5,6 +5,7 @@ const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
+const { normalizeQueueStatus } = require("../constants/queueWorkflow");
 const {
   APPOINTMENT_CREATION_ROLES,
   APPOINTMENT_EDIT_ROLES,
@@ -50,6 +51,7 @@ const syncAppointmentQueue = async (appointment) => {
       existingQueueItem.appointmentDate = appointment.appointmentDate;
       existingQueueItem.appointmentTime = appointment.appointmentTime;
       existingQueueItem.requestedAt = appointment.createdAt || existingQueueItem.requestedAt;
+      existingQueueItem.status = normalizeQueueStatus(existingQueueItem.status);
       await existingQueueItem.save();
       return existingQueueItem;
     }
