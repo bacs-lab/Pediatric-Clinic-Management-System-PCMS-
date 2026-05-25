@@ -179,7 +179,6 @@ function PatientProfile() {
 
   const patientStatus = patient.status || "Active";
   const isPending = patientStatus === "Pending";
-  const hasPendingUpdate = patient.pendingUpdateStatus === "Pending";
 
   return (
     <div className="dashboard-bg">
@@ -197,9 +196,6 @@ function PatientProfile() {
             <span className={`status-badge ${patientStatus.toLowerCase()}`}>
               {patientStatus}
             </span>
-            {hasPendingUpdate && (
-              <span className="status-badge pending">Update Review Pending</span>
-            )}
           </div>
         </div>
 

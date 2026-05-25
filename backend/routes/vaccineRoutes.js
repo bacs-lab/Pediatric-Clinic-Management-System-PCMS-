@@ -7,6 +7,8 @@ const Patient = require("../models/Patient");
 const { protect, allowRoles } = require("../middleware/authMiddleware");
 const { MEDICAL_ROLES, ROLES } = require("../constants/roles");
 
+const VACCINE_STATUSES = ["Completed", "Upcoming", "Missed", "Rescheduled"];
+
 const parentOwnsPatient = async (userId, patientId) => {
   const patient = await Patient.findById(patientId).select("guardianId");
   return patient?.guardianId?.toString() === userId;
@@ -41,6 +43,49 @@ router.post(
       const vaccineRecord = await VaccineRecord.create(req.body);
 
       res.status(201).json(vaccineRecord);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+// UPDATE vaccine status details
+router.put(
+  "/:id",
+  protect,
+  allowRoles("staff", ...MEDICAL_ROLES),
+  async (req, res) => {
+    try {
+      const doseNumber = Number(req.body.doseNumber);
+
+      if (!Number.isInteger(doseNumber) || doseNumber < 1) {
+        return res.status(400).json({
+          message: "Dose number must be a whole number greater than 0",
+        });
+      }
+
+      if (!VACCINE_STATUSES.includes(req.body.status)) {
+        return res.status(400).json({ message: "Invalid vaccine status" });
+      }
+
+      const updates = {
+        doseNumber,
+        nextDoseDate: req.body.nextDoseDate || null,
+        status: req.body.status,
+        remarks: req.body.remarks || "",
+      };
+
+      const updatedRecord = await VaccineRecord.findByIdAndUpdate(
+        req.params.id,
+        updates,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedRecord) {
+        return res.status(404).json({ message: "Vaccine record not found" });
+      }
+
+      res.json(updatedRecord);
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

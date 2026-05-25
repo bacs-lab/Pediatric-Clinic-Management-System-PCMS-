@@ -2,11 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
-import ConfirmDialog from "../components/ConfirmDialog";
 import CreateAppointment from "./CreateAppointment";
 import CreatePatient from "./CreatePatient";
 import { apiUrl, authHeaders } from "../utils/api";
-import { notify, notifySuccess } from "../utils/notify";
 
 function ParentDashboard() {
   const [patients, setPatients] = useState([]);
@@ -15,7 +13,6 @@ function ParentDashboard() {
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
-  const [pendingCancelPatient, setPendingCancelPatient] = useState(null);
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -45,34 +42,8 @@ function ParentDashboard() {
     loadPortal();
   }, [loadPortal]);
 
-  const cancelPatientRequest = async () => {
-    if (!pendingCancelPatient) return;
-
-    try {
-      const res = await fetch(apiUrl(`/api/patients/${pendingCancelPatient._id}/cancel`), {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
-
-      if (res.ok) {
-        notifySuccess("Child enrollment request cancelled.");
-        loadPortal();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        notify(data.message || "Failed to cancel request.");
-      }
-    } catch {
-      notify("Failed to cancel request.");
-    } finally {
-      setPendingCancelPatient(null);
-    }
-  };
-
   const activeChildren = patients.filter(
     (patient) => (patient.status || "Active") === "Active"
-  );
-  const pendingChildren = patients.filter(
-    (patient) => patient.status === "Pending"
   );
   const activeAppointments = appointments.filter(
     (item) => item.status !== "Completed"
@@ -114,9 +85,9 @@ function ParentDashboard() {
           <small>Active child record(s)</small>
         </div>
         <div className="summary-pill">
-          <span className="ti ti-user-question" />
-          <strong>{pendingChildren.length}</strong>
-          <small>Pending child request(s)</small>
+          <span className="ti ti-heart-handshake" />
+          <strong>{patients.length}</strong>
+          <small>Total child record(s)</small>
         </div>
         <div className="summary-pill">
           <span className="ti ti-calendar-check" />
@@ -135,17 +106,15 @@ function ParentDashboard() {
           <EmptyState
             icon="ti ti-baby-carriage"
             title="No child records found"
-            message="Add a child request and the clinic team will review it before it becomes active."
+            message="Add a child profile to start managing records, appointments, billing, and vaccines."
             actionLabel="Add Child"
             onAction={() => setChildOpen(true)}
           />
         ) : (
           patients.map((patient) => {
             const status = patient.status || "Active";
-            const isPending = status === "Pending";
             const isRejected = status === "Rejected";
             const isActive = status === "Active";
-            const hasPendingUpdate = patient.pendingUpdateStatus === "Pending";
 
             return (
               <div className="child-card" key={patient._id}>
@@ -163,31 +132,14 @@ function ParentDashboard() {
                   <p><strong>Emergency Contact:</strong> {patient.emergencyContact || "N/A"}</p>
                   <p><strong>Blood Type:</strong> {patient.bloodType || "N/A"}</p>
                   <p><strong>Allergies:</strong> {patient.allergies || "None"}</p>
-                  {hasPendingUpdate && (
-                    <div className="child-pending-note">
-                      <span className="ti ti-edit-circle" />
-                      Detail update pending clinic review
-                    </div>
-                  )}
                 </div>
 
                 {!isActive ? (
                   <div className={`child-pending-note${isRejected ? " rejected" : ""}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className={isPending ? "ti ti-clock-hour-4" : "ti ti-alert-circle"} />
-                      {isPending
-                        ? "Waiting for clinic approval"
-                        : "Request was declined by the clinic"}
+                      <span className="ti ti-alert-circle" />
+                      Child record is not active
                     </div>
-                    {isPending && (
-                      <button 
-                        className="danger-btn" 
-                        style={{ marginTop: '12px', padding: '6px 12px', fontSize: '13px' }}
-                        onClick={() => setPendingCancelPatient(patient)}
-                      >
-                        Cancel Request
-                      </button>
-                    )}
                   </div>
                 ) : (
                   <div className="child-actions">
@@ -282,15 +234,6 @@ function ParentDashboard() {
         </div>
       )}
 
-      {pendingCancelPatient && (
-        <ConfirmDialog
-          title="Cancel child enrollment request?"
-          message={`Are you sure you want to cancel the enrollment request for ${pendingCancelPatient.firstName} ${pendingCancelPatient.lastName}?`}
-          confirmLabel="Yes, Cancel Request"
-          onCancel={() => setPendingCancelPatient(null)}
-          onConfirm={cancelPatientRequest}
-        />
-      )}
     </div>
   );
 }

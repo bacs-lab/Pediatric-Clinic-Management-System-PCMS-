@@ -8,7 +8,7 @@ export const adminNavItems = [
     roles: ADMIN_ONLY,
   },
   {
-    label: 'Requests',
+    label: 'Guardian Requests',
     icon: 'ti ti-mail-opened',
     path: '/staff/requests',
     roles: ADMIN_ONLY,
@@ -68,7 +68,7 @@ export const staffNavItems = [
     roles: STAFF_ROLES,
   },
   {
-    label: 'Requests',
+    label: 'Guardian Requests',
     icon: 'ti ti-mail-opened',
     path: '/staff/requests',
     roles: PATIENT_APPROVAL_ROLES,

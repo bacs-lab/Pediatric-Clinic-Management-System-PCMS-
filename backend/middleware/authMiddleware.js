@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const ParentProfile = require("../models/ParentProfile");
 const User = require("../models/User");
 
 const protect = async (req, res, next) => {
@@ -21,8 +22,38 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, user not found" });
     }
 
-    if (user.status === "Disabled") {
-      return res.status(403).json({ message: "Account is disabled" });
+    if (user.status !== "Active") {
+      const messages = {
+        Pending: "Account is still pending clinic verification",
+        Rejected: "Account verification was rejected",
+        Disabled: "Account is disabled",
+      };
+
+      return res.status(403).json({
+        message: messages[user.status] || "Account is not active",
+      });
+    }
+
+    if (user.role === "parent") {
+      const profile = await ParentProfile.findOne({ userId: user._id }).select(
+        "verificationStatus"
+      );
+
+      if (
+        profile?.verificationStatus &&
+        profile.verificationStatus !== "Approved"
+      ) {
+        const messages = {
+          Pending: "Account is still pending clinic verification",
+          Rejected: "Account verification was rejected",
+        };
+
+        return res.status(403).json({
+          message:
+            messages[profile.verificationStatus] ||
+            "Guardian account is not verified",
+        });
+      }
     }
 
     req.user = {

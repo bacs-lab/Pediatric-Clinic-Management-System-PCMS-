@@ -7,6 +7,7 @@ function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("login");
   const [saving, setSaving] = useState(false);
+  const [pendingApprovalEmail, setPendingApprovalEmail] = useState("");
 
   const [loginForm, setLoginForm] = useState({
     email: "",
@@ -35,9 +36,14 @@ function Login() {
           kicker: "Parent / Guardian Registration",
           title: "Create Account",
           description:
-            "Register a parent account to manage child requests, appointments, and updates.",
+            "Register a guardian account for clinic verification before using the parent portal.",
           submitLabel: saving ? "Creating account..." : "Create Account",
         };
+
+  const showPendingApprovalNote =
+    mode === "login" &&
+    pendingApprovalEmail &&
+    loginForm.email.trim().toLowerCase() === pendingApprovalEmail;
 
   const handleLoginChange = (event) => {
     setLoginForm({
@@ -143,7 +149,8 @@ function Login() {
         return;
       }
 
-      notify("Account created. Please log in.");
+      notify("Account submitted. Please wait for clinic verification before logging in.");
+      setPendingApprovalEmail(signupForm.email.trim().toLowerCase());
       setLoginForm({
         email: signupForm.email,
         password: "",
@@ -188,10 +195,12 @@ function Login() {
           </button>
         </div>
 
-        <div className="auth-card-brand">
-          <div className="auth-card-logo" aria-hidden="true">
-            <img src="/OFFICIAL PCMS.png" alt="" />
-          </div>
+        <div className={`auth-card-brand ${mode === "signup" ? "compact" : ""}`}>
+          {mode === "login" ? (
+            <div className="auth-card-logo" aria-hidden="true">
+              <img src="/OFFICIAL PCMS.png" alt="" />
+            </div>
+          ) : null}
 
           <div className="auth-card-copy">
             <span>{authModeCopy.kicker}</span>
@@ -202,6 +211,21 @@ function Login() {
 
         {mode === "login" ? (
           <form className="auth-form" onSubmit={handleLogin}>
+            {showPendingApprovalNote ? (
+              <div className="auth-request-note" role="status">
+                <div className="auth-request-note-icon">
+                  <span className="ti ti-hourglass-high" />
+                </div>
+                <div>
+                  <strong>Request submitted</strong>
+                  <p>
+                    {pendingApprovalEmail} must be approved by the clinic staff before
+                    first login.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <input
@@ -235,6 +259,21 @@ function Login() {
           </form>
         ) : (
           <form className="auth-form" onSubmit={handleSignup}>
+            <div className="auth-approval-steps">
+              <div>
+                <strong>1. Submit request</strong>
+                <p>Create your parent or guardian account details.</p>
+              </div>
+              <div>
+                <strong>2. Staff review</strong>
+                <p>Clinic staff will review and approve the request.</p>
+              </div>
+              <div>
+                <strong>3. Login after approval</strong>
+                <p>You can sign in only after the clinic activates your account.</p>
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">Full Name</label>
               <input

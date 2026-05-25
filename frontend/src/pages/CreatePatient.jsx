@@ -10,7 +10,7 @@ const formatDateInput = (value) => {
   return date.toISOString().slice(0, 10);
 };
 
-const buildInitialForm = (patient) => {
+const buildInitialForm = (patient, defaults = {}) => {
   const source = patient ?? {};
 
   return ({
@@ -19,11 +19,11 @@ const buildInitialForm = (patient) => {
   birthDate: formatDateInput(source.birthDate),
   gender: source.gender || "Male",
   guardianId: source.guardianId || "",
-  guardianName: source.guardianName || "",
+  guardianName: source.guardianName || defaults.guardianName || "",
   relationshipToChild: source.relationshipToChild || "",
   emergencyContact: source.emergencyContact || "",
-  contactNumber: source.contactNumber || "",
-  address: source.address || "",
+  contactNumber: source.contactNumber || defaults.contactNumber || "",
+  address: source.address || defaults.address || "",
   bloodType: source.bloodType || "",
   allergies: source.allergies || "",
   notes: source.notes || "",
@@ -41,21 +41,20 @@ function CreatePatient({
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("user")) || {};
   const currentUserId = currentUser.id || currentUser._id || "";
-
-  const [guardians, setGuardians] = useState([]);
-  const [form, setForm] = useState(() => buildInitialForm(patient));
-
-  useEffect(() => {
-    if (parentMode) {
-      if (!editMode) {
-        setForm((current) => ({
-          ...current,
+  const parentDefaults =
+    parentMode && !editMode
+      ? {
+          guardianName: currentUser.name || "",
           contactNumber: currentUser.contactNumber || "",
           address: currentUser.address || "",
-        }));
-      }
-      return;
-    }
+        }
+      : {};
+
+  const [guardians, setGuardians] = useState([]);
+  const [form, setForm] = useState(() => buildInitialForm(patient, parentDefaults));
+
+  useEffect(() => {
+    if (parentMode) return;
 
     fetch(apiUrl("/api/parent-profiles"), {
       headers: authHeaders(),
@@ -66,15 +65,15 @@ function CreatePatient({
   }, [parentMode]);
 
   const formTitle = useMemo(() => {
-    if (parentMode && editMode) return "Request Child Detail Update";
-    if (parentMode) return "Request Child Patient";
+    if (parentMode && editMode) return "Edit Child Details";
+    if (parentMode) return "Add Child Patient";
     if (editMode) return "Edit Child Patient";
     return "Create Child Patient";
   }, [editMode, parentMode]);
 
   const submitLabel = useMemo(() => {
-    if (parentMode && editMode) return "Submit Update Request";
-    if (parentMode) return "Submit Request";
+    if (parentMode && editMode) return "Save Child Details";
+    if (parentMode) return "Add Child";
     if (editMode) return "Save Patient";
     return "Create Patient";
   }, [editMode, parentMode]);
@@ -158,16 +157,6 @@ function CreatePatient({
       return;
     }
 
-    if (!form.contactNumber.trim()) {
-      notify("Contact number is required");
-      return;
-    }
-
-    if (form.contactNumber.length < 11) {
-      notify("Contact number must be at least 11 digits");
-      return;
-    }
-
     if (!form.emergencyContact.trim()) {
       notify("Emergency contact number is required");
       return;
@@ -178,10 +167,18 @@ function CreatePatient({
       return;
     }
 
+    const selectedGuardian = !parentMode
+      ? guardians.find((guardian) => guardian.userId === form.guardianId)
+      : null;
+    const resolvedContactNumber = parentMode
+      ? currentUser.contactNumber || form.contactNumber
+      : selectedGuardian?.contactNumber || form.contactNumber;
+
     const payload = {
       ...form,
       guardianId: parentMode ? currentUserId : form.guardianId,
       guardianName: parentMode ? currentUser.name : form.guardianName,
+      contactNumber: resolvedContactNumber || "",
       age: form.birthDate ? Number(calculateAge(form.birthDate)) : undefined,
     };
 
@@ -191,7 +188,7 @@ function CreatePatient({
     if (editMode && patient?._id) {
       method = "PUT";
       targetUrl = parentMode
-        ? apiUrl(`/api/patients/${patient._id}/request-edit`)
+        ? apiUrl(`/api/patients/${patient._id}/parent-edit`)
         : apiUrl(`/api/patients/${patient._id}`);
     }
 
@@ -209,13 +206,9 @@ function CreatePatient({
     }
 
     if (parentMode && editMode) {
-      notify(
-        patient?.pendingUpdateStatus === "Pending"
-          ? "Child detail update request refreshed for clinic review."
-          : "Child detail update request submitted for approval."
-      );
+      notify("Child details updated.");
     } else if (parentMode) {
-      notify("Child request submitted for approval!");
+      notify("Child patient added.");
     } else if (editMode) {
       notify("Child patient updated.");
     } else {
@@ -235,8 +228,7 @@ function CreatePatient({
       <h1 className={embedded ? "modal-title" : "page-title"}>{formTitle}</h1>
       {parentMode && editMode && (
         <p className="modal-support-text">
-          The clinic team will review these child detail changes before the live patient
-          record is updated.
+          Keep your child's basic clinic details current.
         </p>
       )}
 

@@ -18,6 +18,9 @@ const queueColumns = [
   "Completed",
 ];
 
+const ASSESSMENT_ROLES = ["staff", "doctor"];
+const BILLING_ROLES = ["secretary", "staff"];
+
 const formatDate = (value) =>
   value ? new Date(value).toLocaleDateString() : "N/A";
 
@@ -52,14 +55,25 @@ function QueueList() {
     fetchQueue();
   }, []);
 
-  const canCreateAssessment = ["admin", "staff", "doctor"].includes(user?.role);
-  const canCreateConsultation = MEDICAL_ROLES.includes(user?.role) || user?.role === "admin";
-  const canCreateBilling = ["admin", "secretary", "staff"].includes(user?.role);
+  const canCreateAssessment = ASSESSMENT_ROLES.includes(user?.role);
+  const canCreateConsultation = MEDICAL_ROLES.includes(user?.role);
+  const canCreateBilling = BILLING_ROLES.includes(user?.role);
 
   const canOpenWorkflow = (type) =>
     (type === "assessment" && canCreateAssessment) ||
     (type === "consultation" && canCreateConsultation) ||
     (type === "billing" && canCreateBilling);
+
+  const canContinueItem = (status) =>
+    (status === "In Assessment" && canCreateAssessment) ||
+    (status === "For Consultation" && canCreateConsultation) ||
+    (status === "For Billing" && canCreateBilling);
+
+  const getStepOwnerLabel = (status) => {
+    if (status === "For Consultation") return "Doctor handles consultation";
+    if (status === "For Billing") return "Front desk handles billing";
+    return "";
+  };
 
   useEffect(() => {
     const modalType = location.state?.modal;
@@ -124,7 +138,6 @@ function QueueList() {
 
   const openWorkflow = (type, item = null) => {
     if (!canOpenWorkflow(type)) {
-      notifyError("Access denied for this workflow.");
       return;
     }
     setWorkflowModal({ type, item });
@@ -248,10 +261,18 @@ function QueueList() {
                         ))}
                       </select>
 
-                      {["In Assessment", "For Consultation", "For Billing"].includes(item.status) && (
+                      {["In Assessment", "For Consultation", "For Billing"].includes(item.status) &&
+                        canContinueItem(item.status) && (
                         <button className="primary-btn" onClick={() => goToStep(item)}>
                           Continue
                         </button>
+                      )}
+
+                      {["For Consultation", "For Billing"].includes(item.status) &&
+                        !canContinueItem(item.status) && (
+                        <span className="table-meta-text">
+                          {getStepOwnerLabel(item.status)}
+                        </span>
                       )}
                     </article>
                   ))

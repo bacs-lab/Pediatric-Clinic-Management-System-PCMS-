@@ -17,6 +17,7 @@ function CreateVaccineRecord({ embedded = false, onCancel, onSaved }) {
     inventoryItemId: "",
     vaccineName: "",
     vaccineDate: "",
+    doseNumber: "1",
     nextDoseDate: "",
     status: "Completed",
     administeredBy: "",
@@ -80,26 +81,39 @@ function CreateVaccineRecord({ embedded = false, onCancel, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!form.patientId) {
-  notify("Please select a patient");
-  return;
-}
+      notify("Please select a patient");
+      return;
+    }
 
-if (!form.inventoryItemId) {
-  notify("Please select a vaccine");
-  return;
-}
+    if (!form.inventoryItemId) {
+      notify("Please select a vaccine");
+      return;
+    }
 
-if (!form.vaccineDate) {
-  notify("Please select vaccine date");
-  return;
-}
+    if (!form.vaccineDate) {
+      notify("Please select vaccine date");
+      return;
+    }
 
-if (!form.administeredBy.trim()) {
-  notify("Please enter administered by");
-  return;
-}
+    const doseNumber = Number(form.doseNumber);
+
+    if (!Number.isInteger(doseNumber) || doseNumber < 1) {
+      notify("Please enter a valid dose number");
+      return;
+    }
+
+    if (!form.administeredBy.trim()) {
+      notify("Please enter administered by");
+      return;
+    }
+
+    const payload = {
+      ...form,
+      doseNumber,
+      nextDoseDate: form.nextDoseDate || null,
+    };
 
     const res = await fetch(apiUrl("/api/vaccines"), {
       method: "POST",
@@ -107,7 +121,7 @@ if (!form.administeredBy.trim()) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -160,6 +174,19 @@ if (!form.administeredBy.trim()) {
               name="vaccineDate"
               type="date"
               value={form.vaccineDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Dose Number</label>
+            <input
+              name="doseNumber"
+              type="number"
+              min="1"
+              step="1"
+              value={form.doseNumber}
               onChange={handleChange}
               required
             />

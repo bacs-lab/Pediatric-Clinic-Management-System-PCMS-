@@ -131,7 +131,7 @@ function StaffDashboard() {
               onClick={() => navigate("/staff/requests")}
             >
               <span className="ti ti-mail-opened" />
-              Parent Requests
+              Guardian Requests
             </button>
           )}
           <button
@@ -211,7 +211,7 @@ function StaffDashboard() {
           <button onClick={() => navigate("/staff/requests")}>
             <span className="ti ti-user-question" />
             <strong>Review Requests</strong>
-            <small>Approve child profiles and parent edit requests</small>
+            <small>Approve guardian account signups</small>
           </button>
         )}
         <button onClick={() => navigate("/staff/billings")}>

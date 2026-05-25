@@ -28,6 +28,12 @@ const parentProfileSchema = new mongoose.Schema(
     emergencyContact: {
       type: String,
     },
+
+    verificationStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Approved",
+    },
   },
   { timestamps: true }
 );

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
+import AccountSettings from './pages/AccountSettings';
 import ChangePassword from './pages/ChangePassword';
 import StaffDashboard from './pages/StaffDashboard';
 import ParentDashboard from './pages/ParentDashboard';
@@ -41,6 +42,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+        <Route path="/account" element={<ProtectedRoute><MainLayout><AccountSettings /></MainLayout></ProtectedRoute>} />
 
         {/* Staff routes */}
         <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={OPERATIONS_ROLES}><MainLayout><StaffDashboard /></MainLayout></ProtectedRoute>} />

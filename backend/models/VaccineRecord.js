@@ -24,6 +24,12 @@ const vaccineRecordSchema = new mongoose.Schema(
       required: true,
     },
 
+    doseNumber: {
+      type: Number,
+      min: 1,
+      default: 1,
+    },
+
     nextDoseDate: {
       type: Date,
     },

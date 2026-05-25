@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PatientEditRequestReviewModal from "./PatientEditRequestReviewModal";
-import PatientRequestReviewModal from "./PatientRequestReviewModal";
+import GuardianRequestReviewModal from "./GuardianRequestReviewModal";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 import { PATIENT_APPROVAL_ROLES, STAFF_ROLES } from "../utils/roles";
@@ -14,10 +13,8 @@ function Topbar({ onMenuClick }) {
     upcomingFollowUps: [],
     upcomingVaccines: [],
   });
-  const [pendingPatients, setPendingPatients] = useState([]);
-  const [pendingPatientEdits, setPendingPatientEdits] = useState([]);
-  const [selectedPatientRequest, setSelectedPatientRequest] = useState(null);
-  const [selectedPatientEditRequest, setSelectedPatientEditRequest] = useState(null);
+  const [pendingGuardians, setPendingGuardians] = useState([]);
+  const [selectedGuardianRequest, setSelectedGuardianRequest] = useState(null);
   const [reviewBusy, setReviewBusy] = useState(false);
 
   const isStaff = STAFF_ROLES.includes(user?.role);
@@ -49,22 +46,11 @@ function Topbar({ onMenuClick }) {
   useEffect(() => {
     if (!canApprovePatients) return;
 
-    fetch(apiUrl("/api/patients/pending"), {
+    fetch(apiUrl("/api/parent-profiles/pending"), {
       headers: authHeaders(),
     })
       .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setPendingPatients(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, [canApprovePatients]);
-
-  useEffect(() => {
-    if (!canApprovePatients) return;
-
-    fetch(apiUrl("/api/patients/pending-updates"), {
-      headers: authHeaders(),
-    })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setPendingPatientEdits(Array.isArray(data) ? data : []))
+      .then((data) => setPendingGuardians(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [canApprovePatients]);
 
@@ -104,36 +90,21 @@ function Topbar({ onMenuClick }) {
         : item.vaccineName,
     }));
 
-    const patientRequests = pendingPatients.slice(0, 4).map((patient) => ({
-      id: `patient-request-${patient._id}`,
+    const guardianRequests = pendingGuardians.slice(0, 4).map((guardian) => ({
+      id: `guardian-request-${guardian._id}`,
       icon: "ti ti-user-question",
-      title: `${patient.firstName} ${patient.lastName} pending approval`,
-      body: `Guardian: ${patient.guardianName || "Parent request"}`,
-      kind: "patient-request",
-      patient,
+      title: `${guardian.fullName} pending verification`,
+      body: guardian.email || "Guardian account request",
+      kind: "guardian-request",
+      guardian,
     }));
 
-    const patientEditRequests = pendingPatientEdits.slice(0, 4).map((patient) => ({
-      id: `patient-edit-${patient._id}`,
-      icon: "ti ti-edit-circle",
-      title: `${patient.firstName} ${patient.lastName} detail update`,
-      body: `Guardian: ${patient.guardianName || "Parent request"}`,
-      kind: "patient-edit-request",
-      patient,
-    }));
-
-    return [...patientRequests, ...patientEditRequests, ...followUps, ...vaccines];
+    return [...guardianRequests, ...followUps, ...vaccines];
   })();
 
   const openNotification = (item) => {
-    if (item.kind === "patient-request" && item.patient) {
-      setSelectedPatientRequest(item.patient);
-      setNotificationsOpen(false);
-      return;
-    }
-
-    if (item.kind === "patient-edit-request" && item.patient) {
-      setSelectedPatientEditRequest(item.patient);
+    if (item.kind === "guardian-request" && item.guardian) {
+      setSelectedGuardianRequest(item.guardian);
       setNotificationsOpen(false);
       return;
     }
@@ -144,82 +115,44 @@ function Topbar({ onMenuClick }) {
     setNotificationsOpen(false);
   };
 
-  const openRequestCenter = (requestType) => {
-    navigate("/staff/requests", requestType ? { state: { requestType } } : undefined);
+  const openRequestCenter = () => {
+    navigate("/staff/requests");
     setNotificationsOpen(false);
   };
 
-  const reviewPatientRequest = async (action) => {
-    if (!selectedPatientRequest) return;
+  const reviewGuardianRequest = async (action) => {
+    if (!selectedGuardianRequest) return;
 
     setReviewBusy(true);
 
     try {
       const route = action === "accept" ? "approve" : "reject";
       const res = await fetch(
-        apiUrl(`/api/patients/${selectedPatientRequest._id}/${route}`),
+        apiUrl(`/api/parent-profiles/${selectedGuardianRequest._id}/${route}`),
         {
           method: "PUT",
           headers: authHeaders(),
         }
       );
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        notify(data.message || `Failed to ${action} patient request`);
+        notify(data.message || `Failed to ${action} guardian account`);
         return;
       }
 
-      setPendingPatients((items) =>
-        items.filter((item) => item._id !== selectedPatientRequest._id)
+      setPendingGuardians((items) =>
+        items.filter((item) => item._id !== selectedGuardianRequest._id)
       );
 
-      setSelectedPatientRequest(null);
+      setSelectedGuardianRequest(null);
       notify(
         action === "accept"
-          ? "Child request accepted."
-          : "Child request rejected."
+          ? "Guardian account approved."
+          : "Guardian account rejected."
       );
     } catch {
-      notify(`Failed to ${action} patient request`);
-    } finally {
-      setReviewBusy(false);
-    }
-  };
-
-  const reviewPatientEditRequest = async (action) => {
-    if (!selectedPatientEditRequest) return;
-
-    setReviewBusy(true);
-
-    try {
-      const route = action === "accept" ? "approve-edit" : "reject-edit";
-      const res = await fetch(
-        apiUrl(`/api/patients/${selectedPatientEditRequest._id}/${route}`),
-        {
-          method: "PUT",
-          headers: authHeaders(),
-        }
-      );
-      const data = await res.json();
-
-      if (!res.ok) {
-        notify(data.message || `Failed to ${action} patient update request`);
-        return;
-      }
-
-      setPendingPatientEdits((items) =>
-        items.filter((item) => item._id !== selectedPatientEditRequest._id)
-      );
-
-      setSelectedPatientEditRequest(null);
-      notify(
-        action === "accept"
-          ? "Patient detail update approved."
-          : "Patient detail update rejected."
-      );
-    } catch {
-      notify(`Failed to ${action} patient update request`);
+      notify(`Failed to ${action} guardian account`);
     } finally {
       setReviewBusy(false);
     }
@@ -316,7 +249,12 @@ function Topbar({ onMenuClick }) {
           )}
         </div>
 
-        <div className="user-chip">
+        <button
+          className="user-chip"
+          type="button"
+          onClick={() => navigate("/account")}
+          aria-label="Edit account details"
+        >
           <div className="avatar">
             {user?.name?.charAt(0)?.toUpperCase() || "K"}
           </div>
@@ -324,29 +262,17 @@ function Topbar({ onMenuClick }) {
             <strong>{user?.name || "Kids First"}</strong>
             <span>{user?.role || "clinic user"}</span>
           </div>
-        </div>
+        </button>
       </div>
 
-      {selectedPatientRequest && (
-        <PatientRequestReviewModal
-          patient={selectedPatientRequest}
+      {selectedGuardianRequest && (
+        <GuardianRequestReviewModal
+          guardian={selectedGuardianRequest}
           busy={reviewBusy}
-          onAccept={() => reviewPatientRequest("accept")}
-          onReject={() => reviewPatientRequest("reject")}
+          onAccept={() => reviewGuardianRequest("accept")}
+          onReject={() => reviewGuardianRequest("reject")}
           onClose={() => {
-            if (!reviewBusy) setSelectedPatientRequest(null);
-          }}
-        />
-      )}
-
-      {selectedPatientEditRequest && (
-        <PatientEditRequestReviewModal
-          patient={selectedPatientEditRequest}
-          busy={reviewBusy}
-          onAccept={() => reviewPatientEditRequest("accept")}
-          onReject={() => reviewPatientEditRequest("reject")}
-          onClose={() => {
-            if (!reviewBusy) setSelectedPatientEditRequest(null);
+            if (!reviewBusy) setSelectedGuardianRequest(null);
           }}
         />
       )}

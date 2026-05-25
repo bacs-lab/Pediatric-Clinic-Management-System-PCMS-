@@ -139,7 +139,7 @@ router.post(
 
       if ((patient.status || "Active") !== "Active") {
         return res.status(400).json({
-          message: "Patient request must be approved before booking appointments",
+          message: "Only active child patient records can book appointments",
         });
       }
 

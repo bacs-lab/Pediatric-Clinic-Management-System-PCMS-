@@ -4,6 +4,7 @@ const Appointment = require("../models/Appointment");
 const Assessment = require("../models/Assessment");
 const Billing = require("../models/Billing");
 const MedicalRecord = require("../models/MedicalRecord");
+const ParentProfile = require("../models/ParentProfile");
 const Patient = require("../models/Patient");
 const Queue = require("../models/Queue");
 const VaccineRecord = require("../models/VaccineRecord");
@@ -11,7 +12,6 @@ const { protect, allowRoles } = require("../middleware/authMiddleware");
 const {
   FRONT_DESK_ROLES,
   PATIENT_CREATION_ROLES,
-  PATIENT_APPROVAL_ROLES,
   ROLES,
   STAFF_ROLES,
 } = require("../constants/roles");
@@ -82,42 +82,22 @@ const sanitizePatientPayload = (body, { allowGuardianOverride = true } = {}) => 
   return payload;
 };
 
-const loadPendingPatientRequest = async (id) => {
-  const patient = await Patient.findById(id);
+const attachGuardianContactNumber = async (payload, fallbackContactNumber = "") => {
+  const trimmedFallback =
+    typeof fallbackContactNumber === "string" ? fallbackContactNumber.trim() : "";
 
-  if (!patient) {
-    return { error: { status: 404, message: "Patient not found" } };
+  if (payload.guardianId) {
+    const guardianProfile = await ParentProfile.findOne({
+      userId: payload.guardianId,
+    }).select("contactNumber");
+
+    const guardianContact = guardianProfile?.contactNumber?.trim?.() || "";
+    payload.contactNumber = guardianContact || trimmedFallback;
+    return payload;
   }
 
-  if ((patient.status || "Active") !== "Pending") {
-    return {
-      error: {
-        status: 400,
-        message: "Only pending child requests can be reviewed",
-      },
-    };
-  }
-
-  return { patient };
-};
-
-const loadPendingPatientUpdateRequest = async (id) => {
-  const patient = await Patient.findById(id);
-
-  if (!patient) {
-    return { error: { status: 404, message: "Patient not found" } };
-  }
-
-  if ((patient.pendingUpdateStatus || "None") !== "Pending" || !patient.pendingUpdate) {
-    return {
-      error: {
-        status: 400,
-        message: "Only pending patient detail updates can be reviewed",
-      },
-    };
-  }
-
-  return { patient };
+  payload.contactNumber = trimmedFallback;
+  return payload;
 };
 
 router.post(
@@ -129,16 +109,18 @@ router.post(
       const isParentRequest = req.user.role === ROLES.PARENT;
       const patientPayload = {
         ...sanitizePatientPayload(req.body),
-        status: isParentRequest ? "Pending" : "Active",
+        status: "Active",
         requestedBy: req.user.id,
-        approvedBy: isParentRequest ? undefined : req.user.id,
-        approvedAt: isParentRequest ? undefined : new Date(),
+        approvedBy: req.user.id,
+        approvedAt: new Date(),
       };
 
       if (isParentRequest) {
         patientPayload.guardianId = req.user.id;
         patientPayload.guardianName = req.user.name;
       }
+
+      await attachGuardianContactNumber(patientPayload, req.body.contactNumber);
 
       const patient = await Patient.create(patientPayload);
       res.status(201).json(patient);
@@ -156,38 +138,6 @@ router.get("/", protect, allowRoles(...STAFF_ROLES), async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-router.get(
-  "/pending",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const patients = await Patient.find({ status: "Pending" }).sort({
-        createdAt: -1,
-      });
-      res.json(patients);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-router.get(
-  "/pending-updates",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const patients = await Patient.find({ pendingUpdateStatus: "Pending" }).sort({
-        updatedAt: -1,
-      });
-      res.json(patients);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
 
 router.get(
   "/guardian/:guardianId",
@@ -211,7 +161,7 @@ router.get(
 );
 
 router.put(
-  "/:id/request-edit",
+  "/:id/parent-edit",
   protect,
   allowRoles(ROLES.PARENT),
   async (req, res) => {
@@ -226,158 +176,28 @@ router.put(
         return res.status(403).json({ message: "Access denied" });
       }
 
-      if ((patient.status || "Active") !== "Active") {
-        return res.status(400).json({
-          message: "Only active child profiles can be edited.",
-        });
-      }
-
-      const pendingUpdate = sanitizePatientPayload(req.body, {
+      const patientPayload = sanitizePatientPayload(req.body, {
         allowGuardianOverride: false,
       });
 
-      if (Object.keys(pendingUpdate).length === 0) {
+      if (Object.keys(patientPayload).length === 0) {
         return res.status(400).json({ message: "No patient changes submitted." });
       }
 
-      patient.pendingUpdate = pendingUpdate;
-      patient.pendingUpdateStatus = "Pending";
-      patient.pendingUpdateRequestedBy = req.user.id;
+      await attachGuardianContactNumber(
+        patientPayload,
+        req.body.contactNumber || patient.contactNumber
+      );
+
+      Object.assign(patient, patientPayload);
+      patient.pendingUpdate = null;
+      patient.pendingUpdateStatus = "None";
+      patient.pendingUpdateRequestedBy = undefined;
       patient.pendingUpdateReviewedBy = undefined;
       patient.pendingUpdateReviewedAt = undefined;
 
       const updatedPatient = await patient.save();
       res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-router.put(
-  "/:id/approve",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const { patient, error } = await loadPendingPatientRequest(req.params.id);
-
-      if (error) {
-        return res.status(error.status).json({ message: error.message });
-      }
-
-      patient.status = "Active";
-      patient.approvedBy = req.user.id;
-      patient.approvedAt = new Date();
-
-      const updatedPatient = await patient.save();
-      res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-router.put(
-  "/:id/approve-edit",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const { patient, error } = await loadPendingPatientUpdateRequest(req.params.id);
-
-      if (error) {
-        return res.status(error.status).json({ message: error.message });
-      }
-
-      Object.assign(patient, patient.pendingUpdate || {});
-      patient.pendingUpdate = null;
-      patient.pendingUpdateStatus = "None";
-      patient.pendingUpdateReviewedBy = req.user.id;
-      patient.pendingUpdateReviewedAt = new Date();
-
-      const updatedPatient = await patient.save();
-      res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-router.put(
-  "/:id/reject",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const { patient, error } = await loadPendingPatientRequest(req.params.id);
-
-      if (error) {
-        return res.status(error.status).json({ message: error.message });
-      }
-
-      patient.status = "Rejected";
-      patient.approvedBy = undefined;
-      patient.approvedAt = undefined;
-
-      const updatedPatient = await patient.save();
-      res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-router.put(
-  "/:id/reject-edit",
-  protect,
-  allowRoles(...PATIENT_APPROVAL_ROLES),
-  async (req, res) => {
-    try {
-      const { patient, error } = await loadPendingPatientUpdateRequest(req.params.id);
-
-      if (error) {
-        return res.status(error.status).json({ message: error.message });
-      }
-
-      patient.pendingUpdate = null;
-      patient.pendingUpdateStatus = "None";
-      patient.pendingUpdateReviewedBy = req.user.id;
-      patient.pendingUpdateReviewedAt = new Date();
-
-      const updatedPatient = await patient.save();
-      res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-);
-
-// CANCEL child enrollment request (Parent)
-router.delete(
-  "/:id/cancel",
-  protect,
-  allowRoles(ROLES.PARENT),
-  async (req, res) => {
-    try {
-      const patient = await Patient.findById(req.params.id);
-
-      if (!patient) {
-        return res.status(404).json({ message: "Patient not found" });
-      }
-
-      if (patient.guardianId?.toString() !== req.user.id) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      if ((patient.status || "Active") !== "Pending") {
-        return res.status(400).json({
-          message: "Only pending child requests can be cancelled.",
-        });
-      }
-
-      await Patient.findByIdAndDelete(patient._id);
-      res.json({ message: "Child enrollment request cancelled" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -404,22 +224,33 @@ router.get("/:id", protect, async (req, res) => {
 
 router.put("/:id", protect, allowRoles(...FRONT_DESK_ROLES), async (req, res) => {
   try {
+    const patientPayload = {
+      ...sanitizePatientPayload(req.body),
+      pendingUpdate: null,
+      pendingUpdateStatus: "None",
+      pendingUpdateRequestedBy: undefined,
+      pendingUpdateReviewedBy: undefined,
+      pendingUpdateReviewedAt: undefined,
+    };
+
     const patient = await Patient.findById(req.params.id);
 
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
 
+    if (!patientPayload.guardianId) {
+      patientPayload.guardianId = patient.guardianId;
+    }
+
+    await attachGuardianContactNumber(
+      patientPayload,
+      req.body.contactNumber || patient.contactNumber
+    );
+
     const updatedPatient = await Patient.findByIdAndUpdate(
       req.params.id,
-      {
-        ...sanitizePatientPayload(req.body),
-        pendingUpdate: null,
-        pendingUpdateStatus: "None",
-        pendingUpdateRequestedBy: undefined,
-        pendingUpdateReviewedBy: undefined,
-        pendingUpdateReviewedAt: undefined,
-      },
+      patientPayload,
       { new: true }
     );
 

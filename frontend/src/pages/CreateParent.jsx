@@ -57,22 +57,19 @@ function CreateParent({
         return;
       }
 
-      const userRes = await fetch(
-        apiUrl("/api/auth/register"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: form.fullName,
-            email: form.email,
-            password: form.password,
-            contactNumber: form.contactNumber,
-            address: form.address,
-          }),
-        }
-      );
+      const userRes = await fetch(apiUrl("/api/parent-profiles/create-account"), {
+        method: "POST",
+        headers: authHeaders({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+          contactNumber: form.contactNumber,
+          address: form.address,
+        }),
+      });
 
       const userData = await userRes.json();
 

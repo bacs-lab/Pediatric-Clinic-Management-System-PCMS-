@@ -9,7 +9,7 @@ import { authFetch } from "../utils/authFetch";
 import { apiUrl, authHeaders } from "../utils/api";
 import { exportCsv } from "../utils/exportCsv";
 import { notify } from "../utils/notify";
-import { EMR_WRITE_ROLES, PATIENT_APPROVAL_ROLES, ROLES } from "../utils/roles";
+import { EMR_WRITE_ROLES, ROLES } from "../utils/roles";
 
 function PatientList() {
   const location = useLocation();
@@ -24,7 +24,6 @@ function PatientList() {
   const recordsPerPage = 10;
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  const canApprovePatients = PATIENT_APPROVAL_ROLES.includes(user.role);
   const canWriteEmr = EMR_WRITE_ROLES.includes(user.role);
   const canAddPatient = user.role !== ROLES.ADMIN;
   const canDeletePatient = user.role === ROLES.ADMIN;
@@ -82,34 +81,6 @@ function PatientList() {
       (!statusFilter || status === statusFilter)
     );
   });
-
-  const reviewPatientRequest = async (patient, action) => {
-    try {
-      const route = action === "accept" ? "approve" : "reject";
-      const res = await fetch(apiUrl(`/api/patients/${patient._id}/${route}`), {
-        method: "PUT",
-        headers: authHeaders(),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        notify(data.message || `Failed to ${action} patient request`, "error");
-        return;
-      }
-
-      setPatients((items) =>
-        items.map((item) => (item._id === patient._id ? data : item))
-      );
-      notify(
-        action === "accept"
-          ? "Patient request approved"
-          : "Patient request rejected",
-        "success"
-      );
-    } catch {
-      notify(`Failed to ${action} patient request`, "error");
-    }
-  };
 
   const exportPatients = () => {
     exportCsv("patients.csv", filteredPatients, [
@@ -193,8 +164,6 @@ function PatientList() {
           >
             <option value="">All statuses</option>
             <option value="Active">Active</option>
-            <option value="Pending">Pending</option>
-            <option value="Rejected">Rejected</option>
           </select>
           <button className="secondary-btn" onClick={exportPatients}>
             <span className="ti ti-download" />
@@ -227,8 +196,6 @@ function PatientList() {
               <tbody>
                 {currentRecords.map((patient) => {
                   const status = patient.status || "Active";
-                  const isPending = status === "Pending";
-                  const isRejected = status === "Rejected";
 
                   return (
                     <tr key={patient._id}>
@@ -247,28 +214,7 @@ function PatientList() {
                       </td>
                       <td>
                         <div className="table-actions">
-                          {isPending ? (
-                            canApprovePatients ? (
-                              <>
-                                <button
-                                  className="primary-btn"
-                                  onClick={() => reviewPatientRequest(patient, "accept")}
-                                >
-                                  Accept Request
-                                </button>
-                                <button
-                                  className="danger-btn"
-                                  onClick={() => reviewPatientRequest(patient, "reject")}
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            ) : (
-                              <span className="status-badge pending">
-                                Pending review
-                              </span>
-                            )
-                          ) : isRejected ? (
+                          {status !== "Active" ? (
                             <button
                               className="secondary-btn"
                               onClick={() => navigate(`/staff/patients/${patient._id}`)}
