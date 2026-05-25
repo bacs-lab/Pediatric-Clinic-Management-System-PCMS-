@@ -23,15 +23,40 @@ const getStoredAccount = () => {
   }
 };
 
+const buildAccountState = (payload = {}, fallbackRole = "") => {
+  const user = payload.user || payload;
+  const profile = payload.profile || {};
+  const role = user?.role || fallbackRole || "";
+
+  return {
+    ...user,
+    role,
+    contactNumber:
+      role === "parent"
+        ? user?.contactNumber || profile?.contactNumber || ""
+        : "",
+    address:
+      role === "parent"
+        ? user?.address || profile?.address || ""
+        : "",
+    verificationStatus:
+      role === "parent"
+        ? user?.verificationStatus || profile?.verificationStatus || "Approved"
+        : user?.verificationStatus || "Approved",
+  };
+};
+
 function AccountSettings() {
   const navigate = useNavigate();
   const storedAccount = getStoredAccount();
+  const storedRole = storedAccount?.role || "";
   const [loading, setLoading] = useState(!storedAccount);
   const [saving, setSaving] = useState(false);
   const [account, setAccount] = useState(storedAccount);
   const [form, setForm] = useState(buildForm(storedAccount || {}));
 
-  const isParent = account?.role === "parent";
+  const accountRole = account?.role || storedRole;
+  const isParent = accountRole === "parent";
 
   useEffect(() => {
     let cancelled = false;
@@ -57,16 +82,7 @@ function AccountSettings() {
           return;
         }
 
-        const loadedAccount = {
-          ...(data.user || {}),
-          contactNumber:
-            data.user?.contactNumber || data.profile?.contactNumber || "",
-          address: data.user?.address || data.profile?.address || "",
-          verificationStatus:
-            data.user?.verificationStatus ||
-            data.profile?.verificationStatus ||
-            "Approved",
-        };
+        const loadedAccount = buildAccountState(data, storedRole);
 
         if (cancelled) return;
 
@@ -94,7 +110,7 @@ function AccountSettings() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, storedRole]);
 
   const handleChange = (event) => {
     setForm((current) => ({
@@ -158,10 +174,12 @@ function AccountSettings() {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setAccount(data.user);
+      const savedAccount = buildAccountState(data, accountRole);
+
+      localStorage.setItem("user", JSON.stringify(savedAccount));
+      setAccount(savedAccount);
       setForm({
-        ...buildForm(data.user),
+        ...buildForm(savedAccount),
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",

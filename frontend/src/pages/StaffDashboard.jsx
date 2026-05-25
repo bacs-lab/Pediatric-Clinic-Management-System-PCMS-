@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
@@ -43,7 +43,7 @@ function StaffDashboard() {
     lowStockItems: 0,
   });
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       const [
         recordsRes,
@@ -100,11 +100,11 @@ function StaffDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [canReviewRequests]);
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+  }, [loadDashboard]);
 
   const todayAppointments = useMemo(() => {
     const today = new Date().toDateString();
