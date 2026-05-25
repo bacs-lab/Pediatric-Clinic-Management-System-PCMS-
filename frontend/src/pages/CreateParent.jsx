@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PasswordField from "../components/PasswordField";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 
@@ -119,9 +120,8 @@ function CreateParent({
           {!editMode && (
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input
+              <PasswordField
                 name="password"
-                type="password"
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}

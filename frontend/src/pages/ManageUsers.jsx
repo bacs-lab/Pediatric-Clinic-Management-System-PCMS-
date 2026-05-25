@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PasswordField from "../components/PasswordField";
 import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
@@ -337,9 +338,8 @@ function ManageUsers() {
 
               <div className="form-group">
                 <label className="form-label">Temporary Password</label>
-                <input
+                <PasswordField
                   name="password"
-                  type="password"
                   placeholder="Temporary password"
                   value={form.password}
                   onChange={handleFormChange}
@@ -373,8 +373,7 @@ function ManageUsers() {
             <form onSubmit={resetPassword}>
               <div className="form-group">
                 <label className="form-label">Temporary Password</label>
-                <input
-                  type="password"
+                <PasswordField
                   placeholder="Temporary password"
                   value={temporaryPassword}
                   onChange={(event) => setTemporaryPassword(event.target.value)}

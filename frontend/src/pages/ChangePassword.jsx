@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PasswordField from "../components/PasswordField";
 import { apiUrl, authHeaders } from "../utils/api";
 import { notify } from "../utils/notify";
 
@@ -78,8 +79,7 @@ function ChangePassword() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Current Temporary Password</label>
-            <input
-              type="password"
+            <PasswordField
               name="currentPassword"
               placeholder="Current password"
               value={form.currentPassword}
@@ -89,8 +89,7 @@ function ChangePassword() {
 
           <div className="form-group">
             <label className="form-label">New Password</label>
-            <input
-              type="password"
+            <PasswordField
               name="newPassword"
               placeholder="New password"
               value={form.newPassword}
@@ -100,8 +99,7 @@ function ChangePassword() {
 
           <div className="form-group">
             <label className="form-label">Confirm New Password</label>
-            <input
-              type="password"
+            <PasswordField
               name="confirmPassword"
               placeholder="Confirm new password"
               value={form.confirmPassword}

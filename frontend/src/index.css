@@ -1103,6 +1103,40 @@ form {
   font-weight: 900;
 }
 
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 52px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.password-toggle-btn:hover {
+  background: var(--canvas-2);
+  color: var(--ink);
+}
+
+.password-toggle-btn span {
+  font-size: 20px;
+}
+
 .form-row-2col,
 .form-info-card,
 .record-grid {
