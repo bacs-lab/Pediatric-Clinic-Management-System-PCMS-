@@ -253,6 +253,10 @@ function PatientProfile() {
               <span>{formatDate(patient.birthDate)}</span>
             </p>
             <p>
+              <strong>Age</strong>
+              <span>{calculateAge(patient.birthDate)}</span>
+            </p>
+            <p>
               <strong>Blood Type</strong>
               <span>{patient.bloodType || "N/A"}</span>
             </p>

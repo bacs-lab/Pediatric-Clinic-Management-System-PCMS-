@@ -129,7 +129,7 @@ function ParentDashboard() {
                   </div>
                   <p><strong>Gender:</strong> {patient.gender}</p>
                   <p><strong>Relationship:</strong> {patient.relationshipToChild || "N/A"}</p>
-                  <p><strong>Emergency Contact:</strong> {patient.emergencyContact || "N/A"}</p>
+                  <p><strong>Contact Number:</strong> {patient.contactNumber || "N/A"}</p>
                   <p><strong>Blood Type:</strong> {patient.bloodType || "N/A"}</p>
                   <p><strong>Allergies:</strong> {patient.allergies || "None"}</p>
                 </div>
