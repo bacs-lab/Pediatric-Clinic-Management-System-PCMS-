@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CreateParent from "./CreateParent";
 import Pagination from "../components/Pagination";
@@ -8,6 +8,7 @@ import { notify } from "../utils/notify";
 
 function ParentList() {
   const location = useLocation();
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const canAddGuardian = user.role !== "admin";
   const canManageGuardians = user.role === "admin";
@@ -197,9 +198,11 @@ function ParentList() {
             <CreateParent
               embedded
               onCancel={() => setAddOpen(false)}
-              onSaved={() => {
+              onSaved={(createdRequest) => {
                 setAddOpen(false);
-                fetchParents();
+                navigate("/staff/requests", {
+                  state: { search: createdRequest?.fullName || "" },
+                });
               }}
             />
           </div>

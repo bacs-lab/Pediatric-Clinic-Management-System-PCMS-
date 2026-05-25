@@ -18,14 +18,17 @@ const buildAuthUser = (user, profile = null) => ({
   email: user.email,
   role: user.role,
   status: user.status,
-  verificationStatus: profile?.verificationStatus || "Approved",
+  verificationStatus:
+    user.role === "parent"
+      ? profile?.verificationStatus || "Pending"
+      : profile?.verificationStatus || "Approved",
   mustChangePassword: user.mustChangePassword,
   contactNumber: profile?.contactNumber || "",
   address: profile?.address || "",
 });
 
 const isGuardianProfileApproved = (profile) =>
-  !profile?.verificationStatus || profile.verificationStatus === "Approved";
+  Boolean(profile && profile.verificationStatus === "Approved");
 
 const getInactiveLoginMessage = (status) => {
   if (status === "Pending") {
@@ -41,6 +44,14 @@ const getInactiveLoginMessage = (status) => {
   }
 
   return "Account is not active";
+};
+
+const getParentVerificationMessage = (profile) => {
+  if (profile?.verificationStatus === "Rejected") {
+    return "Your parent account request was rejected. Please contact the clinic for assistance.";
+  }
+
+  return "Your parent account request is waiting for clinic approval before you can log in.";
 };
 
 // REGISTER
@@ -165,9 +176,10 @@ router.post("/login", async (req, res) => {
       (user.role === "parent" && !isGuardianProfileApproved(profile))
     ) {
       return res.status(403).json({
-        message: getInactiveLoginMessage(
-          user.status !== "Active" ? user.status : profile?.verificationStatus
-        ),
+        message:
+          user.role === "parent" && user.status === "Active"
+            ? getParentVerificationMessage(profile)
+            : getInactiveLoginMessage(user.status),
       });
     }
 

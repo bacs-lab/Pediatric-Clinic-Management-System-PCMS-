@@ -32,7 +32,7 @@ const parentProfileSchema = new mongoose.Schema(
     verificationStatus: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
-      default: "Approved",
+      default: "Pending",
     },
   },
   { timestamps: true }

@@ -74,9 +74,13 @@ function CreateParent({
       const userData = await userRes.json();
 
       if (userRes.ok) {
-        notify("Parent account and profile created!");
-        if (onSaved) onSaved();
-        else navigate("/staff/dashboard");
+        notify("Guardian account request submitted for approval.");
+        if (onSaved) onSaved(userData);
+        else {
+          navigate("/staff/requests", {
+            state: { search: userData.fullName || form.fullName },
+          });
+        }
       } else {
         notify(userData.message || "Failed to create parent account");
       }
@@ -89,7 +93,7 @@ function CreateParent({
   return (
     <>
         <h1 className={embedded ? "modal-title" : "page-title"}>
-          {editMode ? "Edit Guardian Profile" : "Create Guardian Account"}
+          {editMode ? "Edit Guardian Profile" : "Submit Guardian Account Request"}
         </h1>
 
         <form onSubmit={handleSubmit}>
@@ -156,7 +160,7 @@ function CreateParent({
               </button>
             )}
             <button className="primary-btn" type="submit">
-              {editMode ? "Save Guardian" : "Create Guardian"}
+              {editMode ? "Save Guardian" : "Submit Request"}
             </button>
           </div>
         </form>

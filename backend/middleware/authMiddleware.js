@@ -40,7 +40,7 @@ const protect = async (req, res, next) => {
       );
 
       if (
-        profile?.verificationStatus &&
+        !profile ||
         profile.verificationStatus !== "Approved"
       ) {
         const messages = {
@@ -50,7 +50,7 @@ const protect = async (req, res, next) => {
 
         return res.status(403).json({
           message:
-            messages[profile.verificationStatus] ||
+            messages[profile?.verificationStatus] ||
             "Guardian account is not verified",
         });
       }

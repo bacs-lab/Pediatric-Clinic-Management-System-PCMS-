@@ -98,6 +98,35 @@ router.post(
       const existingUser = await User.findOne({ email: normalizedEmail });
 
       if (existingUser) {
+        const existingProfile =
+          existingUser.role === ROLES.PARENT
+            ? await ParentProfile.findOne({ userId: existingUser._id }).select(
+                "verificationStatus"
+              )
+            : null;
+
+        if (
+          existingUser.role === ROLES.PARENT &&
+          (existingUser.status === "Pending" ||
+            existingProfile?.verificationStatus === "Pending")
+        ) {
+          return res.status(400).json({
+            message:
+              "A guardian account request for this email is already waiting for approval.",
+          });
+        }
+
+        if (
+          existingUser.role === ROLES.PARENT &&
+          (existingUser.status === "Rejected" ||
+            existingProfile?.verificationStatus === "Rejected")
+        ) {
+          return res.status(400).json({
+            message:
+              "This guardian account request was rejected. Please contact the clinic before creating it again.",
+          });
+        }
+
         return res.status(400).json({ message: "Email already exists" });
       }
 
@@ -106,19 +135,30 @@ router.post(
         email: normalizedEmail,
         password: await bcrypt.hash(password, 10),
         role: ROLES.PARENT,
-        status: "Active",
+        status: "Pending",
         mustChangePassword: false,
       });
 
       const profile = await ParentProfile.create({
         userId: user._id,
         fullName: user.name,
-        contactNumber,
-        address,
-        verificationStatus: "Approved",
+        contactNumber: typeof contactNumber === "string" ? contactNumber.trim() : "",
+        address: typeof address === "string" ? address.trim() : "",
+        verificationStatus: "Pending",
       });
 
-      res.status(201).json(profile);
+      await AuditLog.create({
+        userId: req.user._id,
+        action: "Submitted parent account request",
+        targetUserId: user._id,
+        role: req.user.role,
+      });
+
+      const pendingProfile = await ParentProfile.findById(profile._id).populate(
+        parentProfilePopulate
+      );
+
+      res.status(202).json(normalizePendingProfile(pendingProfile));
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
