@@ -1,0 +1,53 @@
+{
+  "name": "pcms-v2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pediatric Clinic Management System v2 replatform scaffold.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src tests *.ts *.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "vitest run tests/integration --pool=forks",
+    "test:watch": "vitest",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "supabase:types": "supabase gen types typescript --local > src/types/database.generated.ts",
+    "verify": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.86.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "0.468.0",
+    "next": "16.3.2",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwind-merge": "2.6.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.2",
+    "@types/react-dom": "19.0.2",
+    "autoprefixer": "10.4.20",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.2",
+    "jsdom": "25.0.1",
+    "postcss": "8.5.26",
+    "prettier": "3.4.2",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.7.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}
