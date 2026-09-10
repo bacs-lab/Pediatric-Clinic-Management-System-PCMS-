@@ -32,4 +32,4 @@ Required checks before factor removal:
 
 - Service-role keys must remain server-only and must never be placed in browser code or committed files.
 - A user with an existing verified factor should only remove it from `/staff/security` after completing MFA for the current session.
-- Real patient data use remains blocked until the final MFA policy is approved in `docs/production-blockers.md`.
+- Database-wide restrictive AAL2 RLS was approved and applied on 2026-09-10. Real patient data use remains blocked by the unresolved role-matrix and guardian identity-proofing decisions in `docs/production-blockers.md`.

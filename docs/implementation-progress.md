@@ -1,6 +1,6 @@
 # Implementation Progress
 
-Last updated: 2026-09-05
+Last updated: 2026-09-10
 
 This is the living checkpoint for PCMS v2 implementation. Every implementation change must update this file in the same work slice, alongside any requirement-specific updates in `docs/requirements-traceability.md`.
 
@@ -17,9 +17,9 @@ This is the living checkpoint for PCMS v2 implementation. Every implementation c
 | Repository replatform | Implemented foundation   | Root Next.js app, strict TypeScript, Tailwind, CI scripts, legacy runtime removed from branch                                                                                                                                                                                             | Clean final diff and commit when ready                                       |
 | Legacy design reuse   | Implemented foundation   | `src/app/globals.css`, `src/components/app-shell.tsx`, `public/pcms-logo.png`                                                                                                                                                                                                             | More screen-level parity polish after workflow depth is complete             |
 | Supabase connection   | Connected                | Project `PCMS` / ref `ewiwbjzlzeprszstnwpr`; `/api/health/database` has returned `200`                                                                                                                                                                                                    | Stabilize local network/dev-server testing; Supabase CLI still not installed |
-| Database schema       | Advisor fixes applied    | Supabase migrations through `20260905114430_optimize_attachment_aal2_policies`; local SQL mirrored in `supabase/migrations`                                                                                                                                                               | Add transaction-level RLS/integration tests                                  |
+| Database schema       | Advisor fixes applied    | Supabase migrations through `20260910050125_require_aal2_for_application_tables`; local SQL mirrored in `supabase/migrations`                                                                                                                                                             | Add transaction-level RLS/integration tests                                  |
 | Authentication        | Scaffolded and connected | `/login`, `/login/update-password`, `/login/mfa`, `/staff/security`, `/guardian/security`, Supabase Auth user linked to profile                                                                                                                                                           | Verify end-to-end browser login and MFA in browser                           |
-| Authorization/RLS     | Scaffolded               | RLS enabled on all public tables; advisor findings resolved; gated Supabase RLS integration tests added; UI/server gates require TOTP enrollment before data modules; clinical attachment metadata and objects require AAL2                                                               | Explicit approval needed before database-wide AAL2 restrictive RLS migration |
+| Authorization/RLS     | AAL2 enforced            | RLS enabled on all public tables; all 19 public application tables have a restrictive AAL2 policy; gated Supabase RLS integration tests cover AAL1 denial and AAL2 role/clinic access; clinical attachment objects require AAL2                                                           | Run live integration suite and verify browser MFA flow                       |
 | Read model            | Partial                  | `src/features/pcms/read-model.ts` uses Supabase when configured; guardian names and immunization summaries now come from linked data                                                                                                                                                      | Replace remaining provider/clinician placeholder labels                      |
 | Staff workflows       | Partial                  | Server actions and forms for patient, guardian linking, appointment, queue check-in/state, assessment/vitals handoff, clinical draft/finalize/addendum/attachments, vaccination recording, inventory, billing lifecycle, audit logging, admin account/role management, confirmations, MFA | Add browser/E2E coverage after login is verified                             |
 | Guardian workflows    | Scaffolded               | `/guardian` supports own profile contact update and renders approved linked children, clinical attachments, clinical records, and statements from Supabase                                                                                                                                | Separate guardian-only browser coverage                                      |
@@ -612,6 +612,31 @@ Remaining:
 - Browser automation was unavailable in this session, so the signed-in visual click-through remains pending.
 - Confirm the production host accepts 11 MB Server Action bodies or replace the server-mediated upload with a direct signed upload flow.
 
+### 2026-09-10 - Database-Wide AAL2 RLS Enforcement
+
+- Received explicit owner approval to enforce AAL2 at the database boundary.
+- Applied Supabase migration `20260910050125_require_aal2_for_application_tables`.
+- Added local migration `supabase/migrations/20260910000100_require_aal2_for_application_tables.sql`.
+- Added one idempotent restrictive `FOR ALL` policy to each of the 19 current public application tables.
+- The policy requires the authenticated JWT `aal` claim to equal `aal2` for both row visibility and inserted/updated row checks.
+- Kept MFA enrollment and challenge reachable because `/staff/security`, `/guardian/security`, and `/login/mfa` use Supabase Auth APIs without requiring public-table access.
+- Service-role administration remains server-only and is not subject to the `authenticated` policy.
+- Added a separate AAL1 integration client that asserts profile/patient reads return no rows and audit inserts are rejected before MFA elevation.
+
+Verification:
+
+- Remote catalog inspection confirms RLS remains enabled and exactly one valid restrictive AAL2 policy exists on every current public application table.
+- A rolled-back remote policy evaluation confirmed the same authenticated user's own profile is hidden at AAL1 (`0` rows) and visible at AAL2 (`1` row).
+- Supabase security advisor reports only the accepted Free-tier leaked-password warning.
+- Supabase performance advisor reports only expected unused-index INFO notices on the small synthetic dataset.
+- `npm.cmd run verify` passed, including formatting, lint, strict TypeScript, 31 local tests, and the production build; 7 live integration tests were gated because `SUPABASE_SERVICE_ROLE_KEY` is not configured.
+
+Remaining:
+
+- Run the gated AAL1/AAL2 integration suite when `SUPABASE_SERVICE_ROLE_KEY` is configured for a non-production project.
+- Verify enrollment, challenge, logout, and subsequent login in the browser.
+- Every future public application table must receive the same restrictive AAL2 policy in its creation migration.
+
 ## Supabase Advisor Findings
 
 Security advisor findings:
@@ -638,7 +663,6 @@ Performance advisor findings:
 
 ## Immediate Implementation Queue
 
-1. Approve or defer the database-wide AAL2 restrictive RLS migration for all public application tables.
-2. Verify browser login after password recovery and document the result here.
-3. Run live Supabase integration tests with a service-role key against a non-production project.
-4. Confirm receipt/export fields with the owner.
+1. Verify browser login after password recovery and document the result here.
+2. Run live Supabase integration tests with a service-role key against a non-production project.
+3. Confirm receipt/export fields with the owner.
