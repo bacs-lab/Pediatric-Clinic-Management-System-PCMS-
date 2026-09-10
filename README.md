@@ -36,7 +36,9 @@ npm run dev
 Replace the placeholder values in `.env.local` with the Supabase project URL
 and publishable key from Project Settings -> API. The login page is available at
 `/login`, and `/api/health/database` reports whether the configured URL/key can
-reach Supabase.
+reach Supabase. Set `PCMS_APP_URL` to the application's origin and add
+`<PCMS_APP_URL>/auth/callback` to the hosted project's Auth redirect URL allow
+list so password recovery can exchange its PKCE code.
 
 Local Supabase workflow:
 

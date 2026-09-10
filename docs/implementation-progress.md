@@ -12,19 +12,19 @@ This is the living checkpoint for PCMS v2 implementation. Every implementation c
 
 ## High-Level Status
 
-| Area                  | Status                   | Evidence                                                                                                                                                                                                                                                                                  | Next Gap                                                                     |
-| --------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Repository replatform | Implemented foundation   | Root Next.js app, strict TypeScript, Tailwind, CI scripts, legacy runtime removed from branch                                                                                                                                                                                             | Clean final diff and commit when ready                                       |
-| Legacy design reuse   | Implemented foundation   | `src/app/globals.css`, `src/components/app-shell.tsx`, `public/pcms-logo.png`                                                                                                                                                                                                             | More screen-level parity polish after workflow depth is complete             |
-| Supabase connection   | Connected                | Project `PCMS` / ref `ewiwbjzlzeprszstnwpr`; `/api/health/database` has returned `200`                                                                                                                                                                                                    | Stabilize local network/dev-server testing; Supabase CLI still not installed |
-| Database schema       | Advisor fixes applied    | Supabase migrations through `20260910050125_require_aal2_for_application_tables`; local SQL mirrored in `supabase/migrations`                                                                                                                                                             | Add transaction-level RLS/integration tests                                  |
-| Authentication        | Scaffolded and connected | `/login`, `/login/update-password`, `/login/mfa`, `/staff/security`, `/guardian/security`, Supabase Auth user linked to profile                                                                                                                                                           | Verify end-to-end browser login and MFA in browser                           |
-| Authorization/RLS     | AAL2 enforced            | RLS enabled on all public tables; all 19 public application tables have a restrictive AAL2 policy; gated Supabase RLS integration tests cover AAL1 denial and AAL2 role/clinic access; clinical attachment objects require AAL2                                                           | Run live integration suite and verify browser MFA flow                       |
-| Read model            | Partial                  | `src/features/pcms/read-model.ts` uses Supabase when configured; guardian names and immunization summaries now come from linked data                                                                                                                                                      | Replace remaining provider/clinician placeholder labels                      |
-| Staff workflows       | Partial                  | Server actions and forms for patient, guardian linking, appointment, queue check-in/state, assessment/vitals handoff, clinical draft/finalize/addendum/attachments, vaccination recording, inventory, billing lifecycle, audit logging, admin account/role management, confirmations, MFA | Add browser/E2E coverage after login is verified                             |
-| Guardian workflows    | Scaffolded               | `/guardian` supports own profile contact update and renders approved linked children, clinical attachments, clinical records, and statements from Supabase                                                                                                                                | Separate guardian-only browser coverage                                      |
-| Reports               | Scaffolded               | CSV report routes for appointments, billing, inventory; CSV injection tests                                                                                                                                                                                                               | Confirm report field definitions with owner and add database-backed tests    |
-| Production readiness  | Blocked                  | `docs/production-blockers.md`, `docs/data-readiness-gate.md`                                                                                                                                                                                                                              | Legal/privacy/hosting/retention/recovery/access approvals                    |
+| Area                  | Status                    | Evidence                                                                                                                                                                                                                                                                                  | Next Gap                                                                     |
+| --------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Repository replatform | Implemented foundation    | Root Next.js app, strict TypeScript, Tailwind, CI scripts, legacy runtime removed from branch                                                                                                                                                                                             | Clean final diff and commit when ready                                       |
+| Legacy design reuse   | Implemented foundation    | `src/app/globals.css`, `src/components/app-shell.tsx`, `public/pcms-logo.png`                                                                                                                                                                                                             | More screen-level parity polish after workflow depth is complete             |
+| Supabase connection   | Connected                 | Project `PCMS` / ref `ewiwbjzlzeprszstnwpr`; `/api/health/database` has returned `200`                                                                                                                                                                                                    | Stabilize local network/dev-server testing; Supabase CLI still not installed |
+| Database schema       | Advisor fixes applied     | Supabase migrations through `20260910050125_require_aal2_for_application_tables`; local SQL mirrored in `supabase/migrations`                                                                                                                                                             | Add transaction-level RLS/integration tests                                  |
+| Authentication        | Connected; recovery built | `/login`, `/login/recover`, `/auth/callback`, `/login/update-password`, `/login/mfa`, staff/guardian security pages, Supabase Auth user linked to profile                                                                                                                                 | Verify recovery email and MFA end to end in a connected browser              |
+| Authorization/RLS     | AAL2 enforced             | RLS enabled on all public tables; all 19 public application tables have a restrictive AAL2 policy; gated Supabase RLS integration tests cover AAL1 denial and AAL2 role/clinic access; clinical attachment objects require AAL2                                                           | Run live integration suite and verify browser MFA flow                       |
+| Read model            | Partial                   | `src/features/pcms/read-model.ts` uses Supabase when configured; guardian names and immunization summaries now come from linked data                                                                                                                                                      | Replace remaining provider/clinician placeholder labels                      |
+| Staff workflows       | Partial                   | Server actions and forms for patient, guardian linking, appointment, queue check-in/state, assessment/vitals handoff, clinical draft/finalize/addendum/attachments, vaccination recording, inventory, billing lifecycle, audit logging, admin account/role management, confirmations, MFA | Add browser/E2E coverage after login is verified                             |
+| Guardian workflows    | Scaffolded                | `/guardian` supports own profile contact update and renders approved linked children, clinical attachments, clinical records, and statements from Supabase                                                                                                                                | Separate guardian-only browser coverage                                      |
+| Reports               | Scaffolded                | CSV report routes for appointments, billing, inventory; CSV injection tests                                                                                                                                                                                                               | Confirm report field definitions with owner and add database-backed tests    |
+| Production readiness  | Blocked                   | `docs/production-blockers.md`, `docs/data-readiness-gate.md`                                                                                                                                                                                                                              | Legal/privacy/hosting/retention/recovery/access approvals                    |
 
 ## Implemented Checkpoints
 
@@ -637,6 +637,31 @@ Remaining:
 - Verify enrollment, challenge, logout, and subsequent login in the browser.
 - Every future public application table must receive the same restrictive AAL2 policy in its creation migration.
 
+### 2026-09-10 - Self-Service Password Recovery
+
+- Added `/login/recover` and linked it from the login form.
+- Added a validated server action that requests a Supabase password recovery email without disclosing whether an account exists.
+- Added `/auth/callback` to exchange SSR PKCE authorization codes and accept recovery token hashes before redirecting to `/login/update-password`.
+- Kept the existing root hash handler as compatibility for older implicit recovery links.
+- Added validated `PCMS_APP_URL` handling so recovery redirects use a configured HTTP(S) origin instead of an untrusted request host.
+- Updated successful password changes to clear the recovery session and return to login so the new password is exercised explicitly.
+- Added the local callback URL to `supabase/config.toml` and documented the hosted Supabase redirect allow-list requirement in `README.md`.
+- Added password recovery email validation and application URL configuration tests.
+
+Verification:
+
+- `/login`, `/login/recover`, `/login/update-password`, and `/login/mfa` returned `200` from the running development server.
+- `/auth/callback` without a valid code or token returned `307` to `/login?auth=failed`.
+- Supabase inspection confirms the staff account is email-confirmed, has a configured password, and has signed in previously.
+- Supabase inspection found one unverified TOTP factor and no verified factor; database data remains inaccessible until enrollment is completed at AAL2.
+- `npm.cmd run verify` passed, including formatting, lint, strict TypeScript, 34 local tests, and the production build; 7 live integration tests were gated.
+
+Remaining:
+
+- Add `<PCMS_APP_URL>/auth/callback` to the hosted Supabase Auth redirect URL allow list.
+- With a controllable browser connected, request a real recovery email, follow the link, set a new password, sign in, remove or complete the pending TOTP enrollment, and verify the session reaches AAL2.
+- Do not mark the browser verification complete until that user-session flow is observed.
+
 ## Supabase Advisor Findings
 
 Security advisor findings:
@@ -663,6 +688,6 @@ Performance advisor findings:
 
 ## Immediate Implementation Queue
 
-1. Verify browser login after password recovery and document the result here.
+1. Complete the password-recovery and TOTP AAL2 click-through in a connected browser and document the result here.
 2. Run live Supabase integration tests with a service-role key against a non-production project.
 3. Confirm receipt/export fields with the owner.

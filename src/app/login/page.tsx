@@ -8,6 +8,8 @@ const authMessages: Record<string, string> = {
   failed: "The email or password was not accepted by Supabase Auth.",
   invalid: "Enter a valid email and a password with at least 8 characters.",
   recovered: "Password updated. Sign in with the new password.",
+  "recovery-sent":
+    "If an account exists for that email, a password recovery link has been sent.",
   "signed-out": "You have been signed out.",
   "supabase-required":
     "Add real Supabase URL and publishable key values to .env.local before signing in.",
@@ -98,6 +100,12 @@ export default async function LoginPage({
                 Sign in
               </button>
             </form>
+            <Link
+              href="/login/recover"
+              className="secondary-btn mt-3 justify-center"
+            >
+              Forgot password?
+            </Link>
             {!hasSupabase ? (
               <p className="mt-5 text-sm leading-6">
                 Create `.env.local` from `.env.example`, then replace the

@@ -9,6 +9,10 @@ export const loginSchema = z.object({
   password: z.string().min(8).max(200),
 });
 
+export const passwordRecoverySchema = z.object({
+  email: z.string().trim().email(),
+});
+
 const commonPasswordFragments = [
   "password",
   "qwerty",

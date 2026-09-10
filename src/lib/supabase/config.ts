@@ -13,6 +13,26 @@ export function getSupabaseConfig() {
   return { publishableKey, url };
 }
 
+export function getPcmsAppUrl() {
+  const value = process.env.PCMS_APP_URL;
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return null;
+    }
+
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 export function requireSupabaseConfig() {
   const config = getSupabaseConfig();
 

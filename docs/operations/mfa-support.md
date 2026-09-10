@@ -2,6 +2,16 @@
 
 This procedure applies to Supabase Auth TOTP factors used by PCMS v2.
 
+## Password Recovery
+
+1. User selects `Forgot password?` on `/login` and submits the account email.
+2. PCMS always returns a neutral response that does not disclose whether the account exists.
+3. User follows the Supabase recovery email to `/auth/callback`, which exchanges the PKCE code or recovery token and opens `/login/update-password`.
+4. User sets a password that satisfies the PCMS password controls.
+5. PCMS clears the recovery session and requires a fresh login with the new password.
+
+The deployment's `<PCMS_APP_URL>/auth/callback` URL must be present in the Supabase Auth redirect allow list.
+
 ## User Enrollment
 
 1. User signs in with email and password.
