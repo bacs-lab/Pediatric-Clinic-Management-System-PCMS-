@@ -644,6 +644,7 @@ Remaining:
 - Added `/auth/callback` to exchange SSR PKCE authorization codes and accept recovery token hashes before redirecting to `/login/update-password`.
 - Kept the existing root hash handler as compatibility for older implicit recovery links.
 - Added validated `PCMS_APP_URL` handling so recovery redirects use a configured HTTP(S) origin instead of an untrusted request host.
+- Development falls back to `http://localhost:3000` when `PCMS_APP_URL` is absent; production continues to require an explicit configured origin.
 - Updated successful password changes to clear the recovery session and return to login so the new password is exercised explicitly.
 - Added the local callback URL to `supabase/config.toml` and documented the hosted Supabase redirect allow-list requirement in `README.md`.
 - Added password recovery email validation and application URL configuration tests.
@@ -651,10 +652,11 @@ Remaining:
 Verification:
 
 - `/login`, `/login/recover`, `/login/update-password`, and `/login/mfa` returned `200` from the running development server.
+- The rendered recovery form contains its server action and remains enabled when local development uses the localhost URL fallback.
 - `/auth/callback` without a valid code or token returned `307` to `/login?auth=failed`.
 - Supabase inspection confirms the staff account is email-confirmed, has a configured password, and has signed in previously.
 - Supabase inspection found one unverified TOTP factor and no verified factor; database data remains inaccessible until enrollment is completed at AAL2.
-- `npm.cmd run verify` passed, including formatting, lint, strict TypeScript, 34 local tests, and the production build; 7 live integration tests were gated.
+- `npm.cmd run verify` passed, including formatting, lint, strict TypeScript, and the production build; the follow-up URL fallback check passes with 35 local tests and 7 live integration tests gated.
 
 Remaining:
 

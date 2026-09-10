@@ -18,10 +18,12 @@ describe("PCMS application URL configuration", () => {
     expect(getPcmsAppUrl()).toBe("https://pcms.example.test");
   });
 
-  it("rejects missing, malformed, and non-HTTP URLs", () => {
+  it("uses localhost when development configuration is missing", () => {
     delete process.env.PCMS_APP_URL;
-    expect(getPcmsAppUrl()).toBeNull();
+    expect(getPcmsAppUrl()).toBe("http://localhost:3000");
+  });
 
+  it("rejects malformed and non-HTTP URLs", () => {
     process.env.PCMS_APP_URL = "not-a-url";
     expect(getPcmsAppUrl()).toBeNull();
 

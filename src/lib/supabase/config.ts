@@ -14,7 +14,11 @@ export function getSupabaseConfig() {
 }
 
 export function getPcmsAppUrl() {
-  const value = process.env.PCMS_APP_URL;
+  const value =
+    process.env.PCMS_APP_URL ??
+    (process.env.NODE_ENV === "production"
+      ? undefined
+      : "http://localhost:3000");
 
   if (!value) {
     return null;
