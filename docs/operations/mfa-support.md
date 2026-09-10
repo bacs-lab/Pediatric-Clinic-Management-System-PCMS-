@@ -2,6 +2,16 @@
 
 This procedure applies to Supabase Auth TOTP factors used by PCMS v2.
 
+## Password Recovery
+
+1. User selects `Forgot password?` on `/login` and submits the account email.
+2. PCMS always returns a neutral response that does not disclose whether the account exists.
+3. User follows the Supabase recovery email to `/auth/callback`, which exchanges the PKCE code or recovery token and opens `/login/update-password`.
+4. User sets a password that satisfies the PCMS password controls.
+5. PCMS clears the recovery session and requires a fresh login with the new password.
+
+The deployment's `<PCMS_APP_URL>/auth/callback` URL must be present in the Supabase Auth redirect allow list.
+
 ## User Enrollment
 
 1. User signs in with email and password.
@@ -32,4 +42,4 @@ Required checks before factor removal:
 
 - Service-role keys must remain server-only and must never be placed in browser code or committed files.
 - A user with an existing verified factor should only remove it from `/staff/security` after completing MFA for the current session.
-- Real patient data use remains blocked until the final MFA policy is approved in `docs/production-blockers.md`.
+- Database-wide restrictive AAL2 RLS was approved and applied on 2026-09-10. Real patient data use remains blocked by the unresolved role-matrix and guardian identity-proofing decisions in `docs/production-blockers.md`.

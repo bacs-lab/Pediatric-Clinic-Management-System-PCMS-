@@ -66,6 +66,7 @@ const password = `Pcms-${suffix}-Password1!`;
 
 let admin: SupabaseClient<Database>;
 let staff: SupabaseClient<Database>;
+let aal1Staff: SupabaseClient<Database>;
 let guardian: SupabaseClient<Database>;
 let staffUserId = "";
 let guardianUserId = "";
@@ -196,6 +197,9 @@ runDescribe("Supabase RLS integration", () => {
       auth: { persistSession: false },
     });
     staff = createClient<Database>(supabaseUrl!, publishableKey!, {
+      auth: { persistSession: false },
+    });
+    aal1Staff = createClient<Database>(supabaseUrl!, publishableKey!, {
       auth: { persistSession: false },
     });
     guardian = createClient<Database>(supabaseUrl!, publishableKey!, {
@@ -405,6 +409,10 @@ runDescribe("Supabase RLS integration", () => {
         .error,
     );
     await expectNoError(
+      (await aal1Staff.auth.signInWithPassword({ email: staffEmail, password }))
+        .error,
+    );
+    await expectNoError(
       (
         await guardian.auth.signInWithPassword({
           email: guardianEmail,
@@ -419,6 +427,34 @@ runDescribe("Supabase RLS integration", () => {
   afterAll(async () => {
     await cleanup();
   }, 60_000);
+
+  it("denies application table access until the session reaches AAL2", async () => {
+    const assurance = await aal1Staff.auth.mfa.getAuthenticatorAssuranceLevel();
+    const profiles = await aal1Staff
+      .from("profiles")
+      .select("id")
+      .eq("id", ids.staffProfile);
+    const patients = await aal1Staff
+      .from("patients")
+      .select("id")
+      .eq("id", ids.patientA);
+    const auditInsert = await aal1Staff.from("audit_events").insert({
+      action: "integration.aal1.denied",
+      actor_profile_id: ids.staffProfile,
+      clinic_id: ids.clinicA,
+      effective_role: "staff",
+      resource_type: "integration_test",
+      result: "success",
+    });
+
+    expect(assurance.error).toBeNull();
+    expect(assurance.data?.currentLevel).toBe("aal1");
+    expect(profiles.error).toBeNull();
+    expect(profiles.data).toEqual([]);
+    expect(patients.error).toBeNull();
+    expect(patients.data).toEqual([]);
+    expect(auditInsert.error?.code).toBe("42501");
+  });
 
   it("allows active staff to read only clinic-scoped operational rows", async () => {
     const patients = await staff

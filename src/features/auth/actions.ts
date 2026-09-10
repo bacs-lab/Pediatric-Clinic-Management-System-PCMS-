@@ -1,8 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { loginSchema, passwordUpdateSchema } from "@/features/demo/validation";
-import { getSupabaseConfig } from "@/lib/supabase/config";
+import {
+  loginSchema,
+  passwordRecoverySchema,
+  passwordUpdateSchema,
+} from "@/features/demo/validation";
+import { getPcmsAppUrl, getSupabaseConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 function valueOf(formData: FormData, key: string) {
@@ -58,6 +62,39 @@ export async function logoutAction() {
   redirect("/login?auth=signed-out");
 }
 
+export async function requestPasswordResetAction(formData: FormData) {
+  if (!getSupabaseConfig()) {
+    redirectWithAuthStatus("supabase-required");
+  }
+
+  const parsed = passwordRecoverySchema.safeParse({
+    email: valueOf(formData, "email"),
+  });
+
+  if (!parsed.success) {
+    redirect("/login/recover?auth=invalid");
+  }
+
+  const appUrl = getPcmsAppUrl();
+
+  if (!appUrl) {
+    redirect("/login/recover?auth=unavailable");
+  }
+
+  const supabase = await createClient();
+  const redirectTo = new URL("/auth/callback", appUrl).toString();
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    { redirectTo },
+  );
+
+  if (error) {
+    redirect("/login/recover?auth=failed");
+  }
+
+  redirect("/login?auth=recovery-sent");
+}
+
 export async function updatePasswordAction(formData: FormData) {
   if (!getSupabaseConfig()) {
     redirectWithAuthStatus("supabase-required");
@@ -81,5 +118,6 @@ export async function updatePasswordAction(formData: FormData) {
     redirect("/login/update-password?auth=failed");
   }
 
-  redirect("/staff");
+  await supabase.auth.signOut({ scope: "local" });
+  redirect("/login?auth=recovered");
 }

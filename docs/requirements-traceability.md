@@ -4,8 +4,8 @@ Source documents were not present in the workspace, so REQ-01 through REQ-36 are
 
 | Requirement                              | v2 Design / Code Path                                                                                                                                                             | Test Path                                                                                | Status      |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------- |
-| REQ-01 Authentication/login/logout       | Supabase SSR clients, `/login`, `/login/mfa`, login/logout server actions, TOTP challenge flow                                                                                    | `tests/validation.test.ts`; pending Supabase auth/browser test                           | Scaffolded  |
-| REQ-02 Role-based access                 | `staff_memberships`, RLS policies, staff/guardian server gates before protected data modules                                                                                      | `tests/integration/supabase-rls.test.ts` gated                                           | Scaffolded  |
+| REQ-01 Authentication/login/logout       | Supabase SSR clients; login/logout; self-service recovery request, PKCE callback, password update; TOTP challenge flow                                                            | `tests/validation.test.ts`; `tests/supabase-config.test.ts`; pending browser test        | Scaffolded  |
+| REQ-02 Role-based access                 | `staff_memberships`, role/clinic RLS policies, database-wide restrictive AAL2 policies, staff/guardian server gates before protected data modules                                 | `tests/integration/supabase-rls.test.ts` gated                                           | Scaffolded  |
 | REQ-03 Account approval/status           | `profiles.account_status`, `staff_memberships.status`, `/staff/security`, `/guardian/security`, MFA enrollment and challenge gates                                                | `tests/validation.test.ts`; pending browser test                                         | Scaffolded  |
 | REQ-04 Patient registration              | `patients` table; validated server action and staff form                                                                                                                          | `tests/validation.test.ts`; pending DB tests                                             | Scaffolded  |
 | REQ-05 Patient search/profile            | `patients` table and staff read model                                                                                                                                             | Pending DB tests                                                                         | Scaffolded  |
@@ -41,13 +41,13 @@ Source documents were not present in the workspace, so REQ-01 through REQ-36 are
 | REQ-35 Data backup/recovery              | `docs/operations/backup-restore.md`                                                                                                                                               | Pending restore drill                                                                    | Documented  |
 | REQ-36 Admin configuration               | Database-backed `/staff/admin`; admin profile/role read RLS; server-only service-role actions for account status, membership status, and role grants                              | `tests/validation.test.ts`; gated admin read RLS test                                    | Scaffolded  |
 
-| NFR                     | v2 Control                                                                                   | Status     |
-| ----------------------- | -------------------------------------------------------------------------------------------- | ---------- |
-| Security/authentication | Supabase Auth, MFA/AAL2 gates, RLS; database-wide AAL2 enforcement pending explicit approval | Scaffolded |
-| Privacy                 | Production blockers, PHI-safe docs, private Storage design                                   | Documented |
-| Integrity               | FK/check constraints, ledger tables, no-overlap exclusion, queue uniqueness constraints      | Scaffolded |
-| Usability               | App shell and module dashboard                                                               | Scaffolded |
-| Performance             | Indexed policy predicates and clinic/date indexes                                            | Scaffolded |
-| Availability/recovery   | Backup/restore runbook placeholder                                                           | Documented |
-| Maintainability         | Strict TypeScript, root app layout, CI                                                       | Scaffolded |
-| Testability             | Vitest plus gated Supabase RLS integration harness                                           | Scaffolded |
+| NFR                     | v2 Control                                                                                      | Status              |
+| ----------------------- | ----------------------------------------------------------------------------------------------- | ------------------- |
+| Security/authentication | Supabase Auth, TOTP MFA gates, and restrictive AAL2 RLS across all 19 public application tables | Implemented control |
+| Privacy                 | Production blockers, PHI-safe docs, private Storage design                                      | Documented          |
+| Integrity               | FK/check constraints, ledger tables, no-overlap exclusion, queue uniqueness constraints         | Scaffolded          |
+| Usability               | App shell and module dashboard                                                                  | Scaffolded          |
+| Performance             | Indexed policy predicates and clinic/date indexes                                               | Scaffolded          |
+| Availability/recovery   | Backup/restore runbook placeholder                                                              | Documented          |
+| Maintainability         | Strict TypeScript, root app layout, CI                                                          | Scaffolded          |
+| Testability             | Vitest plus gated Supabase RLS integration harness                                              | Scaffolded          |

@@ -23,6 +23,7 @@ import {
   mfaCodeSchema,
   mfaFactorSchema,
   patientGuardianLinkSchema,
+  passwordRecoverySchema,
   passwordUpdateSchema,
   patientRegistrationSchema,
   queueCheckInSchema,
@@ -58,6 +59,15 @@ describe("domain validation", () => {
         password: "Generated!Passphrase42",
         confirmPassword: "Different!Passphrase42",
       }).success,
+    ).toBe(false);
+  });
+
+  it("validates password recovery email addresses", () => {
+    expect(
+      passwordRecoverySchema.safeParse({ email: "staff@example.test" }).success,
+    ).toBe(true);
+    expect(
+      passwordRecoverySchema.safeParse({ email: "not-an-email" }).success,
     ).toBe(false);
   });
 
