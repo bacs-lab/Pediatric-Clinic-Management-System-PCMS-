@@ -664,6 +664,13 @@ Remaining:
 - With a controllable browser connected, request a real recovery email, follow the link, set a new password, sign in, remove or complete the pending TOTP enrollment, and verify the session reaches AAL2.
 - Do not mark the browser verification complete until that user-session flow is observed.
 
+### 2026-09-10 - Pull Request CI History Fix
+
+- Opened GitHub pull request #2 from `PCMS-VER2.0` into `main`.
+- The initial GitHub Actions run passed formatting, lint, type checking, tests, and the production build.
+- Gitleaks did not report a secret; it failed before scanning because the default shallow checkout omitted the parent commit in the PR scan range.
+- Updated `actions/checkout` with `fetch-depth: 0` so Gitleaks can inspect the complete PR commit range without weakening or bypassing secret detection.
+
 ## Supabase Advisor Findings
 
 Security advisor findings:
